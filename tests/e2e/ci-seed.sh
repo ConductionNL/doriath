@@ -312,15 +312,15 @@ elif kind == 'registers':
     print(f'[ci-seed] openregister registers present: {sorted(s for s in slugs if s)}')
 
 elif kind == 'schemas':
-    required = ['example']
+    # REPORTED, NOT ASSERTED — for the same reason as `registers` above.
+    # lib/Settings/keepiq_register.json now declares no schemas at all.
+    # It used to carry the scaffold's `example` placeholder, which was
+    # asserted here as an import canary; that slug collided with shillinq's
+    # copy of the same placeholder on a shared OpenRegister, and Keepiq
+    # keeps its secrets in its own lib/Db tables rather than as OpenRegister
+    # objects, so there was never a real schema to put in its place.
     slugs = {field(i, 'slug') for i in items}
     print(f'[ci-seed] openregister schemas present: {sorted(s for s in slugs if s)}')
-    missing = [s for s in required if s not in slugs]
-    if missing:
-        print(f'::error::Keepiq schemas missing from OpenRegister after import: {missing}. '
-              'The register descriptor did not apply — check the import response above.')
-        sys.exit(1)
-    print('[ci-seed] schemas OK.')
 PY
 }
 

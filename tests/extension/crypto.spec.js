@@ -6,15 +6,15 @@
  * unlock envelope and RSA-OAEP field encryption, and that the imported private
  * key the worker holds is NON-EXTRACTABLE (task 6.1 invariant).
  */
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
+	decryptPrivateKey,
 	deriveAesKey,
 	encryptPrivateKey,
-	decryptPrivateKey,
 	importPrivateKey,
 	importPublicKey,
-	rsaEncrypt,
 	rsaDecrypt,
+	rsaEncrypt,
 } from '../../browser-extension/src/crypto/index.js'
 import {
 	RSA4096_PRIVATE_KEY_PKCS8_PEM,

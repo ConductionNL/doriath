@@ -13,7 +13,7 @@
  * @spec openspec/changes/secret-export-gdpr/specs/secret-export/spec.md
  */
 
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { encryptBackup } from '../../src/export/backup.js'
 import { backupParser, parseBackup } from '../../src/import/backupParser.js'
 import { getParser } from '../../src/import/parserRegistry.js'

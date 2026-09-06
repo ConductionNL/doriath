@@ -68,11 +68,19 @@ const PROTECTED_ROUTES = [
 	'FeaturesRoadmap',
 	'PersonalActivity',
 	'PasswordHealth',
+	// Reports is PROTECTED, not public. It is the page those two now live on
+	// as cards (ADR-112 / ADR-114), and both read vault state: Password health
+	// analyses the UNLOCKED vault in memory, and My activity is the caller's
+	// own audit trail. A Reports page reachable while the vault is locked would
+	// be a way in around the lock, even if each card then refused.
+	'Reports',
 	'Certificates',
 	'EmergencyAccess',
+	// SecretList/'SecretListFolder' also carry the optional `:id?` detail
+	// segment (restyle Stage 8) — the old SecretDetail page id is gone, but
+	// /secrets/<id> deep links still resolve to SecretList and stay gated.
 	'SecretList',
 	'SecretListFolder',
-	'SecretDetail',
 	'ApplicationRegister',
 	'ApplicationDetail',
 	// Flows are PROTECTED, not public. A flow in this app can read and write
@@ -100,11 +108,10 @@ describe('createVaultGuard', () => {
 		it('preserves the attempted path as returnUrl so unlock resumes it', () => {
 			const { guard, next } = harness(true)
 
-			guard(
-				route('SecretDetail', '/secrets/42'),
-				route('Dashboard', '/'),
-				next,
-			)
+			// A secret deep link resolves to the SecretList route with the
+			// optional :id segment (restyle Stage 8) — the deep PATH is what
+			// must survive as returnUrl.
+			guard(route('SecretList', '/secrets/42'), route('Dashboard', '/'), next)
 
 			expect(next).toHaveBeenCalledWith({
 				name: LOCK_ROUTE_NAME,
@@ -383,7 +390,23 @@ describe('isPublicSurface', () => {
 		).toBe(true)
 	})
 
-	it('recognises the recipient routes on the authenticated shell', () => {
+	it('recognises the recipient PATH routes on either shell', () => {
+		// The link builders emit paths (createWebHistory), on the public shell
+		// for recipients and resolvable on the authenticated shell too.
+		for (const pathname of [
+			'/index.php/apps/keepiq/public/share/request/tok',
+			'/apps/keepiq/public/share/link/tok',
+			'/index.php/apps/keepiq/share/request/tok',
+			'/index.php/apps/keepiq/share/link/tok',
+			'/apps/keepiq/send/tok',
+		]) {
+			expect(isPublicSurface({ pathname, hash: '' }), pathname).toBe(true)
+		}
+	})
+
+	it('still recognises the RETIRED hash forms, links to which are in the wild', () => {
+		// applyHashRouteHandoff() rewrites these at bootstrap, but the
+		// classification must not depend on rewrite order.
 		for (const hash of [
 			'#/share/request/tok',
 			'#/share/link/tok',
@@ -402,8 +425,60 @@ describe('isPublicSurface', () => {
 				hash: '#/secrets',
 			}),
 		).toBe(false)
+		expect(
+			isPublicSurface({
+				pathname: '/index.php/apps/keepiq/secrets',
+				hash: '',
+			}),
+		).toBe(false)
+		// A nested segment that merely CONTAINS a recipient word is not one.
+		expect(
+			isPublicSurface({
+				pathname: '/apps/keepiq/secrets/send/decoy',
+				hash: '',
+			}),
+		).toBe(false)
+		// A send URL's #k= fragment alone does not make a surface public.
+		expect(
+			isPublicSurface({ pathname: '/apps/keepiq/secrets', hash: '#k=abc' }),
+		).toBe(false)
 		expect(isPublicSurface({})).toBe(false)
 		expect(isPublicSurface()).toBe(false)
+	})
+
+	it('matches the shell on a segment boundary, not as a substring', () => {
+		// A substring test on '/apps/keepiq/public' answered true for every one
+		// of these. It is not the security gate, but a classifier that is wrong
+		// for a whole family of paths invites being mistaken for one.
+		for (const pathname of [
+			'/apps/keepiq/publications/share/link/tok',
+			'/index.php/apps/keepiq/publications',
+			'/apps/keepiq/publicfoo',
+			'/apps/keepiq/secrets/public',
+		]) {
+			expect(isPublicSurface({ pathname, hash: '' }), pathname).toBe(false)
+		}
+	})
+
+	it('is not fooled by another app whose id starts with this one', () => {
+		for (const pathname of [
+			'/apps/keepiq-old/public/share/link/tok',
+			'/index.php/apps/keepiqfoo/send/tok',
+		]) {
+			expect(isPublicSurface({ pathname, hash: '' }), pathname).toBe(false)
+		}
+	})
+
+	it('still works when Nextcloud is served from a sub-directory', () => {
+		// The app segment is located, not anchored, so a webroot install keeps
+		// resolving — the boundary check must not cost that.
+		for (const pathname of [
+			'/nextcloud/index.php/apps/keepiq/public',
+			'/nextcloud/apps/keepiq/public/share/link/tok',
+			'/nextcloud/index.php/apps/keepiq/send/tok',
+		]) {
+			expect(isPublicSurface({ pathname, hash: '' }), pathname).toBe(true)
+		}
 	})
 
 	it('answers without a resolved route, which is the whole point', () => {

@@ -16,21 +16,21 @@
  * @spec openspec/changes/restore-suite-migration-loop/specs/encryption-suites/spec.md#requirement-re-encrypted-ciphertext-is-verified-before-the-original-is-discarded
  */
 
-import { describe, it, expect, beforeAll } from 'vitest'
-import { privateDecrypt, constants, createPrivateKey } from 'node:crypto'
+import { constants, createPrivateKey, privateDecrypt } from 'node:crypto'
+import { beforeAll, describe, expect, it } from 'vitest'
+import { rsaDecrypt, rsaEncrypt } from '../../src/crypto/rsa.js'
 import {
+	migrateRecord,
 	MIGRATION_STORES,
+	reEncryptAttachmentGrant,
+	reEncryptSecretFields,
 	RoundTripMismatchError,
 	verifiedReEncrypt,
-	reEncryptSecretFields,
-	reEncryptAttachmentGrant,
-	migrateRecord,
 } from '../../src/migration/pipeline.js'
-import { rsaEncrypt, rsaDecrypt } from '../../src/crypto/rsa.js'
 import {
-	sharedKeyPair,
-	secondaryKeyPair,
 	RSA4096_SECONDARY_PRIVATE_KEY_PKCS8_PEM,
+	secondaryKeyPair,
+	sharedKeyPair,
 } from './fixtures/rsa-fixtures.js'
 
 const RSA_BLOCK_SIZE = 512

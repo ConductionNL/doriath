@@ -19,15 +19,14 @@
  * @spec openspec/changes/secret-export-gdpr/specs/gdpr-compliance/spec.md
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-
-import ExportDialog from '../../src/dialogs/ExportDialog.vue'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import AccountDeletionDialog from '../../src/dialogs/AccountDeletionDialog.vue'
+import ExportDialog from '../../src/dialogs/ExportDialog.vue'
+import * as reauth from '../../src/crypto/reauth.js'
 import { useExportStore } from '../../src/store/modules/export.js'
 import { useSessionStore } from '../../src/store/modules/session.js'
-import * as reauth from '../../src/crypto/reauth.js'
 
 const ncStubs = {
 	NcDialog: {

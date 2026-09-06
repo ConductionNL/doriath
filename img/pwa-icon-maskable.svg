@@ -7,6 +7,7 @@
        viewBox scaled ~10.6x and translated to centre. -->
   <g transform="translate(128,128) scale(10.6667)" fill="#fff">
     <rect x="5" y="11" width="14" height="10" rx="2"/>
-    <path fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" d="M8,11V7a4,4,0,0,1,8,0v4"/>
+    <!-- Shackle as a filled outline (1.5 units thick) so stroke-less rasterizers draw it too. -->
+    <path fill-rule="evenodd" d="M12 2.25A4.75 4.75 0 0 0 7.25 7v4h1.5V7a3.25 3.25 0 0 1 6.5 0v4h1.5V7A4.75 4.75 0 0 0 12 2.25Z"/>
   </g>
 </svg>

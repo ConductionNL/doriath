@@ -10,10 +10,12 @@
  * session without repeating the login flow.
  */
 
-import { chromium, request, type FullConfig } from '@playwright/test'
-import * as path from 'path'
+import type { FullConfig } from '@playwright/test'
+
+import { chromium, request } from '@playwright/test'
 import * as fs from 'fs'
-import { resolveBaseUrl } from './base-url'
+import * as path from 'path'
+import { resolveBaseUrl } from './base-url.ts'
 
 const AUTH_DIR = path.resolve(__dirname, '.auth')
 const STORAGE_STATE = path.join(AUTH_DIR, 'admin.json')
@@ -154,8 +156,45 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
 		await page.evaluate(() => {
 			try {
 				window.localStorage.setItem('cn-walkthrough-seen:keepiq', '999.0.0')
-			} catch (e) {
+			} catch {
 				// localStorage unavailable — specs fall back to dismissing by hand.
+			}
+		})
+	} catch {
+		// Never fail setup over an optional convenience.
+	}
+
+	/*
+	 * Settle the support note the same way, and for a harder reason: it is not
+	 * a convenience, it is a mask.
+	 *
+	 * `CnAppRoot` mounts `CnSupportDialog` on first open — `supportDialog`
+	 * defaults to true — and the dialog is a real `aria-modal` overlay. It does
+	 * not merely cover the page, it INTERCEPTS POINTER EVENTS: every click in
+	 * the app lands on `cn-support-dialog__paragraph` instead of its target,
+	 * and the failure names that paragraph rather than anything the spec is
+	 * about. Five app-chrome specs have died in their own `beforeEach` on this
+	 * since it shipped, all of them timing out on a button that was visible,
+	 * enabled and stable the whole time.
+	 *
+	 * Settled ONCE here rather than per spec, because the marker is per USER:
+	 * dismissing it inside a spec makes the suite order-dependent, with
+	 * whichever spec runs first wearing the dialog and the rest inheriting a
+	 * dismissed one.
+	 *
+	 * localStorage only, unlike some apps in the fleet. `useSupportDialog`
+	 * reads the app's `/api/preferences/support-dialog-seen` first and falls
+	 * back to `cn-support-dialog-shown:<appId>`; keepiq ships no such endpoint,
+	 * so the local key IS the mechanism here, not a belt-and-braces second
+	 * copy. The appId is the one App.vue passes to CnAppRoot.
+	 */
+	try {
+		await page.evaluate(() => {
+			try {
+				window.localStorage.setItem('cn-support-dialog-shown:keepiq', '1')
+			} catch {
+				// A browser with site data blocked. Specs then hit the mask and
+				// say so, which is better than passing for the wrong reason.
 			}
 		})
 	} catch {

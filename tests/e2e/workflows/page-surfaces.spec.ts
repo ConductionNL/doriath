@@ -1,3 +1,5 @@
+import type { Page } from '@playwright/test'
+
 /*
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -44,15 +46,15 @@
  *
  * ROUTING NOTE
  * ------------
- * The router is in hash mode and the vault's private key lives only in memory,
- * so a full `page.goto()` to an in-app route reloads the SPA, discards the
- * CryptoKey and lands on the lock gate. Authenticated pages are reached with
- * `gotoVaultRoute()` (an in-place `location.hash` change) after one
- * `unlockVault()`. The three public recipient routes are exempt from the lock
- * guard (`PUBLIC_ROUTE_NAMES` in `src/App.vue`) and are reached with `goto`.
+ * The vault's private key lives only in memory, so a full `page.goto()` to an
+ * in-app route reloads the SPA, discards the CryptoKey and lands on the lock
+ * gate. Authenticated pages are reached with `gotoVaultRoute()` (an in-place
+ * router navigation) after one `unlockVault()`. The three public recipient
+ * routes are exempt from the lock guard (`PUBLIC_ROUTE_NAMES` in `src/App.vue`)
+ * and are reached with `goto`.
  */
-import { test, expect, type Page } from '@playwright/test'
-import { APP_BASE, gotoVaultRoute, unlockVault } from './_workflow-helpers'
+import { expect, test } from '@playwright/test'
+import { APP_BASE, gotoVaultRoute, unlockVault } from './_workflow-helpers.ts'
 
 /** A placeholder ciphertext blob. The server stores it opaquely, never decrypts. */
 const OPAQUE = 'ZTJlLXBhZ2Utc3VyZmFjZS1wbGFjZWhvbGRlcg=='
@@ -92,7 +94,7 @@ async function api(
 				body: body ? JSON.stringify(body) : undefined,
 			})
 			const text = await res.text()
-			let parsed: any = null
+			let parsed: any
 			try {
 				parsed = JSON.parse(text)
 			} catch {
@@ -399,7 +401,7 @@ test.describe('Routed page surfaces — public recipient routes', () => {
 			pending,
 			'no pending secret request — the dev seed is missing',
 		).toBeTruthy()
-		await page.goto(`${APP_BASE}/#/share/request/${pending.token}`, {
+		await page.goto(`${APP_BASE}/share/request/${pending.token}`, {
 			waitUntil: 'domcontentloaded',
 		})
 		await expect(
@@ -448,7 +450,7 @@ test.describe('Routed page surfaces — public recipient routes', () => {
 		).toBeLessThan(300)
 		const token = created.json.token ?? created.json.data?.token
 		expect(token, 'the created link share carries no token').toBeTruthy()
-		await page.goto(`${APP_BASE}/#/share/link/${token}`, {
+		await page.goto(`${APP_BASE}/share/link/${token}`, {
 			waitUntil: 'domcontentloaded',
 		})
 		await expect(page.locator('[data-testid="link-share-access"]')).toBeVisible({
@@ -487,7 +489,7 @@ test.describe('Routed page surfaces — public recipient routes', () => {
 		).toBeLessThan(300)
 		const token = created.json.token ?? created.json.data?.token
 		expect(token, 'the created ephemeral send carries no token').toBeTruthy()
-		await page.goto(`${APP_BASE}/#/send/${token}`, {
+		await page.goto(`${APP_BASE}/send/${token}`, {
 			waitUntil: 'domcontentloaded',
 		})
 		await expect(page.locator('[data-testid="send-access-page"]')).toBeVisible({

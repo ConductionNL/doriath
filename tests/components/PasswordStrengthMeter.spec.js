@@ -18,8 +18,8 @@
  * @spec openspec/specs/org-password-policies/spec.md
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import zxcvbn from 'zxcvbn'
 
 const fetchPolicy = vi.fn()

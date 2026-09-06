@@ -124,12 +124,14 @@
 				:disabled="saving"
 				@update:members="additionalFields = $event" />
 
-			<NcSelect
+			<!-- The shared destination picker (no "Vault root" option, by
+			     design): a secret always lives in a vault, so creating one
+			     at the root cannot be offered. Replaces a local NcSelect
+			     that still listed the root. -->
+			<DestinationSelect
 				v-model="selectedFolderId"
-				:options="folderOptions"
-				:inputLabel="t('keepiq', 'Folder')"
-				:reduce="(opt) => opt.value"
-				:clearable="false" />
+				mode="folders"
+				:label="t('keepiq', 'Folder')" />
 
 			<NcNoteCard
 				v-if="!policyVerdict.compliant"
@@ -167,6 +169,7 @@ import {
 import Dice5 from 'vue-material-design-icons/Dice5.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import AdditionalFieldsEditor from '../components/AdditionalFieldsEditor.vue'
+import DestinationSelect from '../components/DestinationSelect.vue'
 import KeyGeneratorModal from './KeyGeneratorModal.vue'
 import {
 	CARD_TYPE_NAME,
@@ -181,6 +184,7 @@ import { useSecretStore } from '../store/modules/secret.js'
 import { useSecretTypeStore } from '../store/modules/secretType.js'
 import { useSessionStore } from '../store/modules/session.js'
 import { membersToObject } from '../utils/additionalFields.js'
+import { secretTypeLabel } from '../utils/secretTypes.js'
 
 /**
  * Create a secret. The value (and optional login) are RSA-encrypted by the
@@ -192,6 +196,7 @@ export default {
 
 	components: {
 		AdditionalFieldsEditor,
+		DestinationSelect,
 		Dice5,
 		KeyGeneratorModal,
 		NcButton,
@@ -250,29 +255,17 @@ export default {
 			return useSessionStore().isLocked
 		},
 
+		/**
+		 * The seeded secret types as select options, labels translated.
+		 *
+		 * @return {Array<{value: string, label: string}>}
+		 * @spec openspec/specs/secrets/spec.md#requirement-secret-types
+		 */
 		typeOptions() {
 			return useSecretTypeStore().types.map((type) => ({
 				value: type.id,
-				label: type.label || type.name,
+				label: secretTypeLabel(type),
 			}))
-		},
-
-		/**
-		 * The folder picker options: the vault root plus every folder the
-		 * user owns.
-		 *
-		 * @return {Array<{value: string|null, label: string}>}
-		 * @spec openspec/specs/secrets-write-ui/spec.md#requirement-create-a-secret-from-the-ui
-		 * @spec openspec/specs/secrets/spec.md#requirement-folder-management
-		 */
-		folderOptions() {
-			const roots = [{ value: null, label: t('keepiq', 'Vault root') }]
-			return roots.concat(
-				useFolderStore().folders.map((folder) => ({
-					value: folder.id,
-					label: folder.name,
-				})),
-			)
 		},
 
 		/**
@@ -333,8 +326,19 @@ export default {
 			return evaluateScore(this.policy, this.selectedTypeName, this.value)
 		},
 
+		/**
+		 * Whether Create may run: not busy, named, a folder chosen (secrets
+		 * cannot live at the vault root), and the type's own required value
+		 * present and policy-compliant.
+		 *
+		 * @return {boolean}
+		 * @spec exclude Form-enablement guard; no domain behaviour.
+		 */
 		canSubmit() {
 			if (this.saving || this.locked || this.name.trim() === '') {
+				return false
+			}
+			if (!this.selectedFolderId) {
 				return false
 			}
 			if (this.isCard) {

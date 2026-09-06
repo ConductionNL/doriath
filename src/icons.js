@@ -17,6 +17,7 @@ import ApplicationOutline from 'vue-material-design-icons/ApplicationOutline.vue
 import Autorenew from 'vue-material-design-icons/Autorenew.vue'
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
 import CertificateOutline from 'vue-material-design-icons/CertificateOutline.vue'
+import ChartBoxOutline from 'vue-material-design-icons/ChartBoxOutline.vue'
 import ClipboardList from 'vue-material-design-icons/ClipboardList.vue'
 import CogOutline from 'vue-material-design-icons/CogOutline.vue'
 import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.vue'
@@ -37,6 +38,7 @@ export default {
 	Autorenew,
 	BookOpenVariantOutline,
 	CertificateOutline,
+	ChartBoxOutline,
 	ClipboardList,
 	CogOutline,
 	FileDocumentOutline,

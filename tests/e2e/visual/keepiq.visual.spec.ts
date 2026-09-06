@@ -11,12 +11,12 @@
  * See _visual-helpers.ts for the platform-rendering caveat.
  */
 import { test } from '@playwright/test'
-import { shootSurface } from './_visual-helpers'
+import { shootSurface } from './_visual-helpers.ts'
 
 const APP = '/index.php/apps/keepiq'
 
 test.describe('Keepiq — visual baselines', () => {
 	test('dashboard', async ({ page }) => {
-		await shootSurface(page, `${APP}/#/`, 'dashboard.png')
+		await shootSurface(page, `${APP}/`, 'dashboard.png')
 	})
 })

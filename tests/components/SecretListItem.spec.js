@@ -27,10 +27,9 @@
  * @spec openspec/changes/keyboard-accessible-secret-rows/tasks.md#2.3
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import SecretListItem from '../../src/components/SecretListItem.vue'
 import { useSecretStore } from '../../src/store/modules/secret.js'
 import { useSecretTypeStore } from '../../src/store/modules/secretType.js'
@@ -65,6 +64,28 @@ describe('SecretListItem', () => {
 
 		expect(wrapper.text()).toContain('GitHub PAT')
 		expect(wrapper.text()).toContain('https://github.com')
+	})
+
+	// Cross-vault hosts (the All-secrets root) pass `vault` so the row can
+	// say where its secret lives (2026-09-03, Proton pattern); without the
+	// prop — inside a vault — no dot renders.
+	it('renders the vault dot only when a vault is passed', () => {
+		const secret = { id: 's-7', name: 'AWS', url: null, typeId: 'type-login' }
+
+		const bare = mount(SecretListItem, { propsData: { secret } })
+		expect(bare.find('[data-testid="secret-vault-dot-s-7"]').exists()).toBe(
+			false,
+		)
+
+		const withVault = mount(SecretListItem, {
+			propsData: {
+				secret,
+				vault: { id: 'v-1', name: 'Keepiq' },
+			},
+		})
+		const dot = withVault.find('[data-testid="secret-vault-dot-s-7"]')
+		expect(dot.exists()).toBe(true)
+		expect(dot.attributes('title')).toBe('Keepiq')
 	})
 
 	it('emits `open` with the secret id on row click', async () => {

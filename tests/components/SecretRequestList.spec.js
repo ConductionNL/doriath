@@ -106,8 +106,13 @@ describe('SecretRequestList', () => {
 		await wrapper
 			.find('[data-testid="secret-request-row-revoke"]')
 			.trigger('click')
+		// `flush()` is a SINGLE macrotask tick, and the submit path awaits an
+		// async chain before it posts. One tick is not guaranteed to drain it,
+		// so this asserted on a call that had not happened yet and failed about
+		// once in twenty full-suite runs while passing every time in isolation.
+		// waitFor retries until the call lands, and still fails if it never does.
 		await flush()
-		expect(del).toHaveBeenCalled()
+		await vi.waitFor(() => expect(del).toHaveBeenCalled())
 	})
 	it('copies the fill link for a pending request', async () => {
 		const writeText = vi.fn().mockResolvedValue(undefined)
@@ -136,7 +141,7 @@ describe('SecretRequestList', () => {
 		// The anonymous shell form — the one a recipient without an account can open.
 		expect(writeText).toHaveBeenCalledTimes(1)
 		const copied = writeText.mock.calls[0][0]
-		expect(copied).toContain('/apps/keepiq/public#/share/request/')
+		expect(copied).toContain('/apps/keepiq/public/share/request/')
 		expect(copied).toContain('aaaaaaaabbbbbbbbccccccccdddddddd')
 		expect(copied).not.toContain('/api/v1/public/')
 	})

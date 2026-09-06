@@ -16,7 +16,6 @@
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-
 import SecretCreateDialog from '../../src/dialogs/SecretCreateDialog.vue'
 import { useFolderStore } from '../../src/store/modules/folder.js'
 import { useSecretStore } from '../../src/store/modules/secret.js'
@@ -54,8 +53,14 @@ const stubs = {
 	KeyGeneratorModal: { props: ['open'], template: '<div />' },
 }
 
-const mountDialog = async () => {
-	const wrapper = mount(SecretCreateDialog, { propsData: {}, global: { stubs } })
+async function mountDialog() {
+	const wrapper = mount(SecretCreateDialog, {
+		// A folder is required since the picker lost its "Vault root" option
+		// (secrets cannot live at the root). These scenarios are about the
+		// additional fields, so any folder will do.
+		propsData: { folderId: 'folder-1' },
+		global: { stubs },
+	})
 	await wrapper.vm.$nextTick()
 
 	return wrapper

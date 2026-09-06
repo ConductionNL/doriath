@@ -36,13 +36,13 @@
  * @spec openspec/changes/implement-secret-requests/tasks.md#task-13.5
  */
 
-import { describe, it, expect, beforeAll } from 'vitest'
 import {
-	privateDecrypt,
 	constants,
 	createPrivateKey,
 	generateKeyPairSync,
+	privateDecrypt,
 } from 'node:crypto'
+import { beforeAll, describe, expect, it } from 'vitest'
 import { importPublicKey, rsaEncrypt } from '../../src/crypto/rsa.js'
 
 const RSA_BLOCK_SIZE = 512

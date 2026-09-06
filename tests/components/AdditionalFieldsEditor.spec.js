@@ -15,7 +15,6 @@
 
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
-
 import AdditionalFieldsEditor from '../../src/components/AdditionalFieldsEditor.vue'
 
 const stubs = {
@@ -32,11 +31,12 @@ const stubs = {
 	},
 }
 
-const mountEditor = (members = []) =>
-	mount(AdditionalFieldsEditor, {
+function mountEditor(members = []) {
+	return mount(AdditionalFieldsEditor, {
 		propsData: { members },
 		global: { stubs },
 	})
+}
 
 describe('AdditionalFieldsEditor', () => {
 	it('says there are none rather than showing an empty list', () => {

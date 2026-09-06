@@ -26,10 +26,9 @@
  * @spec openspec/changes/implement-link-sharing/tasks.md#13.2
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { setActivePinia, createPinia } from 'pinia'
 import axios from '@nextcloud/axios'
-
+import { createPinia, setActivePinia } from 'pinia'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useLinkShareStore } from '../../src/store/modules/linkShare.js'
 
 /**

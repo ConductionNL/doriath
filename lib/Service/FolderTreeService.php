@@ -66,6 +66,8 @@ class FolderTreeService {
 	 * @param string $name The folder name (no slashes)
 	 * @param string|null $parentId The parent folder ID (null = root)
 	 * @param string $userId The owning Nextcloud user ID
+	 * @param string|null $customIcon Optional custom icon key (validated by FolderService)
+	 * @param string|null $customColor Optional custom color key (validated by FolderService)
 	 *
 	 * @return Folder
 	 *
@@ -76,7 +78,13 @@ class FolderTreeService {
 	 *
 	 * @spec openspec/specs/secrets/spec.md#requirement-folder-management
 	 */
-	public function create(string $name, ?string $parentId, string $userId): Folder {
+	public function create(
+		string $name,
+		?string $parentId,
+		string $userId,
+		?string $customIcon = null,
+		?string $customColor = null,
+	): Folder {
 		$name = trim($name);
 		if ($name === '') {
 			throw new InvalidArgumentException('Folder name is required');
@@ -109,6 +117,8 @@ class FolderTreeService {
 		$folder->setParentId($parentId);
 		$folder->setOwnerType('user');
 		$folder->setOwnerId($userId);
+		$folder->setCustomIcon($customIcon);
+		$folder->setCustomColor($customColor);
 		$folder->setCreatedAt($now);
 		$folder->setUpdatedAt($now);
 

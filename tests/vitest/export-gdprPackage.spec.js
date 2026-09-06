@@ -12,7 +12,7 @@
  * @spec openspec/changes/secret-export-gdpr/specs/gdpr-compliance/spec.md
  */
 
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
 	assembleGdprPackage,
 	GDPR_PACKAGE_FORMAT,

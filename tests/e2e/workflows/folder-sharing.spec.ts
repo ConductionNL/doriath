@@ -13,9 +13,10 @@
  *   - Folder create: SecretList.vue offers a "New folder" affordance that opens
  *     FolderCreateDialog (src/dialogs/), wired to folderStore.createFolder.
  *     POST /api/v1/folders persists owner_type cleanly.
- *   - Move: SecretDetail.vue offers a "Move" affordance (SecretMoveDialog) that
- *     re-parents a secret via secret.updateSecret({ folderId }).
- *   - Share: SecretDetail.vue offers a "Share" affordance (SecretShareDialog)
+ *   - Move: the detail sidebar's "Secret actions" menu offers a "Move" entry
+ *     (SecretMoveDialog) that re-parents a secret via
+ *     secret.updateSecret({ folderId }).
+ *   - Share: the detail sidebar offers an icon-only "Share" button (SecretShareDialog)
  *     that creates a password-protected public link via linkShare.createLinkShare
  *     (Argon2id + AES-GCM snapshot, client-side) and reveals the link + password
  *     once. The token resolves via the public two-phase endpoint.
@@ -38,13 +39,14 @@
  * were credited to zero scenarios. They are anchored per-test below, against the
  * `secrets-write-ui` scenarios they actually drive.
  */
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import {
 	clickOverflowAction,
 	gotoLockSettled,
+	gotoVaultRoute,
 	openVault,
 	unlockVault,
-} from './_workflow-helpers'
+} from './_workflow-helpers.ts'
 
 const REQ_TOKEN = `(() => {
 	const head = document.querySelector('head[data-requesttoken]');
@@ -166,8 +168,8 @@ test.describe('Workflow: folders + sharing — folders/spec.md', () => {
 		await unlockVault(page)
 		await openVault(page)
 
-		// The create affordance lives in the toolbar's "More actions" overflow
-		// (restyle Stage 5); at the vault root its label is "New vault". The
+		// The create affordance lives in the actions bar's "Actions" overflow
+		// (restyle Stage 8); at the vault root its label is "New vault". The
 		// helper clicks the NcActionButton's INNER button — the testid sits on
 		// the presentational <li>, whose click fires nothing.
 		await clickOverflowAction(page, 'open-create-folder')
@@ -208,9 +210,9 @@ test.describe('Workflow: folders + sharing — folders/spec.md', () => {
 		)
 		expect(folder, 'folder must be persisted').toBeTruthy()
 
-		// The in-page folder pane is gone (restyle Stage 6): at the vault root
-		// the new vault appears as a SUBFOLDER ROW in the list itself.
-		await expect(page.getByTestId(`folder-row-${folder.id}`)).toBeVisible({
+		// The root shows no vault rows (2026-09-03): the nav's folder tree is
+		// the one place a new vault appears.
+		await expect(page.getByTestId(`nav-folder-${folder.id}`)).toBeVisible({
 			timeout: 10_000,
 		})
 
@@ -272,9 +274,80 @@ test.describe('Workflow: folders + sharing — folders/spec.md', () => {
 		const secretName = await openFirstSecret(page)
 		expect(secretName).toBeTruthy()
 
-		await nativeClickByText(page, '.secret-detail__actions button', 'Move')
+		// Restyle Stage-8 polish: Move lives in the sidebar's "Secret
+		// actions" ("…") menu. Native clicks — the themed buttons swallow
+		// Playwright's synthetic click, same as elsewhere in this file.
+		await page
+			.getByRole('button', { name: /Secret actions/i })
+			.evaluate((el: HTMLElement) => el.click())
+		// TARGET THE MENUITEM, NOT A NODE GUESSED FROM THE MARKUP.
+		//
+		// This used to descend from `data-testid=secret-detail-move` to an
+		// inner <button> and dispatch `el.click()`, on the assumption that
+		// the testid lands on NcActionButton's <li> root while the handler
+		// sits on the button. That assumption is what broke: after the
+		// Stage-8 restyle the synthetic dispatch stopped reaching the
+		// handler, and the failure was invisible — the trace shows the
+		// testid RESOLVING in 0.1s and then `.move-form` timing out for 10s,
+		// with the menu still `[expanded]` and `menuitem "Move"` present in
+		// the snapshot. A click that lands on the wrong node looks exactly
+		// like a dialog that refuses to open.
+		//
+		// The accessibility tree exposes this as `menuitem "Move"` whatever
+		// element NcActionButton happens to render, so ask for that and let
+		// Playwright's own click do the actionability checks. It is also a
+		// real click rather than a dispatched event, which is what a user
+		// performs.
+		await page.getByRole('menuitem', { name: 'Move' }).click()
 		await expect(page.locator('.move-form')).toBeVisible({ timeout: 10_000 })
 		await page.locator('.move-form .vs__dropdown-toggle').click()
+
+		// Is the option list actually REACHABLE, not merely present? This block
+		// exists because the clicks below kept passing while a human could not
+		// use the control at all: with the teleport turned off, the open list
+		// was clipped by `.dialog__content` (52px tall, `overflow: auto`) to
+		// roughly 9 visible pixels of 350. Playwright scrolls an element into
+		// view before clicking, so it drove the select happily — the failure
+		// was invisible to exactly the test that covered the flow.
+		//
+		// The list teleports again now, so it floats over the dialog and the
+		// question is whether it is on screen rather than whether some scroll
+		// box contains it. Measure against the VIEWPORT and against any
+		// clipping ancestor: a teleported list has none, an inline one is cut
+		// down to the sliver this test exists to catch.
+		const listVisibility = await page.evaluate(() => {
+			const menu = document.querySelector('.vs__dropdown-menu')
+			if (!menu) return null
+			const m = menu.getBoundingClientRect()
+			let top = Math.max(m.top, 0)
+			let bottom = Math.min(m.bottom, window.innerHeight)
+			for (
+				let node = menu.parentElement;
+				node && node !== document.body;
+				node = node.parentElement
+			) {
+				const style = getComputedStyle(node)
+				if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
+					const box = node.getBoundingClientRect()
+					top = Math.max(top, box.top)
+					bottom = Math.min(bottom, box.bottom)
+				}
+			}
+			return {
+				menuHeight: m.height,
+				visibleHeight: Math.max(0, bottom - top),
+			}
+		})
+		expect(
+			listVisibility,
+			'the destination-folder list should be rendered',
+		).not.toBeNull()
+		expect(
+			listVisibility!.visibleHeight,
+			`destination-folder list clipped: only ${listVisibility!.visibleHeight}px `
+				+ `of ${listVisibility!.menuHeight}px is inside the dialog's visible area`,
+		).toBeGreaterThan(120)
+
 		await page
 			.locator('.vs__dropdown-menu li', { hasText: FOLDER })
 			.first()
@@ -309,10 +382,7 @@ test.describe('Workflow: folders + sharing — folders/spec.md', () => {
 		// write; this is the read, and they are not the same claim — the list
 		// could filter on something else entirely and the row would vanish.
 		// Navigate in place (a reload would drop the in-memory key).
-		await page.evaluate((id) => {
-			window.location.hash = `#/folders/${id}`
-		}, folder.id)
-		await page.waitForLoadState('domcontentloaded')
+		await gotoVaultRoute(page, `folders/${folder.id}`)
 		await expect(
 			page.locator('.secret-list-item', { hasText: secretName }),
 			`"${secretName}" is not listed under the folder it was moved into`,
@@ -355,7 +425,9 @@ test.describe('Workflow: folders + sharing — folders/spec.md', () => {
 		await openVault(page)
 		await openFirstSecret(page)
 
-		await nativeClickByText(page, '.secret-detail__actions button', 'Share')
+		await page
+			.getByTestId('secret-detail-share')
+			.evaluate((el: HTMLElement) => el.click())
 		await expect(page.locator('.share-dialog')).toBeVisible({ timeout: 10_000 })
 		await nativeClickByText(page, 'body button', 'Create link')
 
@@ -475,7 +547,9 @@ test.describe('Workflow: folders + sharing — folders/spec.md', () => {
 		await unlockVault(page)
 		await openVault(page)
 		await openFirstSecret(page)
-		await nativeClickByText(page, '.secret-detail__actions button', 'Share')
+		await page
+			.getByTestId('secret-detail-share')
+			.evaluate((el: HTMLElement) => el.click())
 		await expect(page.locator('.share-dialog')).toBeVisible({ timeout: 10_000 })
 		const userBtn = page.locator('.share-dialog__user button')
 		await expect(userBtn).toBeVisible()
@@ -567,10 +641,16 @@ test.describe('Workflow: folders + sharing — folders/spec.md', () => {
 		await unlockVault(page)
 		await openVault(page)
 
-		// Root: the new vault appears as a subfolder row; descend into it.
-		const parentRow = page.getByTestId(`folder-row-${ids.parentId}`)
-		await expect(parentRow).toBeVisible({ timeout: 20_000 })
-		await parentRow.evaluate((el: HTMLElement) => el.click())
+		// The root shows no vault rows (2026-09-03): descend into the vault
+		// through the nav's folder tree, like a user would. The testid sits
+		// on NcAppNavigationItem's <li>; the router link is the entry-link
+		// anchor inside — `.first()` skips the expanded children's links.
+		const parentNavItem = page.getByTestId(`nav-folder-${ids.parentId}`)
+		await expect(parentNavItem).toBeVisible({ timeout: 20_000 })
+		await parentNavItem
+			.locator('a.app-navigation-entry-link')
+			.first()
+			.evaluate((el: HTMLElement) => el.click())
 
 		// Inside the vault: breadcrumbs render, the nested folder is a row.
 		await expect(page.getByTestId('cn-breadcrumbs')).toBeVisible({

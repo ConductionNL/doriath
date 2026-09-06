@@ -20,10 +20,9 @@
  * @spec openspec/changes/implement-secret-requests/tasks.md#13.3
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import SecretRequestCreateDialog from '../../src/dialogs/SecretRequestCreateDialog.vue'
 import { useSecretRequestStore } from '../../src/store/modules/secretRequest.js'
 
@@ -98,12 +97,15 @@ describe('SecretRequestCreateDialog', () => {
 		expect(payload.expiresAt.endsWith('Z')).toBe(true)
 
 		// fillUrl is populated from the response token.
-		// The anonymous shell, NOT /apps/keepiq/share/request/<token>: the
-		// recipient has no account, and that form answers 401 for them.
+		// The anonymous shell as a PATH, NOT /apps/keepiq/share/request/<token>
+		// (the recipient has no account, and that form answers 401 for them)
+		// and NOT the retired '#/share/request/' hash form (the
+		// createWebHistory router never reads the fragment).
 		expect(wrapper.vm.fillUrl).toContain(
-			'/apps/keepiq/public#/share/request/tok-abc',
+			'/apps/keepiq/public/share/request/tok-abc',
 		)
-		expect(wrapper.vm.fillUrl).not.toContain('/apps/keepiq/share/request/')
+		expect(wrapper.vm.fillUrl).not.toContain('#/')
+		expect(wrapper.vm.fillUrl).not.toMatch(/apps\/keepiq\/share\/request\//)
 
 		// `created` event is emitted with the store response.
 		const events = wrapper.emitted('created')
@@ -145,7 +147,7 @@ describe('SecretRequestCreateDialog', () => {
 			null, // no expiry → null (not empty string)
 		)
 		expect(wrapper.vm.fillUrl).toContain(
-			'/apps/keepiq/public#/share/request/tok-rerequest',
+			'/apps/keepiq/public/share/request/tok-rerequest',
 		)
 	})
 
@@ -158,11 +160,11 @@ describe('SecretRequestCreateDialog', () => {
 			global: { stubs: ncStubs },
 		})
 
-		wrapper.vm.fillUrl = 'http://nc.test/apps/keepiq/public#/share/request/tok-1'
+		wrapper.vm.fillUrl = 'http://nc.test/apps/keepiq/public/share/request/tok-1'
 		await wrapper.vm.copyUrl()
 
 		expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-			'http://nc.test/apps/keepiq/public#/share/request/tok-1',
+			'http://nc.test/apps/keepiq/public/share/request/tok-1',
 		)
 		expect(wrapper.vm.copied).toBe(true)
 	})

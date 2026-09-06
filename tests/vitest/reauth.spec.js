@@ -15,7 +15,7 @@
  * @spec openspec/changes/secret-export-gdpr/specs/secret-export/spec.md
  */
 
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { encryptPrivateKey } from '../../src/crypto/aes.js'
 import { verifyMasterPassword } from '../../src/crypto/reauth.js'
 

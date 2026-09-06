@@ -18,9 +18,8 @@
  * @spec openspec/changes/implement-secrets/tasks.md#13.3
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
-
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import PasswordField from '../../src/components/PasswordField.vue'
 
 describe('PasswordField', () => {

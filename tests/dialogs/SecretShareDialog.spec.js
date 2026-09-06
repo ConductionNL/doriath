@@ -26,11 +26,10 @@
  * @spec openspec/specs/link-sharing/spec.md#requirement-create-link-share
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import axios from '@nextcloud/axios'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-import axios from '@nextcloud/axios'
-
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import SecretShareDialog from '../../src/dialogs/SecretShareDialog.vue'
 import { useLinkShareStore } from '../../src/store/modules/linkShare.js'
 import { useSecretStore } from '../../src/store/modules/secret.js'

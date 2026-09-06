@@ -6,16 +6,17 @@
  * so the attestation the extension emits is standards-correct, not merely
  * self-consistent.
  */
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
 	cborEncode,
 	rawEcdsaToDer,
 } from '../../browser-extension/src/passkey/cbor.js'
 
-const hex = (u8) =>
-	Array.from(u8)
+function hex(u8) {
+	return Array.from(u8)
 		.map((b) => b.toString(16).padStart(2, '0'))
 		.join('')
+}
 
 describe('CBOR encoder (RFC 8949 vectors)', () => {
 	it('encodes small unsigned ints', () => {
@@ -47,7 +48,7 @@ describe('CBOR encoder (RFC 8949 vectors)', () => {
 		const m = new Map()
 		m.set(1, 2)
 		m.set(3, -7)
-		expect(hex(cborEncode(m))).toBe('a2010203' + '26')
+		expect(hex(cborEncode(m))).toBe('a201020326')
 	})
 
 	it('encodes the attestation object skeleton (fmt none)', () => {

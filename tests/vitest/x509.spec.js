@@ -5,7 +5,7 @@
  * Tests for the minimal client-side X.509 parser
  * (certificate-lifecycle §5.2) against a static self-signed fixture.
  */
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { parseCertificatePem } from '../../src/certificates/x509.js'
 
 // Static self-signed RSA-2048 fixture: CN=x509-fixture.doriath.test,

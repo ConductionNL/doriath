@@ -358,8 +358,12 @@ class KeepiqNotifier implements INotifier {
 			   secret deep-link would quietly stop appearing with nothing
 			   logged: exactly the silent-failure shape this app id rename
 			   was full of. */
+			/* A path, not the retired '#/secrets/' hash form — the SPA's
+			   createWebHistory router never reads the fragment. The route is
+			   gated, so the click lands on the lock screen with this path as
+			   returnUrl and resumes here after unlock. */
 			$route = $this->url->linkToRoute(Application::APP_ID . '.dashboard.page')
-				. '#/secrets/' . $secretId;
+				. 'secrets/' . $secretId;
 			$notification->setLink($this->url->getAbsoluteURL($route));
 		} catch (InvalidArgumentException) {
 			/* Deliberately swallowed: the link is optional and a notification

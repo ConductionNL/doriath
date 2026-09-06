@@ -3,8 +3,8 @@
   SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 
   Anonymous ephemeral-send access page (ephemeral-send §5.3): reads the
-  token from the route and the content key from the fragment query (or
-  prompts for the password), decrypts client-side, renders the payload
+  token from the route and the content key from the URL fragment (`#k=`,
+  or prompts for the password), decrypts client-side, renders the payload
   once with a burn notice. Exempt from the lock guard (PUBLIC_ROUTE_NAMES).
 
   @spec openspec/specs/ephemeral-send/spec.md#requirement-anonymous-recipient-access-with-no-account
@@ -112,7 +112,21 @@ export default {
 			return this.$route.params.token || ''
 		},
 
+		/**
+		 * The content key, read from the URL fragment.
+		 *
+		 * @return {string} The decoded key, or '' when the URL carries none.
+		 * @spec openspec/specs/ephemeral-send/spec.md#requirement-anonymous-recipient-access-with-no-account
+		 */
 		fragmentKey() {
+			// The content key rides in the URL fragment (`#k=<key>`), which the
+			// browser never transmits — see ephemeralSend.createSend(). The
+			// query fallback covers legacy hash links whose `?k=` sat inside
+			// the old SPA fragment and was parsed into the route query.
+			const hash = this.$route.hash || ''
+			if (hash.startsWith('#k=')) {
+				return decodeURIComponent(hash.slice('#k='.length))
+			}
 			return this.$route.query.k || ''
 		},
 	},
@@ -200,12 +214,18 @@ export default {
 
 <style scoped>
 .send-access {
+	box-sizing: border-box;
+	width: 100%;
 	max-width: 640px;
-	margin: 48px auto;
+	/* Centred by the public shell's flex wrapper (App.vue). */
+	margin: auto;
 	display: flex;
 	flex-direction: column;
 	gap: 16px;
-	padding: 0 16px;
+	padding: 32px;
+	background: var(--color-main-background, #fff);
+	border-radius: var(--border-radius-container, 16px);
+	box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2);
 }
 
 .send-access__field {

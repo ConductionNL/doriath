@@ -93,26 +93,93 @@ export function isPublicRoute(route) {
 }
 
 /**
- * Hash prefixes of the recipient-facing routes.
+ * Path prefixes of the recipient-facing routes, relative to the router base.
  *
  * Derived from the same routes as PUBLIC_ROUTE_NAMES, kept as paths because the
  * check below runs before the router has resolved a name.
  *
  * @type {string[]}
  */
+export const PUBLIC_PATH_PREFIXES = ['/share/request/', '/share/link/', '/send/']
+
+/**
+ * Hash prefixes of the same routes under the RETIRED hash-routing scheme.
+ *
+ * Links built under that scheme are still in the wild (they were mailed to
+ * recipients), and `applyHashRouteHandoff()` in the bootstrap rewrites them to
+ * the path form before the router is created. This list exists for the reads
+ * that can happen before or without that handoff — direct unit-test calls,
+ * mainly — so the classification of a legacy URL never depends on rewrite
+ * order.
+ *
+ * @type {string[]}
+ */
 export const PUBLIC_HASH_PREFIXES = ['#/share/request/', '#/share/link/', '#/send/']
 
 /**
- * Whether the CURRENT URL is an anonymous recipient surface.
+ * The app's own path segment, as it appears in every Keepiq URL.
  *
- * The route-level `isPublicRoute()` needs a resolved route, and some decisions
- * are read before the router's first navigation completes — CnAppRoot, for one,
- * reads `supportDialog` once in `setup()`. This answers the same question from
- * the URL alone, so it is correct at that moment.
+ * @type {string}
+ */
+const APP_PATH_SEGMENT = '/apps/keepiq'
+
+/**
+ * Path of the anonymous SPA shell, relative to the app's path segment.
+ *
+ * @type {string}
+ */
+const PUBLIC_SHELL_PATH = '/public'
+
+/**
+ * The part of a pathname that follows the app's own path segment.
+ *
+ * Nextcloud can be served from a sub-directory and with or without
+ * `/index.php`, so the app segment is located rather than anchored: the base
+ * may be `/apps/keepiq`, `/index.php/apps/keepiq` or
+ * `/nextcloud/index.php/apps/keepiq`. What it may NOT be is a longer segment
+ * that merely starts with the app id — the remainder has to begin at a `/`
+ * boundary (or be empty), so `/apps/keepiq-old/...` and `/apps/keepiqfoo` are
+ * not this app.
+ *
+ * @param {string} path The pathname to split.
+ * @return {string|null} The remainder, or null when the path is not this app's.
+ */
+function appRelativePath(path) {
+	const at = path.indexOf(APP_PATH_SEGMENT)
+	if (at === -1) {
+		return null
+	}
+
+	const rest = path.slice(at + APP_PATH_SEGMENT.length)
+	if (rest !== '' && rest.startsWith('/') === false) {
+		return null
+	}
+
+	return rest
+}
+
+/**
+ * Whether the CURRENT URL has the shape of an anonymous recipient surface.
+ *
+ * NOT the security gate. Access to a recipient page is authorised server-side
+ * by its own scoped token, and the locked-vault gate is the name-based
+ * `isPublicRoute()` above; this only classifies a URL so the shell can decide
+ * what chrome to render. It is loaded here for a reason `isPublicRoute()`
+ * cannot serve: that one needs a resolved route, and some decisions are read
+ * before the router's first navigation completes — CnAppRoot, for one, reads
+ * `supportDialog` once in `setup()`. This answers the same question from the
+ * URL alone, so it is correct at that moment.
  *
  * `/apps/keepiq/public` is the anonymous SPA shell, so anything served from it
- * is a recipient page by definition; the hash prefixes cover the same routes
- * when reached on the authenticated shell.
+ * is a recipient page by definition; the path prefixes cover the same routes
+ * when reached on the authenticated shell, and the legacy hash prefixes cover
+ * links built under the retired hash-routing scheme.
+ *
+ * Every comparison is boundary-aware. A substring test on
+ * `'/apps/keepiq/public'` also matched `/apps/keepiq/publications/…` and
+ * `/apps/keepiq/publicfoo` — no exploit, since this is not the gate, but a
+ * classifier whose answer is wrong for a whole family of paths invites being
+ * mistaken for one.
  *
  * @param {{pathname?: string, hash?: string}} location A Location-like object.
  * @return {boolean} True when the URL is a public recipient surface.
@@ -121,8 +188,17 @@ export const PUBLIC_HASH_PREFIXES = ['#/share/request/', '#/share/link/', '#/sen
 export function isPublicSurface(location = {}) {
 	const path = location.pathname || ''
 	const hash = location.hash || ''
+	const rest = appRelativePath(path)
 
-	if (path.includes('/apps/keepiq/public') === true) {
+	if (rest === null) {
+		return false
+	}
+
+	if (rest === PUBLIC_SHELL_PATH || rest.startsWith(`${PUBLIC_SHELL_PATH}/`)) {
+		return true
+	}
+
+	if (PUBLIC_PATH_PREFIXES.some((prefix) => rest.startsWith(prefix))) {
 		return true
 	}
 

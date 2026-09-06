@@ -164,15 +164,19 @@ export const useEphemeralSendStore = defineStore('ephemeralSend', {
 			await this.fetchSends()
 
 			// The /public shell serves the SPA as #[PublicPage] so an
-			// account-less recipient reaches the access route.
+			// account-less recipient reaches the access route. A PATH, not
+			// a hash route: the router is createWebHistory and never reads
+			// the fragment (the fragment is reserved for the key below).
 			const base =
 				window.location.origin
 				+ generateUrl('/apps/keepiq/public')
-				+ '#/send/'
+				+ '/send/'
 				+ encodeURIComponent(token)
 			// Fragment-mode: the content key NEVER reaches the server — it
-			// rides after a second '#k=' marker inside the SPA fragment.
-			return password !== '' ? base : `${base}?k=${toBase64Url(rawKey)}`
+			// rides in the URL fragment (`#k=`), which the browser does not
+			// transmit. A real `?k=` query would be sent (and logged) on
+			// every load of the link.
+			return password !== '' ? base : `${base}#k=${toBase64Url(rawKey)}`
 		},
 
 		/**

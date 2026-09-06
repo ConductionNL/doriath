@@ -4,12 +4,12 @@
  * URL/host matching over the UNENCRYPTED index fields (browser-extension-
  * autofill §4.1, task 6.2). Matching never touches ciphertext.
  */
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
 	hostOf,
-	registrableDomain,
 	matchScore,
 	matchSecrets,
+	registrableDomain,
 } from '../../browser-extension/src/lib/match.js'
 
 describe('extension host matching', () => {

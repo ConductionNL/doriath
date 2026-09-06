@@ -16,7 +16,7 @@
 				width="24"
 				height="24"
 				@error="faviconFailed = true" />
-			<component :is="iconComponent" v-else :size="24" />
+			<SecretTypeIcon v-else :typeId="secret.typeId" :size="24" />
 		</span>
 
 		<span class="secret-list-item__main">
@@ -70,6 +70,15 @@
 			</span>
 		</span>
 
+		<!-- Which vault this secret lives in — only passed by cross-vault
+		     hosts (the All-secrets root), where the row itself is the only
+		     place that can say so (2026-09-03, Proton pattern). -->
+		<VaultIndicator
+			v-if="vault"
+			class="secret-list-item__vault"
+			:vault="vault"
+			:data-testid="`secret-vault-dot-${secret.id}`" />
+
 		<span v-if="secret.blocked" class="secret-list-item__blocked">
 			<Lock :size="16" />
 			{{ blockedLabel }}
@@ -92,22 +101,13 @@
 <script>
 import AccountQuestion from 'vue-material-design-icons/AccountQuestion.vue'
 import AlertOutline from 'vue-material-design-icons/AlertOutline.vue'
-import CardAccountDetailsOutline from 'vue-material-design-icons/CardAccountDetailsOutline.vue'
-import ClockOutline from 'vue-material-design-icons/ClockOutline.vue'
-import CodeTags from 'vue-material-design-icons/CodeTags.vue'
-import Console from 'vue-material-design-icons/Console.vue'
-import CreditCardOutline from 'vue-material-design-icons/CreditCardOutline.vue'
-import Database from 'vue-material-design-icons/Database.vue'
-import Fingerprint from 'vue-material-design-icons/Fingerprint.vue'
-import Key from 'vue-material-design-icons/Key.vue'
 import Lock from 'vue-material-design-icons/Lock.vue'
-import NoteText from 'vue-material-design-icons/NoteText.vue'
-import ShieldCheck from 'vue-material-design-icons/ShieldCheck.vue'
 import CopyButton from './CopyButton.vue'
+import SecretTypeIcon from './SecretTypeIcon.vue'
 import StrengthBadge from './StrengthBadge.vue'
+import VaultIndicator from './VaultIndicator.vue'
 import { useSecretStore } from '../store/modules/secret.js'
-import { useSecretTypeStore } from '../store/modules/secretType.js'
-import { resolveFaviconUrl, typeIconName } from '../utils/favicon.js'
+import { resolveFaviconUrl } from '../utils/favicon.js'
 
 /**
  * A single secret row: favicon (or type icon), name, url, and a copy button.
@@ -120,18 +120,10 @@ export default {
 		AccountQuestion,
 		Lock,
 		AlertOutline,
-		Key,
-		CardAccountDetailsOutline,
-		ClockOutline,
-		CodeTags,
-		Console,
-		CreditCardOutline,
-		Fingerprint,
-		ShieldCheck,
-		NoteText,
-		Database,
 		CopyButton,
+		SecretTypeIcon,
 		StrengthBadge,
+		VaultIndicator,
 	},
 
 	props: {
@@ -156,6 +148,17 @@ export default {
 			type: String,
 			default: null,
 		},
+
+		/**
+		 * The root VAULT this secret lives under, or null to show no vault
+		 * indicator. Only cross-vault hosts pass it (the All-secrets root):
+		 * inside a vault the location is the page itself, and a dot on every
+		 * row would say nothing.
+		 */
+		vault: {
+			type: Object,
+			default: null,
+		},
 	},
 
 	data() {
@@ -167,12 +170,6 @@ export default {
 	computed: {
 		faviconUrl() {
 			return resolveFaviconUrl(this.secret.url)
-		},
-
-		iconComponent() {
-			const typeStore = useSecretTypeStore()
-			const type = typeStore.typesById[this.secret.typeId]
-			return typeIconName(type ? type.name : 'login')
 		},
 
 		/**

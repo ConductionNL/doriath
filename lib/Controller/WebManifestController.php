@@ -71,7 +71,9 @@ class WebManifestController extends Controller {
 	#[NoCSRFRequired]
 	#[AnonRateLimit(limit: 240, period: 60)]
 	public function manifest(): DataDisplayResponse {
-		$vaultUrl = $this->urlGenerator->linkToRouteAbsolute('keepiq.dashboard.page') . '#/secrets';
+		// A path, not the retired '#/secrets' hash form — the SPA's
+		// createWebHistory router never reads the fragment.
+		$vaultUrl = $this->urlGenerator->linkToRouteAbsolute('keepiq.dashboard.page') . 'secrets';
 		$startUrl = $this->urlGenerator->linkToRouteAbsolute('keepiq.dashboard.page');
 		$scope = $this->urlGenerator->linkToRoute('keepiq.dashboard.page');
 		$maskable = $this->urlGenerator->getAbsoluteURL($this->urlGenerator->imagePath(Application::APP_ID, 'pwa-icon-maskable.svg'));

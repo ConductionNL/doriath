@@ -32,10 +32,9 @@
  * @spec openspec/specs/encryption-suites/spec.md#requirement-revocation
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { setActivePinia, createPinia } from 'pinia'
 import axios from '@nextcloud/axios'
-
+import { createPinia, setActivePinia } from 'pinia'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useEncryptionSuiteStore } from '../../src/store/modules/encryptionSuite.js'
 
 const evict = vi.fn(async () => {})

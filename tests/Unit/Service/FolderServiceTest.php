@@ -404,6 +404,139 @@ class FolderServiceTest extends TestCase {
 	}//end testMoveDuplicateNameRejected()
 
 	/**
+	 * Creating with customization keys persists both (restyle Stage 9).
+	 *
+	 * @return void
+	 */
+	public function testCreateWithCustomization(): void {
+		$this->mapper->expects($this->once())->method('insert');
+
+		$folder = $this->service->create(
+			name: 'Work',
+			parentId: null,
+			userId: 'alice',
+			customIcon: 'briefcase',
+			customColor: 'blue',
+		);
+
+		$this->assertSame('briefcase', $folder->getCustomIcon());
+		$this->assertSame('blue', $folder->getCustomColor());
+	}//end testCreateWithCustomization()
+
+	/**
+	 * A non-key customization value is rejected on create — the columns
+	 * store catalog KEYS, never hex or free text.
+	 *
+	 * @return void
+	 */
+	public function testCreateInvalidCustomColorRejected(): void {
+		$this->mapper->expects($this->never())->method('insert');
+
+		$this->expectException(InvalidArgumentException::class);
+		$this->service->create(
+			name: 'Work',
+			parentId: null,
+			userId: 'alice',
+			customColor: '#ff0000',
+		);
+	}//end testCreateInvalidCustomColorRejected()
+
+	/**
+	 * updateAttributes sets the values present in the changes map.
+	 *
+	 * @return void
+	 */
+	public function testUpdateAttributesSetsValues(): void {
+		$this->mapper->method('findById')->willReturn($this->makeFolder());
+		$this->mapper->expects($this->once())->method('update');
+
+		$folder = $this->service->updateAttributes(
+			id: 'f-1',
+			changes: ['customIcon' => 'star', 'customColor' => 'green'],
+			userId: 'alice',
+		);
+
+		$this->assertSame('star', $folder->getCustomIcon());
+		$this->assertSame('green', $folder->getCustomColor());
+	}//end testUpdateAttributesSetsValues()
+
+	/**
+	 * A key present with an explicit null CLEARS the stored value.
+	 *
+	 * @return void
+	 */
+	public function testUpdateAttributesNullClears(): void {
+		$folder = $this->makeFolder();
+		$folder->setCustomIcon('star');
+		$folder->setCustomColor('green');
+		$this->mapper->method('findById')->willReturn($folder);
+
+		$updated = $this->service->updateAttributes(
+			id: 'f-1',
+			changes: ['customIcon' => null, 'customColor' => null],
+			userId: 'alice',
+		);
+
+		$this->assertNull($updated->getCustomIcon());
+		$this->assertNull($updated->getCustomColor());
+	}//end testUpdateAttributesNullClears()
+
+	/**
+	 * A key ABSENT from the changes map leaves its value untouched — the
+	 * distinction that keeps a color-only update from wiping the icon.
+	 *
+	 * @return void
+	 */
+	public function testUpdateAttributesAbsentKeyUntouched(): void {
+		$folder = $this->makeFolder();
+		$folder->setCustomIcon('star');
+		$this->mapper->method('findById')->willReturn($folder);
+
+		$updated = $this->service->updateAttributes(
+			id: 'f-1',
+			changes: ['customColor' => 'red'],
+			userId: 'alice',
+		);
+
+		$this->assertSame('star', $updated->getCustomIcon());
+		$this->assertSame('red', $updated->getCustomColor());
+	}//end testUpdateAttributesAbsentKeyUntouched()
+
+	/**
+	 * Only the owner may update a folder's attributes.
+	 *
+	 * @return void
+	 */
+	public function testUpdateAttributesForeignForbidden(): void {
+		$this->mapper->method('findById')->willReturn($this->makeFolder(ownerId: 'bob'));
+		$this->mapper->expects($this->never())->method('update');
+
+		$this->expectException(ForbiddenException::class);
+		$this->service->updateAttributes(
+			id: 'f-1',
+			changes: ['customColor' => 'red'],
+			userId: 'alice',
+		);
+	}//end testUpdateAttributesForeignForbidden()
+
+	/**
+	 * A malformed key (uppercase / spaces / over-long) is rejected.
+	 *
+	 * @return void
+	 */
+	public function testUpdateAttributesInvalidFormatRejected(): void {
+		$this->mapper->method('findById')->willReturn($this->makeFolder());
+		$this->mapper->expects($this->never())->method('update');
+
+		$this->expectException(InvalidArgumentException::class);
+		$this->service->updateAttributes(
+			id: 'f-1',
+			changes: ['customIcon' => 'Not A Key!'],
+			userId: 'alice',
+		);
+	}//end testUpdateAttributesInvalidFormatRejected()
+
+	/**
 	 * A kept subfolder that would collide in the destination parent is rejected.
 	 *
 	 * @return void

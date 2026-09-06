@@ -91,6 +91,13 @@ export const useAttachmentStore = defineStore('attachment', {
 		loading: false,
 		/** @type {string|null} The last error message. */
 		error: null,
+		/**
+		 * @type {number} Monotonic id of the newest list request. A response
+		 * whose id has been superseded does not write to the store — the
+		 * sidebar swaps `:id` without remounting, so a slow response for the
+		 * previous secret can otherwise land after the current one.
+		 */
+		listRequestId: 0,
 	}),
 
 	actions: {
@@ -123,6 +130,7 @@ export const useAttachmentStore = defineStore('attachment', {
 		 * @spec openspec/specs/encrypted-attachments/spec.md#requirement-single-blob-envelope-with-per-recipient-key-wrapping
 		 */
 		async fetchAttachments(secretId) {
+			const requestId = ++this.listRequestId
 			this.loading = true
 			this.error = null
 			try {
@@ -154,15 +162,22 @@ export const useAttachmentStore = defineStore('attachment', {
 						contentType: meta.contentType ?? null,
 					})
 				}
-				this.attachments = rows
+				if (requestId === this.listRequestId) {
+					this.attachments = rows
+				}
 			} catch (e) {
-				this.error =
+				const message =
 					e?.response?.data?.message
 					|| e?.message
 					|| 'Failed to load attachments'
+				if (requestId === this.listRequestId) {
+					this.error = message
+				}
 				throw e
 			} finally {
-				this.loading = false
+				if (requestId === this.listRequestId) {
+					this.loading = false
+				}
 			}
 		},
 
@@ -343,13 +358,22 @@ export const useAttachmentStore = defineStore('attachment', {
 		},
 
 		/**
-		 * Reset the store (secret detail unmount).
+		 * Reset the store (secret detail unmount, or a secret switch).
+		 *
+		 * Bumping the request id retires any list request still in flight,
+		 * so its response cannot repopulate the store after the reset. The
+		 * spinner is cleared for the same reason: without it, a reset while
+		 * a fetch was running left `loading` true with nothing to finish it.
 		 *
 		 * @return {void}
+		 * @spec exclude Store lifecycle; states no attachment behaviour of
+		 * its own.
 		 */
 		reset() {
+			this.listRequestId++
 			this.attachments = []
 			this.error = null
+			this.loading = false
 		},
 	},
 })

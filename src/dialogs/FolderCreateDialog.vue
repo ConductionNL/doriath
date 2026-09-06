@@ -7,9 +7,11 @@
 -->
 <template>
 	<!-- Level-appropriate wording (restyle terminology): a TOP-LEVEL folder
-	     is a Vault, one inside a vault is a folder. The wording follows the
-	     SELECTED parent, so switching the parent picker retitles the dialog
-	     live. -->
+	     is a Vault, one inside a vault is a folder. The LEVEL IS FIXED by
+	     the opening context (team decision): a vault is only ever created
+	     at the root — no parent picker at all — and a folder only ever
+	     inside a vault, so the picker never offers the root. The two flows
+	     can no longer morph into each other mid-dialog. -->
 	<NcDialog
 		:name="isVaultLevel ? t('keepiq', 'New vault') : t('keepiq', 'New folder')"
 		:open="open"
@@ -30,11 +32,25 @@
 				:required="true" />
 
 			<NcSelect
+				v-if="!isVaultLevel"
 				v-model="selectedParentId"
 				:options="parentOptions"
 				:reduce="(opt) => opt.value"
 				:inputLabel="t('keepiq', 'Parent folder')"
 				:clearable="false" />
+
+			<!-- Vault personalization (restyle Stage 9, Proton pattern):
+			     only TOP-LEVEL folders are Vaults and carry an icon + color;
+			     nested folders keep the plain glyph, so the picker follows
+			     the selected parent like the wording does. Unset = the Safe
+			     default. -->
+			<CnIconColorPicker
+				v-if="isVaultLevel"
+				v-model:icon="customIcon"
+				v-model:color="customColor"
+				:fallbackIcon="safeIcon"
+				:translate="translateLabel"
+				data-testid="folder-create-style-picker" />
 		</div>
 
 		<template #actions>
@@ -58,6 +74,7 @@
 </template>
 
 <script>
+import { CnIconColorPicker } from '@conduction/nextcloud-vue'
 import {
 	NcButton,
 	NcDialog,
@@ -66,6 +83,7 @@ import {
 	NcSelect,
 	NcTextField,
 } from '@nextcloud/vue'
+import { markRaw } from 'vue'
 import FolderPlus from 'vue-material-design-icons/FolderPlus.vue'
 import Safe from 'vue-material-design-icons/Safe.vue'
 import { useFolderStore } from '../store/modules/folder.js'
@@ -79,6 +97,7 @@ export default {
 	name: 'FolderCreateDialog',
 
 	components: {
+		CnIconColorPicker,
 		NcButton,
 		NcDialog,
 		NcLoadingIcon,
@@ -103,6 +122,8 @@ export default {
 		},
 	},
 
+	emits: ['saved', 'close'],
+
 	data() {
 		return {
 			open: true,
@@ -110,38 +131,44 @@ export default {
 			selectedParentId: this.parentId,
 			saving: false,
 			error: '',
+			/** Picked customization keys (vault level only; null = default). */
+			customIcon: null,
+			customColor: null,
+			/** The vaults' default glyph, for the picker's Default cell. */
+			safeIcon: markRaw(Safe),
 		}
 	},
 
 	computed: {
 		/**
-		 * Whether the SELECTED parent is the root — creating there makes a
-		 * top-level folder, i.e. a Vault (restyle terminology), and the
-		 * dialog's wording follows.
+		 * Whether the dialog creates a VAULT: fixed by the OPENING context
+		 * (no parentId = opened at the root), never by the picker. A vault
+		 * is only ever created at the root (team decision), so the vault
+		 * flow shows no parent picker at all.
 		 *
 		 * @return {boolean}
+		 * @spec openspec/specs/secrets/spec.md#requirement-folder-management
 		 */
 		isVaultLevel() {
-			return !this.selectedParentId
+			return !this.parentId
 		},
 
 		/**
-		 * The parent-folder picker options: the vault root plus every folder
-		 * the user owns, path-labelled ("A / B / C") so same-named nested
-		 * folders stay distinguishable (restyle Stage 6).
+		 * The parent-folder picker options (FOLDER creation only): every
+		 * folder the user owns — WITHOUT the root, because creating at the
+		 * root is the vault flow and the two never morph into each other —
+		 * path-labelled ("A / B / C") so same-named nested folders stay
+		 * distinguishable (restyle Stage 6).
 		 *
-		 * @return {Array<{value: string|null, label: string}>}
+		 * @return {Array<{value: string, label: string}>}
 		 * @spec openspec/specs/secrets-write-ui/spec.md#requirement-create-a-folder-and-move-a-secret
 		 */
 		parentOptions() {
 			const folders = useFolderStore().folders
-			const roots = [{ value: null, label: t('keepiq', 'Vault root') }]
-			return roots.concat(
-				folders.map((folder) => ({
-					value: folder.id,
-					label: folderPathLabel(folders, folder.id) || folder.name,
-				})),
-			)
+			return folders.map((folder) => ({
+				value: folder.id,
+				label: folderPathLabel(folders, folder.id) || folder.name,
+			}))
 		},
 
 		canSubmit() {
@@ -158,6 +185,18 @@ export default {
 
 	methods: {
 		t,
+
+		/**
+		 * Translate a picker label through keepiq's catalog (the picker's
+		 * labels are library-side English source strings).
+		 *
+		 * @param {string} label The English source label.
+		 * @return {string} The translated label.
+		 * @spec exclude Pure i18n pass-through.
+		 */
+		translateLabel(label) {
+			return t('keepiq', label)
+		},
 
 		/**
 		 * Forward the open-state change; emit `close` when dismissed.
@@ -188,6 +227,15 @@ export default {
 				const created = await useFolderStore().createFolder(
 					this.name.trim(),
 					this.selectedParentId,
+					// Customization only exists at vault level — a picker
+					// choice made before switching to a nested parent must
+					// not ride along.
+					this.isVaultLevel
+						? {
+								customIcon: this.customIcon,
+								customColor: this.customColor,
+							}
+						: {},
 				)
 				this.$emit('saved', created)
 				if (this.onSaved) {

@@ -21,10 +21,9 @@
  * @spec openspec/changes/implement-application-mgmt/tasks.md#task-10.6
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import WriteSecretForAppDialog from '../../src/dialogs/WriteSecretForAppDialog.vue'
 import { useApplicationStore } from '../../src/store/modules/application.js'
 

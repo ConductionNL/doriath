@@ -10,12 +10,12 @@
  * @spec openspec/specs/encrypted-attachments/spec.md#requirement-client-side-encrypted-attachment-upload
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { createPinia, setActivePinia } from 'pinia'
 import axios from '@nextcloud/axios'
-import { sharedKeyPair } from './fixtures/rsa-fixtures.js'
+import { createPinia, setActivePinia } from 'pinia'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useAttachmentStore } from '../../src/store/modules/attachment.js'
 import { useSessionStore } from '../../src/store/modules/session.js'
+import { sharedKeyPair } from './fixtures/rsa-fixtures.js'
 
 const PLAINTEXT = 'attachment-plaintext-body-0123456789'
 const FILENAME = 'aws-recovery-codes.pdf'

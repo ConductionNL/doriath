@@ -29,17 +29,18 @@
  * @type {Record<string, { kind: string, component: object, defaultSize?: object, minSize?: object, maxSize?: object, allowedSlots?: string[], propsSchema?: object }>}
  */
 
-import ApplicationRegisterDialog from './components/application/ApplicationRegisterDialog.vue'
-import PrivateKeyDownloadDialog from './components/application/PrivateKeyDownloadDialog.vue'
 import SecretRequestForm from './components/secretRequest/SecretRequestForm.vue'
 import SecretRequestList from './components/secretRequest/SecretRequestList.vue'
 import GroupShareForm from './components/share/GroupShareForm.vue'
 import ShareDialog from './components/share/ShareDialog.vue'
 import ShareList from './components/share/ShareList.vue'
+import ApplicationRegisterDialog from './dialogs/ApplicationRegisterDialog.vue'
 import FolderCreateDialog from './dialogs/FolderCreateDialog.vue'
+import MoveDialog from './dialogs/MoveDialog.vue'
+import PrivateKeyDownloadDialog from './dialogs/PrivateKeyDownloadDialog.vue'
 import SecretCreateDialog from './dialogs/SecretCreateDialog.vue'
+import SecretDeleteConfirmDialog from './dialogs/SecretDeleteConfirmDialog.vue'
 import SecretEditDialog from './dialogs/SecretEditDialog.vue'
-import SecretMoveDialog from './dialogs/SecretMoveDialog.vue'
 import SecretShareDialog from './dialogs/SecretShareDialog.vue'
 import ApplicationDetail from './views/ApplicationDetail.vue'
 import ApplicationRegisterView from './views/ApplicationRegisterView.vue'
@@ -51,7 +52,6 @@ import HealthReportView from './views/HealthReportView.vue'
 import LinkShareAccess from './views/LinkShareAccess.vue'
 import LockScreen from './views/LockScreen.vue'
 import PersonalActivityView from './views/PersonalActivityView.vue'
-import SecretDetail from './views/SecretDetail.vue'
 import SecretList from './views/SecretList.vue'
 import SecretRequestFill from './views/SecretRequestFill.vue'
 
@@ -64,7 +64,6 @@ export default {
 
 	LockScreen: { kind: 'page', component: LockScreen },
 	SecretList: { kind: 'page', component: SecretList },
-	SecretDetail: { kind: 'page', component: SecretDetail },
 	SecretRequestFill: { kind: 'page', component: SecretRequestFill },
 	LinkShareAccess: { kind: 'page', component: LinkShareAccess },
 	EphemeralSendAccess: { kind: 'page', component: EphemeralSendAccess },
@@ -85,7 +84,12 @@ export default {
 		component: FolderCreateDialog,
 		propsSchema: {},
 	},
-	'secret-move': { kind: 'modal', component: SecretMoveDialog, propsSchema: {} },
+	'secret-delete': {
+		kind: 'modal',
+		component: SecretDeleteConfirmDialog,
+		propsSchema: {},
+	},
+	'secret-move': { kind: 'modal', component: MoveDialog, propsSchema: {} },
 	'secret-share': { kind: 'modal', component: SecretShareDialog, propsSchema: {} },
 	'application-register': {
 		kind: 'modal',

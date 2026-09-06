@@ -94,8 +94,13 @@ describe('SecretRequestFill', () => {
 		await flush()
 		await wrapper.find('[data-testid="fill-field-key"]').setValue('p4ss')
 		await wrapper.find('[data-testid="fill-form"]').trigger('submit.prevent')
+		// `flush()` is a SINGLE macrotask tick, and the submit path awaits an
+		// async chain before it posts. One tick is not guaranteed to drain it,
+		// so this asserted on a call that had not happened yet and failed about
+		// once in twenty full-suite runs while passing every time in isolation.
+		// waitFor retries until the call lands, and still fails if it never does.
 		await flush()
-		expect(post).toHaveBeenCalled()
+		await vi.waitFor(() => expect(post).toHaveBeenCalled())
 		const body = post.mock.calls[0][1]
 		expect(body.encryptedFields.key).toBe('ENC(p4ss)')
 		expect(wrapper.find('[data-testid="fill-success"]').exists()).toBe(true)

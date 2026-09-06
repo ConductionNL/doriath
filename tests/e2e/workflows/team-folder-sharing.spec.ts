@@ -37,20 +37,20 @@
  * The seven `team-folder-sharing` scenarios stay in the gate's findings list
  * until a test exists that adds a second user and counts the copies.
  */
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import {
-	gotoLockSettled,
-	unlockVault,
-	openVault,
 	APP_BASE,
-} from './_workflow-helpers'
+	gotoLockSettled,
+	openVault,
+	unlockVault,
+} from './_workflow-helpers.ts'
 
 const API = `${APP_BASE.replace('/apps/keepiq', '')}/apps/keepiq/api/v1`
 
 test.describe('team folder sharing', () => {
 	test('owner shares a folder, fans out to a user, and revokes', async ({
 		page,
-		request,
+		request: _request,
 	}) => {
 		await gotoLockSettled(page)
 		await unlockVault(page)

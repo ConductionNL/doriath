@@ -91,23 +91,39 @@ export const useFolderStore = defineStore('folder', {
 		 *
 		 * @param {string} name The folder name.
 		 * @param {string|null} parentId The parent folder ID (null = root).
+		 * @param {object} [extra] Optional customization: `customIcon` /
+		 *   `customColor` catalog keys (restyle Stage 9). Only the two known
+		 *   keys are forwarded.
 		 * @return {Promise<object>} The created folder.
 		 * @spec openspec/specs/secrets/spec.md#requirement-folder-management
 		 */
-		async createFolder(name, parentId = null) {
+		async createFolder(name, parentId = null, extra = {}) {
+			const body = { name, parentId }
+			if (extra.customIcon !== undefined && extra.customIcon !== null) {
+				body.customIcon = extra.customIcon
+			}
+			if (extra.customColor !== undefined && extra.customColor !== null) {
+				body.customColor = extra.customColor
+			}
 			const response = await axios.post(
 				generateUrl('/apps/keepiq/api/v1/folders'),
-				{ name, parentId },
+				body,
 			)
 			this.folders.push(response.data)
 			return response.data
 		},
 
 		/**
-		 * Rename and/or move a folder.
+		 * Rename and/or move a folder — and/or update its customization.
+		 *
+		 * The backend applies `customIcon` / `customColor` only when the KEY
+		 * is present in the body, and an explicit null CLEARS the stored
+		 * value — so callers that only rename/move must simply omit the two
+		 * keys, and a reset sends `{ customIcon: null, customColor: null }`.
 		 *
 		 * @param {string} id The folder ID.
-		 * @param {object} data The change ({ name } and/or { parentId, move: true }).
+		 * @param {object} data The change ({ name } and/or { parentId, move: true }
+		 *   and/or { customIcon, customColor } — null clears, absent untouched).
 		 * @return {Promise<object>} The updated folder.
 		 * @spec openspec/specs/secrets/spec.md#requirement-folder-management
 		 */

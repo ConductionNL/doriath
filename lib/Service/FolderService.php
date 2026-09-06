@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Keepiq\Service;
 
+use DateTime;
 use InvalidArgumentException;
 use OCA\Keepiq\Db\Folder;
 use OCA\Keepiq\Db\FolderMapper;
@@ -97,19 +98,113 @@ class FolderService {
 	 * @param string $name The folder name (no slashes)
 	 * @param string|null $parentId The parent folder ID (null = root)
 	 * @param string $userId The owning Nextcloud user ID
+	 * @param string|null $customIcon Optional custom icon key (restyle Stage 9)
+	 * @param string|null $customColor Optional custom color key (restyle Stage 9)
 	 *
 	 * @return Folder
 	 *
-	 * @throws InvalidArgumentException When the name is invalid
+	 * @throws InvalidArgumentException When the name or an attribute key is invalid
 	 * @throws NotFoundException When the parent does not exist
 	 * @throws ForbiddenException When the parent is not owned
 	 * @throws DuplicateFolderNameException When a sibling folder already uses the name
 	 *
 	 * @spec openspec/specs/secrets/spec.md#requirement-folder-management
 	 */
-	public function create(string $name, ?string $parentId, string $userId): Folder {
-		return $this->tree->create(name: $name, parentId: $parentId, userId: $userId);
+	public function create(
+		string $name,
+		?string $parentId,
+		string $userId,
+		?string $customIcon = null,
+		?string $customColor = null,
+	): Folder {
+		$this->assertAttributeFormat(attribute: 'customIcon', value: $customIcon);
+		$this->assertAttributeFormat(attribute: 'customColor', value: $customColor);
+
+		return $this->tree->create(
+			name: $name,
+			parentId: $parentId,
+			userId: $userId,
+			customIcon: $customIcon,
+			customColor: $customColor
+		);
 	}//end create()
+
+	/**
+	 * Update presentation attributes (customIcon, customColor) on a folder.
+	 *
+	 * Only keys PRESENT in $changes are applied; an explicit null CLEARS the
+	 * value, an absent key leaves it untouched — so a rename/move request
+	 * that carries no attribute keys can never accidentally wipe a color.
+	 *
+	 * Values are validated on FORMAT only (lowercase kebab key, max 64
+	 * chars): the frontend owns the catalogs, and an unknown key renders as
+	 * the fallback glyph there — which keeps old servers forward-compatible
+	 * with newer frontends.
+	 *
+	 * @param string $id The folder ID
+	 * @param array<string,string|null> $changes Attribute name to new value (null clears)
+	 * @param string $userId The requesting Nextcloud user ID
+	 *
+	 * @return Folder
+	 *
+	 * @throws InvalidArgumentException When a value fails the format check
+	 * @throws NotFoundException When the folder does not exist
+	 * @throws ForbiddenException When the folder is not owned
+	 *
+	 * @spec openspec/specs/secrets/spec.md#requirement-folder-management
+	 */
+	public function updateAttributes(string $id, array $changes, string $userId): Folder {
+		$folder = $this->ownership->requireOwned(id: $id, userId: $userId);
+
+		if (array_key_exists('customIcon', $changes) === true) {
+			$this->assertAttributeFormat(
+				attribute: 'customIcon',
+				value: $changes['customIcon']
+			);
+			$folder->setCustomIcon($changes['customIcon']);
+		}
+
+		if (array_key_exists('customColor', $changes) === true) {
+			$this->assertAttributeFormat(
+				attribute: 'customColor',
+				value: $changes['customColor']
+			);
+			$folder->setCustomColor($changes['customColor']);
+		}
+
+		$folder->setUpdatedAt(new DateTime());
+		$this->mapper->update($folder);
+
+		return $folder;
+	}//end updateAttributes()
+
+	/**
+	 * Reject a customization value that is not a catalog-shaped key.
+	 *
+	 * Null passes (it means "unset"/"clear"); anything else must be a
+	 * lowercase kebab identifier of at most 64 characters. Free text and
+	 * hex values are refused — the columns store KEYS, not presentation.
+	 *
+	 * @param string $attribute The attribute name (for the error message)
+	 * @param string|null $value The candidate value
+	 *
+	 * @return void
+	 *
+	 * @throws InvalidArgumentException When the value fails the format check
+	 *
+	 * @spec openspec/specs/secrets/spec.md#requirement-folder-management
+	 */
+	private function assertAttributeFormat(string $attribute, ?string $value): void {
+		if ($value === null) {
+			return;
+		}
+
+		if (preg_match('/^[a-z0-9][a-z0-9-]{0,63}$/', $value) !== 1) {
+			throw new InvalidArgumentException(
+				"Invalid {$attribute}: expected a lowercase kebab-case key of at most 64 characters"
+			);
+		}
+	}//end assertAttributeFormat()
 
 	/**
 	 * Rename a folder.

@@ -7,11 +7,10 @@
  * @spec openspec/changes/implement-application-mgmt/tasks.md#15.2
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import axios from '@nextcloud/axios'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-import axios from '@nextcloud/axios'
-
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import ApplicationRegisterView from '../../src/views/ApplicationRegisterView.vue'
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
@@ -63,20 +62,26 @@ describe('ApplicationRegisterView', () => {
 		expect(wrapper.findAll('.cn-object-row').at(1).text()).toContain('internal')
 	})
 
+	// Both dialogs render through NcDialog now (they used to be in-flow
+	// sections), and the test alias's NcDialog stub always renders with a
+	// `data-open` attribute — so a bare `exists()` would pass vacuously.
+	// The open flag is what the click actually changes.
 	it('opens the dialog when the register (add) button is clicked', async () => {
 		vi.spyOn(axios, 'get').mockResolvedValue({ data: [] })
 		const wrapper = mount(ApplicationRegisterView)
 		await flush()
+		const dialog = wrapper.find('[data-testid="application-register-dialog"]')
+		expect(dialog.attributes('data-open')).toBe('false')
 		await wrapper.find('[data-testid="cn-cta-primary"]').trigger('click')
-		expect(
-			wrapper.find('[data-testid="application-register-dialog"]').exists(),
-		).toBe(true)
+		expect(dialog.attributes('data-open')).toBe('true')
 	})
 
-	it('mounts the PrivateKeyDownloadDialog when the store has a one-time key', async () => {
+	it('opens the PrivateKeyDownloadDialog when the store has a one-time key', async () => {
 		vi.spyOn(axios, 'get').mockResolvedValue({ data: [] })
 		const wrapper = mount(ApplicationRegisterView)
 		await flush()
+		const dialog = wrapper.find('[data-testid="private-key-dialog"]')
+		expect(dialog.attributes('data-open')).toBe('false')
 		// Simulate the registration flow having captured the key.
 		const { useApplicationStore } =
 			await import('../../src/store/modules/application.js')
@@ -84,8 +89,50 @@ describe('ApplicationRegisterView', () => {
 		store.oneTimePrivateKey =
 			'-----BEGIN PRIVATE KEY-----\nabc\n-----END PRIVATE KEY-----'
 		await flush()
-		expect(wrapper.find('[data-testid="private-key-dialog"]').exists()).toBe(
-			true,
-		)
+		expect(dialog.attributes('data-open')).toBe('true')
+	})
+
+	// The dashboard's "Register application" tile deep-links to
+	// `/applications?action=register` through the router (a full page load
+	// would drop the in-memory vault key). The view consumes the marker:
+	// dialog open, marker stripped so a refresh cannot re-open it.
+	it('opens the register dialog from the dashboard quick action and strips the marker', async () => {
+		vi.spyOn(axios, 'get').mockResolvedValue({ data: [] })
+		const replace = vi.fn()
+		const wrapper = mount(ApplicationRegisterView, {
+			global: {
+				mocks: {
+					$route: { query: { action: 'register', view: 'cards' } },
+					$router: { replace, push: vi.fn() },
+				},
+			},
+		})
+		await flush()
+		expect(
+			wrapper
+				.find('[data-testid="application-register-dialog"]')
+				.attributes('data-open'),
+		).toBe('true')
+		expect(replace).toHaveBeenCalledWith({ query: { view: 'cards' } })
+	})
+
+	it('ignores an action marker that is not register', async () => {
+		vi.spyOn(axios, 'get').mockResolvedValue({ data: [] })
+		const replace = vi.fn()
+		const wrapper = mount(ApplicationRegisterView, {
+			global: {
+				mocks: {
+					$route: { query: { action: 'create' } },
+					$router: { replace, push: vi.fn() },
+				},
+			},
+		})
+		await flush()
+		expect(
+			wrapper
+				.find('[data-testid="application-register-dialog"]')
+				.attributes('data-open'),
+		).toBe('false')
+		expect(replace).not.toHaveBeenCalled()
 	})
 })

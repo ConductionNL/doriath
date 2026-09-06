@@ -6,6 +6,19 @@
 }
 
 /*
+ * Anonymous recipient shell (guest layout, RENDER_AS_BASE): core's
+ * #content.app-public is `display: flex` and the app mount is a flex CHILD,
+ * so #keepiq-app shrinks to the card's width — the recipient card's
+ * `margin: auto` then has no free space to distribute and the card sits
+ * pinned in the corner. Let the mount fill the flex row so the
+ * .keepiq-public-shell wrapper (App.vue) can centre its card.
+ */
+#body-public #keepiq-app {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+/*
  * Mobile-first PWA touch + responsive audit (mobile-pwa §4).
  * A single narrow-viewport breakpoint drives single-column layout and a
  * 44×44 CSS-px minimum touch target on the vault-critical controls

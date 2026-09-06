@@ -10,15 +10,15 @@
  * @spec openspec/specs/card-identity-items/spec.md#requirement-composite-payload-stored-as-ciphertext-in-the-key-field
  */
 
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
-	serializeCard,
-	serializeIdentity,
-	parsePayload,
 	cardBrand,
 	cardLast4,
-	luhnValid,
 	expiryFormatValid,
+	luhnValid,
+	parsePayload,
+	serializeCard,
+	serializeIdentity,
 } from '../../src/cardIdentity/cardIdentity.js'
 import { parseBitwardenJson } from '../../src/import/parsers/bitwarden.js'
 

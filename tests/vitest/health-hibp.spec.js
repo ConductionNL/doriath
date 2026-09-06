@@ -8,8 +8,8 @@
  * on a fetch error. The full hash and value never leave the browser.
  */
 
-import { describe, it, expect } from 'vitest'
-import { sha1Hex, matchSuffix, checkValue } from '../../src/health/hibp.js'
+import { describe, expect, it } from 'vitest'
+import { checkValue, matchSuffix, sha1Hex } from '../../src/health/hibp.js'
 
 describe('hibp: sha1Hex', () => {
 	it('computes the known SHA-1 of "password"', async () => {

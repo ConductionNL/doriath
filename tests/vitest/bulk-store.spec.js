@@ -9,8 +9,8 @@
  * @spec openspec/specs/bulk-actions/spec.md#requirement-chunked-execution-with-a-per-item-report
  */
 
-import { describe, it, expect, beforeEach } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { useBulkStore } from '../../src/store/modules/bulk.js'
 import { useSessionStore } from '../../src/store/modules/session.js'
 

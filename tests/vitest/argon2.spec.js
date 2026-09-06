@@ -34,12 +34,12 @@
  * @spec openspec/changes/implement-link-sharing/tasks.md#13.1
  */
 
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
+	decryptSnapshot,
+	encryptSnapshot,
 	generateLinkPassword,
 	isArgon2Supported,
-	encryptSnapshot,
-	decryptSnapshot,
 } from '../../src/crypto/argon2.js'
 
 describe('generateLinkPassword', () => {

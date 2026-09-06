@@ -19,16 +19,16 @@
  * @spec openspec/changes/secret-import/specs/secret-import/spec.md#requirement-chunked-batch-commit
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { setActivePinia, createPinia } from 'pinia'
 import axios from '@nextcloud/axios'
-import { useImportStore, COMMIT_CHUNK_SIZE } from '../../src/store/modules/import.js'
-import { useSessionStore } from '../../src/store/modules/session.js'
-import { useSecretStore } from '../../src/store/modules/secret.js'
+import { createPinia, setActivePinia } from 'pinia'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { rsaDecrypt } from '../../src/crypto/rsa.js'
-import { sharedKeyPair } from '../vitest/fixtures/rsa-fixtures.js'
 import { encryptBackup } from '../../src/export/backup.js'
 import { serializeVault } from '../../src/export/serializer.js'
+import { COMMIT_CHUNK_SIZE, useImportStore } from '../../src/store/modules/import.js'
+import { useSecretStore } from '../../src/store/modules/secret.js'
+import { useSessionStore } from '../../src/store/modules/session.js'
+import { sharedKeyPair } from '../vitest/fixtures/rsa-fixtures.js'
 
 /**
  * Unlock the session store with the shared RSA-4096 key pair so the real
@@ -225,7 +225,7 @@ describe('useImportStore', () => {
 	it('folds per-index server failures into the rejected list', async () => {
 		await unlockSession()
 		vi.spyOn(useSecretStore(), 'fetchSecrets').mockResolvedValue()
-		vi.spyOn(axios, 'post').mockImplementation(async (url, b) => ({
+		vi.spyOn(axios, 'post').mockImplementation(async (_url, _b) => ({
 			data: {
 				results: [
 					{ index: 0, status: 'created', secretId: 'ok' },

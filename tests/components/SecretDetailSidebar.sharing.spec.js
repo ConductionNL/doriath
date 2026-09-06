@@ -2,30 +2,33 @@
  * SPDX-FileCopyrightText: 2026 Conduction / Keepiq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
- * Component tests for the §12.6 SecretDetail sharing sidebar
- * integration. The view itself is mounted with the
- * RecipientList / DelegationManager / ShareRequestForm components
- * stubbed, so the test asserts the role-driven visibility branches
- * rather than re-asserting each child's behaviour (those are covered
- * by their own .spec.js files).
+ * Component tests for the §12.6 sharing integration on the secret-detail
+ * sidebar (the restyle Stage-8 successor of the SecretDetail view). The
+ * component is mounted with the RecipientList / DelegationManager /
+ * ShareRequestForm components stubbed, so the test asserts the role-driven
+ * visibility branches rather than re-asserting each child's behaviour
+ * (those are covered by their own .spec.js files). NcAppSidebar and its
+ * tabs are stubbed to plain slot-renderers, so every tab's content is in
+ * the DOM at once.
  *
  * @spec openspec/changes/implement-user-sharing/tasks.md#task-12.6
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import axios from '@nextcloud/axios'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-import axios from '@nextcloud/axios'
-
-import SecretDetail from '../../src/views/SecretDetail.vue'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import SecretDetailSidebar from '../../src/components/SecretDetailSidebar.vue'
 import { useSecretStore } from '../../src/store/modules/secret.js'
 import { useSecretTypeStore } from '../../src/store/modules/secretType.js'
 
 const stubAll = {
+	NcAppSidebar: { template: '<aside><slot /></aside>' },
+	NcActions: { template: '<div><slot /></div>' },
+	NcActionButton: { template: '<button><slot /></button>' },
 	NcButton: { template: '<button><slot /></button>' },
 	NcEmptyContent: { template: '<div><slot /></div>' },
-	NcLoadingIcon: { template: '<span />' },
-	ArrowLeft: { template: '<span />' },
+	NcNoteCard: { template: '<div><slot /></div>' },
 	Delete: { template: '<span />' },
 	Lock: { template: '<span />' },
 	Pencil: { template: '<span />' },
@@ -44,9 +47,9 @@ const stubAll = {
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
 
-const mountDetail = async ({ secret, currentUser }) => {
+async function mountDetail({ secret, currentUser }) {
 	window.OC = { currentUser }
-	// Pre-seed the secret store so the view's mounted hook resolves
+	// Pre-seed the secret store so the component's mounted hook resolves
 	// `fetchSecret` to our fixture rather than going through the live
 	// RSA decryption path.
 	const secretStore = useSecretStore()
@@ -55,16 +58,12 @@ const mountDetail = async ({ secret, currentUser }) => {
 	typeStore.fetchTypes = vi.fn().mockResolvedValue([])
 
 	// VTU v2 moved `stubs` and `mocks` under `global`. At the top level they
-	// are SILENTLY IGNORED — the component would render its real children and
-	// `$route` would be undefined, so this must stay nested.
-	const wrapper = mount(SecretDetail, {
-		propsData: {},
+	// are SILENTLY IGNORED — the component would render its real children, so
+	// this must stay nested.
+	const wrapper = mount(SecretDetailSidebar, {
+		props: { secretId: secret?.id ?? 's-1' },
 		global: {
 			stubs: stubAll,
-			mocks: {
-				$route: { params: { id: secret?.id ?? 's-1' } },
-				$router: { push: vi.fn() },
-			},
 		},
 	})
 	await flush()
@@ -72,7 +71,7 @@ const mountDetail = async ({ secret, currentUser }) => {
 	return wrapper
 }
 
-describe('SecretDetail sharing sidebar (§12.6)', () => {
+describe('SecretDetailSidebar sharing tab (§12.6)', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
 		vi.restoreAllMocks()
@@ -128,11 +127,10 @@ describe('SecretDetail sharing sidebar (§12.6)', () => {
 		).toBe(true)
 	})
 
-	it('hides the entire sharing section when no secret is loaded', async () => {
-		// The view's mounted hook will set `secret` via fetchSecret;
-		// when our store stub returns null, the v-else-if="secret"
-		// short-circuits the whole card and the sharing section never
-		// renders.
+	it('hides the entire sharing tab when no secret is loaded', async () => {
+		// The component's mounted hook will set `secret` via fetchSecret;
+		// when our store stub returns null, the v-if="!error && secret"
+		// short-circuits every tab and the sharing section never renders.
 		const wrapper = await mountDetail({ secret: null, currentUser: 'alice' })
 
 		expect(wrapper.find('[data-testid="secret-detail-sharing"]').exists()).toBe(
@@ -140,7 +138,12 @@ describe('SecretDetail sharing sidebar (§12.6)', () => {
 		)
 	})
 
-	it('falls back to legacy owner_id field when ownerId is absent', async () => {
+	it('treats ownerId as the single canonical owner field (fail-closed)', async () => {
+		// The Secret entity has serialized `ownerId` since its first version,
+		// so no response or offline snapshot ever carried `owner_id`/`userId`.
+		// A payload with only a legacy-style name therefore reads as
+		// not-owned rather than re-introducing a fallback chain every
+		// consumer would have to duplicate (PR #479 review).
 		const wrapper = await mountDetail({
 			secret: { id: 's-1', name: 'GitHub', key: 'CIPHER', owner_id: 'alice' },
 			currentUser: 'alice',
@@ -148,6 +151,9 @@ describe('SecretDetail sharing sidebar (§12.6)', () => {
 
 		expect(
 			wrapper.find('[data-testid="secret-detail-share-list"]').exists(),
+		).toBe(false)
+		expect(
+			wrapper.find('[data-testid="secret-detail-share-request"]').exists(),
 		).toBe(true)
 	})
 

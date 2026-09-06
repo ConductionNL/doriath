@@ -10,7 +10,7 @@
  * @spec openspec/specs/org-password-policies/spec.md#requirement-client-side-save-enforcement
  */
 
-import { describe, it, expect, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('../../src/health/hibp.js', () => ({
 	checkValue: vi.fn(async (value) => {
@@ -24,12 +24,12 @@ vi.mock('../../src/health/hibp.js', () => ({
 	}),
 }))
 
+import { checkValue } from '../../src/health/hibp.js'
 import {
-	evaluateScore,
 	evaluateHibp,
+	evaluateScore,
 	isExemptType,
 } from '../../src/policy/policy.js'
-import { checkValue } from '../../src/health/hibp.js'
 
 const POLICY = {
 	policy_enabled: true,

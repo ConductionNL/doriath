@@ -22,14 +22,14 @@
  * development master password, and the dev seed data provides at least one
  * secret to analyse.
  */
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import {
 	APP_BASE,
 	DEV_MASTER_PASSWORD,
 	gotoLockSettled,
 	gotoVaultRoute,
 	unlockVault,
-} from './_workflow-helpers'
+} from './_workflow-helpers.ts'
 
 test.describe('password health', () => {
 	test('the secrets list shows a strength badge after unlock', async ({
@@ -87,7 +87,7 @@ test.describe('password health', () => {
 		// redirected to the lock gate by the zero-knowledge router guard (the same
 		// behaviour the gated-routes spec verifies for every in-app route), so the
 		// dashboard — and any health data — never mounts.
-		await page.goto(`${APP_BASE}/#/`, { waitUntil: 'domcontentloaded' })
+		await page.goto(`${APP_BASE}/`, { waitUntil: 'domcontentloaded' })
 		await expect(page.locator('.lock-screen')).toBeVisible({ timeout: 20_000 })
 
 		// No health data leaks while locked: no strength badges, no dashboard card.

@@ -20,7 +20,6 @@
  */
 
 import { beforeAll, describe, expect, it } from 'vitest'
-
 import { rsaDecrypt, rsaEncrypt } from '../../src/crypto/rsa.js'
 import {
 	membersToObject,

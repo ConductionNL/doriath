@@ -7,11 +7,10 @@
  * @spec openspec/changes/implement-user-sharing/tasks.md#16.5
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import axios from '@nextcloud/axios'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-import axios from '@nextcloud/axios'
-
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import DelegationManager from '../../src/components/share/DelegationManager.vue'
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0))

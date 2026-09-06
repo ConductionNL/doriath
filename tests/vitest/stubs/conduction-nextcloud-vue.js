@@ -151,4 +151,133 @@ const CnBreadcrumbs = {
 	},
 }
 
-export { CnIndexPage, CnStatusBadge, CnBreadcrumbs }
+/**
+ * CnIconColorPicker stub — a div carrying two buttons that emit the picker's
+ * v-model events, so dialog specs can drive icon/color picks without the
+ * library's catalogs.
+ */
+const CnIconColorPicker = {
+	name: 'CnIconColorPicker',
+	props: ['icon', 'color', 'fallbackIcon', 'translate'],
+	emits: ['update:icon', 'update:color'],
+	render() {
+		return h('div', { 'data-testid': 'cn-icon-color-picker' }, [
+			h('button', {
+				type: 'button',
+				'data-testid': 'stub-pick-icon',
+				onClick: () => this.$emit('update:icon', 'briefcase'),
+			}),
+			h('button', {
+				type: 'button',
+				'data-testid': 'stub-pick-color',
+				onClick: () => this.$emit('update:color', 'blue'),
+			}),
+			h('button', {
+				type: 'button',
+				'data-testid': 'stub-clear-style',
+				onClick: () => {
+					this.$emit('update:icon', null)
+					this.$emit('update:color', null)
+				},
+			}),
+		])
+	},
+}
+
+/**
+ * Catalog-resolver stubs (folder customization, restyle Stage 9). A
+ * two-entry palette is enough for rendering specs; unknown keys resolve to
+ * null exactly like the real resolvers, so fallback paths stay covered.
+ */
+const FOLDER_COLORS = [
+	{ key: 'red', label: 'Red', light: '#c92020', dark: '#ff6b66' },
+	{ key: 'blue', label: 'Blue', light: '#0064a3', dark: '#4fa8e6' },
+]
+const STUB_ICON = {
+	name: 'StubFolderIcon',
+	props: ['size', 'fillColor'],
+	render() {
+		return h('span', { 'data-stub': 'folder-icon' })
+	},
+}
+const FOLDER_ICONS = [
+	{ key: 'briefcase', label: 'Work', component: STUB_ICON },
+	{ key: 'star', label: 'Star', component: STUB_ICON },
+]
+
+/**
+ * Resolve a stub palette key to its theme variant (null when unknown).
+ *
+ * @param {string|null} value The stored color value.
+ * @param {'dark'|'light'} theme The active theme.
+ * @return {string|null} The hex or null.
+ */
+function resolveFolderColor(value, theme) {
+	if (!value) return null
+	if (value.startsWith('#')) return value
+	const entry = FOLDER_COLORS.find((c) => c.key === value)
+	if (!entry) return null
+	return theme === 'dark' ? entry.dark : entry.light
+}
+
+/**
+ * Resolve a stub icon key to its component (null when unknown).
+ *
+ * @param {string|null} key The stored icon key.
+ * @return {object|null} The component or null.
+ */
+function resolveFolderIcon(key) {
+	if (!key) return null
+	return FOLDER_ICONS.find((e) => e.key === key)?.component ?? null
+}
+
+/**
+ * Search the stub icon set (mirrors the real signature).
+ *
+ * @param {string} query The query.
+ * @return {Array<object>} Matching entries.
+ */
+function searchFolderIcons(query) {
+	const q = String(query || '').toLowerCase()
+	if (q === '') return FOLDER_ICONS
+	return FOLDER_ICONS.filter(
+		(e) => e.key.includes(q) || e.label.toLowerCase().includes(q),
+	)
+}
+
+/**
+ * Tint stub (Proton circle): mirrors the real derive-from-the-same-hex
+ * contract at a fixed alpha; null for unset/unknown.
+ *
+ * @param {string|null} value The stored color value.
+ * @param {'dark'|'light'} theme The active theme.
+ * @return {string|null} An rgba string or null.
+ */
+function folderColorTint(value, theme) {
+	const hex = resolveFolderColor(value, theme)
+	if (!hex) return null
+	return `rgba(0, 0, 0, 0.15) /* ${hex} */`
+}
+
+/**
+ * Non-reactive theme stub — jsdom has no NC theme attributes.
+ *
+ * @return {'light'} Always light.
+ */
+function currentTheme() {
+	return 'light'
+}
+
+export {
+	CnBreadcrumbs,
+	CnIconColorPicker,
+	CnIndexPage,
+	CnStatusBadge,
+	currentTheme,
+	FOLDER_COLORS,
+	FOLDER_ICONS,
+	folderColorTint,
+	resolveFolderColor,
+	resolveFolderIcon,
+	searchFolderIcons,
+}

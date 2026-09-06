@@ -9,7 +9,7 @@
  * human passwords are password-bearing.
  */
 
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { isKeyMaterial, isPasswordBearing } from '../../src/health/classify.js'
 
 describe('classify: isKeyMaterial', () => {

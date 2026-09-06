@@ -1,3 +1,5 @@
+import type { Page } from '@playwright/test'
+
 /*
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -15,7 +17,7 @@
  * These helpers therefore assert real DOM behaviour without ever needing to
  * unlock the vault.
  */
-import { type Page, expect } from '@playwright/test'
+import { expect } from '@playwright/test'
 
 export const APP_BASE = '/index.php/apps/keepiq'
 

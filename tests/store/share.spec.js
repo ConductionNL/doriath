@@ -7,10 +7,9 @@
  * @spec openspec/changes/implement-user-sharing/tasks.md#16.1
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { setActivePinia, createPinia } from 'pinia'
 import axios from '@nextcloud/axios'
-
+import { createPinia, setActivePinia } from 'pinia'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useShareStore } from '../../src/store/modules/share.js'
 
 vi.mock('../../src/crypto/index.js', () => ({

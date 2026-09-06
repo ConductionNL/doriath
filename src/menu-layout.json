@@ -5,6 +5,7 @@
 		"description": "Canonical navigation layout applied AFTER all manifest.d fragments merge (ADR-037). Fragments stay the source of WHAT exists in the menu; this file is the single place deciding WHERE entries live. relocations: sourceId -> targetGroupId. removals: leaf menu-entry ids retired as duplicate navigation — their PAGES stay routable for deep links. settingsSection: leaf ids lifted into the NC gear foldout (NcAppNavigationSettings, outside the scrollable nav) — config/admin/app-registration entries only; operational/vault/activity items stay in the main nav."
 	},
 	"relocations": {},
+	"_removals_note": "ADR-112 Decision 2: a report is a card on the Reports page OR a menu entry, never both. MyActivityMenu and PasswordHealthMenu were DELETED from src/manifest.json rather than listed here, because `removals` retires an entry that still exists and gate-53 reports a removal naming an absent entry as a STALE removal. Their PAGES stay routable under the same route names, which is what keeps deep links, the dashboard widget's viewAllRoute and the e2e specs working (ADR-044 Decision 5's no-functionality-loss invariant).",
 	"removals": [],
 	"settingsSection": [
 		"ApplicationsMenu"

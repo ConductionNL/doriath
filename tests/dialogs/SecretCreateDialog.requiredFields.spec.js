@@ -105,7 +105,12 @@ describe('SecretCreateDialog — required fields and folder default', () => {
 		await wrapper.vm.submit()
 		expect(create).not.toHaveBeenCalled()
 
+		// Name and value alone are no longer enough: the picker lost its
+		// "Vault root" option, so a folder must be chosen too.
 		wrapper.vm.name = 'Both present'
+		expect(wrapper.vm.canSubmit).toBe(false)
+
+		wrapper.vm.selectedFolderId = 'folder-1'
 		expect(wrapper.vm.canSubmit).toBe(true)
 	})
 
@@ -143,7 +148,11 @@ describe('SecretCreateDialog — required fields and folder default', () => {
 		expect(create.mock.calls[0][0].folderId).toBe('folder-42')
 	})
 
-	it('sends a null folder when created at the vault root', async () => {
+	// This used to assert the opposite — "sends a null folder when created at
+	// the vault root". The root is not a place a secret can live (top-level
+	// folders are Vaults; a rootless secret has nowhere to be shown), so the
+	// picker no longer offers it and a folderless form must stay blocked.
+	it('refuses to create at the vault root — a folder must be chosen', async () => {
 		const create = vi
 			.spyOn(useSecretStore(), 'createSecret')
 			.mockResolvedValue({ id: 's1' })
@@ -151,8 +160,9 @@ describe('SecretCreateDialog — required fields and folder default', () => {
 
 		wrapper.vm.name = 'At the root'
 		wrapper.vm.value = STRONG
-		await wrapper.vm.submit()
 
-		expect(create.mock.calls[0][0].folderId ?? null).toBeNull()
+		expect(wrapper.vm.canSubmit).toBe(false)
+		await wrapper.vm.submit()
+		expect(create).not.toHaveBeenCalled()
 	})
 })

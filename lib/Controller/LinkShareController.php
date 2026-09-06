@@ -169,8 +169,12 @@ class LinkShareController extends OCSController {
 		// The /public shell serves the SPA as #[PublicPage] — the
 		// authenticated dashboard.page route bounced account-less
 		// recipients to the Nextcloud login (fixed with ephemeral-send).
+		// A PATH under the shell (publicShell.pageCatchAll serves it), not
+		// the retired '#/share/link/' hash form: the SPA routes with
+		// createWebHistory, which never reads the fragment, so the hash
+		// form showed recipients the lock screen.
 		$linkUrl = $this->urlGenerator->getAbsoluteURL(
-			$this->urlGenerator->linkToRoute('keepiq.publicShell.page') . '#/share/link/' . $linkShare->getToken()
+			$this->urlGenerator->linkToRoute('keepiq.publicShell.page') . '/share/link/' . $linkShare->getToken()
 		);
 
 		$payload = $linkShare->jsonSerialize();

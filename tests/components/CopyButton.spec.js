@@ -19,9 +19,8 @@
  * @spec openspec/changes/implement-secrets/tasks.md#13.3
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
-
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import CopyButton from '../../src/components/CopyButton.vue'
 
 // Helper: wait for any pending promises to settle (microtask drain).

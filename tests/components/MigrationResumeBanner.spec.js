@@ -18,10 +18,9 @@
  * @spec openspec/specs/encryption-suites/spec.md#requirement-suite-migration
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import MigrationResumeBanner from '../../src/components/MigrationResumeBanner.vue'
 import { useEncryptionSuiteStore } from '../../src/store/modules/encryptionSuite.js'
 import { useSessionStore } from '../../src/store/modules/session.js'

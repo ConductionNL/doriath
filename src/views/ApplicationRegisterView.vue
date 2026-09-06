@@ -65,8 +65,8 @@
 
 <script>
 import { CnIndexPage, CnStatusBadge } from '@conduction/nextcloud-vue'
-import ApplicationRegisterDialog from '../components/application/ApplicationRegisterDialog.vue'
-import PrivateKeyDownloadDialog from '../components/application/PrivateKeyDownloadDialog.vue'
+import ApplicationRegisterDialog from '../dialogs/ApplicationRegisterDialog.vue'
+import PrivateKeyDownloadDialog from '../dialogs/PrivateKeyDownloadDialog.vue'
 import { useApplicationStore } from '../store/modules/application.js'
 
 export default {
@@ -120,6 +120,41 @@ export default {
 
 		listConfig() {
 			return { titleField: 'name', subtitleField: 'description' }
+		},
+	},
+
+	watch: {
+		/**
+		 * Dashboard quick-action deep link (`/applications?action=register`):
+		 * open the register dialog and strip the marker from the URL, so a
+		 * refresh (which re-locks the vault and round-trips the query through
+		 * the lock screen's `returnUrl`) does not re-open the dialog. A
+		 * watcher rather than a mounted() check because CnPageRenderer keeps
+		 * the view mounted when only the query changes.
+		 *
+		 * @param {string|undefined} action The `action` query value.
+		 * @spec openspec/specs/application-mgmt/spec.md#requirement-register-application
+		 */
+		'$route.query.action': {
+			immediate: true,
+			/**
+			 * Open the dialog and strip the marker; anything else is ignored.
+			 * The dialog is local view state (not a registry modal), so the
+			 * query replace cannot close it the way it would a cnOpenModal
+			 * dialog.
+			 *
+			 * @param {string|undefined} action The `action` query value.
+			 * @return {void}
+			 * @spec openspec/specs/application-mgmt/spec.md#requirement-register-application
+			 */
+			handler(action) {
+				if (action === 'register') {
+					this.dialogOpen = true
+					const query = { ...this.$route.query }
+					delete query.action
+					this.$router.replace({ query })
+				}
+			},
 		},
 	},
 

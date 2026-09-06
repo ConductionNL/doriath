@@ -7,11 +7,10 @@
  * @spec openspec/changes/implement-user-sharing/tasks.md#16.5
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import axios from '@nextcloud/axios'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-import axios from '@nextcloud/axios'
-
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import ShareRequestForm from '../../src/components/share/ShareRequestForm.vue'
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
@@ -59,8 +58,13 @@ describe('ShareRequestForm', () => {
 			.find('[data-testid="share-request-form-target"]')
 			.setValue('carol')
 		await wrapper.find('form').trigger('submit.prevent')
+		// `flush()` is a SINGLE macrotask tick, and the submit path awaits an
+		// async chain before it posts. One tick is not guaranteed to drain it,
+		// so this asserted on a call that had not happened yet and failed about
+		// once in twenty full-suite runs while passing every time in isolation.
+		// waitFor retries until the call lands, and still fails if it never does.
 		await flush()
-		expect(post).toHaveBeenCalled()
+		await vi.waitFor(() => expect(post).toHaveBeenCalled())
 		const [url, body] = post.mock.calls[0]
 		expect(url).toContain('/api/v1/share-requests')
 		expect(body.targetUserId).toBe('carol')

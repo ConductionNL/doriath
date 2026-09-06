@@ -346,12 +346,15 @@ class ApplicationSecretRequestsController extends ApplicationApiController {
 			// them raw JSON including the vault's public certificate.
 			//
 			// The recipient has no Nextcloud account, so the URL must be the
-			// ANONYMOUS SPA shell (`publicShell.page`) carrying the router's
-			// hash route. Verified live: this form answers 200 while
-			// /apps/keepiq/share/request/{token} answers 401.
+			// ANONYMOUS SPA shell carrying the route as a PATH
+			// (`publicShell.pageCatchAll` serves it): the authenticated
+			// /apps/keepiq/share/request/{token} form answers 401 for them,
+			// and the retired '#/share/request/' hash form is never read by
+			// the createWebHistory router — it showed recipients the lock
+			// screen.
 			'fillLinkUrl' => $this->urlGenerator->getAbsoluteURL(
 				$this->urlGenerator->linkToRoute(KeepiqApp::APP_ID . '.publicShell.page')
-				. '#/share/request/' . $request->getToken()
+				. '/share/request/' . $request->getToken()
 			),
 			// Kept alongside it so a machine polling for fulfilment does not
 			// have to parse the human URL.

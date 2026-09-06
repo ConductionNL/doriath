@@ -10,13 +10,12 @@
  * @spec openspec/changes/password-health/specs/password-health/spec.md#requirement-client-side-health-analysis
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { setActivePinia, createPinia } from 'pinia'
 import axios from '@nextcloud/axios'
-
+import { createPinia, setActivePinia } from 'pinia'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useHealthStore } from '../../src/store/modules/health.js'
-import { useSessionStore } from '../../src/store/modules/session.js'
 import { useSecretTypeStore } from '../../src/store/modules/secretType.js'
+import { useSessionStore } from '../../src/store/modules/session.js'
 
 // The engine decrypts via rsaDecrypt(session.cryptoKey); stub the crypto module
 // so the store test exercises orchestration, not RSA.

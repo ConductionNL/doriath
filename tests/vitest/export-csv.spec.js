@@ -12,8 +12,8 @@
  * @spec openspec/changes/secret-export-gdpr/specs/secret-export/spec.md
  */
 
-import { describe, it, expect } from 'vitest'
-import { generateCsv, parseCsv, CSV_COLUMNS } from '../../src/export/csv.js'
+import { describe, expect, it } from 'vitest'
+import { CSV_COLUMNS, generateCsv, parseCsv } from '../../src/export/csv.js'
 
 const secrets = [
 	{

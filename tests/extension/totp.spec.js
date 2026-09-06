@@ -6,7 +6,7 @@
  * vector (SHA1 seed "12345678901234567890", T=59s → 6-digit 287082), and the
  * honest invalid-seed contract (never a fabricated code).
  */
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { computeTotp } from '../../browser-extension/src/lib/totp-service.js'
 
 // base32 of ASCII "12345678901234567890" (the RFC 6238 SHA1 seed)

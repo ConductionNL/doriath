@@ -19,10 +19,9 @@
  * @spec openspec/changes/restore-suite-migration-loop/specs/encryption-suites/spec.md#requirement-a-migration-always-has-a-way-to-terminate
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import CompromiseRecoveryForm from '../../src/components/CompromiseRecoveryForm.vue'
 import { useEncryptionSuiteStore } from '../../src/store/modules/encryptionSuite.js'
 

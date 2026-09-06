@@ -8,10 +8,9 @@
  * @spec openspec/changes/add-secret-audit-trail/tasks.md#task-8.1
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { setActivePinia, createPinia } from 'pinia'
 import axios from '@nextcloud/axios'
-
+import { createPinia, setActivePinia } from 'pinia'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useAuditStore } from '../../src/store/modules/audit.js'
 
 describe('useAuditStore', () => {

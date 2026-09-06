@@ -1,3 +1,4 @@
+import { expect, test } from '@playwright/test'
 /*
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -21,8 +22,7 @@
  */
 import * as fs from 'fs'
 import * as path from 'path'
-import { test, expect } from '@playwright/test'
-import { collectKeepiqErrors, assertNoKeepiqErrors } from './_helpers'
+import { assertNoKeepiqErrors, collectKeepiqErrors } from './_helpers.ts'
 
 const ADMIN_SETTINGS = '/index.php/settings/admin/keepiq'
 
