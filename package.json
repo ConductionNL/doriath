@@ -12,7 +12,7 @@
     "format": "prettier --check \"**/*.{js,ts,vue,css,scss}\"",
     "format:fix": "prettier --write \"**/*.{js,ts,vue,css,scss}\"",
     "l10n:build": "node scripts/build-l10n-js.js",
-    "lint": "eslint src",
+    "lint": "eslint src tests scripts",
     "lint-fix": "npm run lint -- --fix",
     "prepare": "git config core.hooksPath .githooks || true",
     "stylelint": "stylelint \"src/**/*.{vue,scss,css}\"",
@@ -32,11 +32,11 @@
   ],
   "prettier": "@nextcloud/prettier-config",
   "overrides": {
-    "@nextcloud/axios": "~2.5.2",
+    "@nextcloud/axios": "$@nextcloud/axios",
     "libxmljs2": "^0.37.0"
   },
   "dependencies": {
-    "@conduction/nextcloud-vue": "^2.24.2",
+    "@conduction/nextcloud-vue": "^2.36.3",
     "@nextcloud/auth": "^2.6.0",
     "@nextcloud/axios": "~2.5.2",
     "@nextcloud/capabilities": "^1.2.1",

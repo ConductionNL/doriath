@@ -12,7 +12,7 @@
  *
  * @e2e openspec/specs/encryption-suites/spec.md#user-views-lock-screen
  */
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 
 // The component under test, named after the file it covers. The selector is
 // unchanged — this makes the spec-to-component link readable in executable
@@ -22,11 +22,11 @@ import { test, expect } from '@playwright/test'
 // e2e coverage was reported as having none.
 const LockScreen = '.lock-screen'
 import {
+	assertNoKeepiqErrors,
+	collectKeepiqErrors,
 	gotoLock,
 	lockHeading,
-	collectKeepiqErrors,
-	assertNoKeepiqErrors,
-} from './_helpers'
+} from './_helpers.ts'
 
 test.describe('Lock screen — spec: encryption-suites/spec.md', () => {
 	test('renders unlock form with password field and Unlock button', async ({

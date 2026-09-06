@@ -23,12 +23,12 @@
  * @e2e openspec/specs/user-settings/spec.md#user-opens-settings
  */
 
-import { test, expect } from '@playwright/test'
-import { BASE_URL } from '../base-url'
+import { expect, test } from '@playwright/test'
+import { BASE_URL } from '../base-url.ts'
 // The lock screen hides `.app-navigation` (exclusive-surface contract), so the
 // user-settings entry is only reachable from an unlocked vault — these two
 // tests borrow the workflow layer's dev-password unlock like navigation.spec.
-import { unlockVault } from '../workflows/_workflow-helpers'
+import { unlockVault } from '../workflows/_workflow-helpers.ts'
 
 // ---------------------------------------------------------------------------
 // Encryption Suites — weak-password rejection in first-time setup

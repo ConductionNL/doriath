@@ -13,12 +13,11 @@
  */
 
 import { describe, expect, it } from 'vitest'
-
 import {
-	RESERVED_MEMBER_NAMES,
 	memberNameError,
 	membersToObject,
 	objectToMembers,
+	RESERVED_MEMBER_NAMES,
 } from '../../src/utils/additionalFields.js'
 
 describe('additional-field naming rules', () => {

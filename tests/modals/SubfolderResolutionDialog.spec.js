@@ -23,10 +23,9 @@
  * @spec openspec/specs/secrets/spec.md#requirement-folder-management
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import SubfolderResolutionDialog from '../../src/modals/SubfolderResolutionDialog.vue'
 import { useFolderStore } from '../../src/store/modules/folder.js'
 

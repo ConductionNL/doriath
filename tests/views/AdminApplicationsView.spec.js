@@ -7,13 +7,12 @@
  * @spec openspec/changes/implement-application-mgmt/tasks.md#15.6
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const flushPromises = () => new Promise((resolve) => setTimeout(resolve, 0))
-import { createPinia, setActivePinia } from 'pinia'
 import axios from '@nextcloud/axios'
-
+import { createPinia, setActivePinia } from 'pinia'
 import AdminApplicationsView from '../../src/views/AdminApplicationsView.vue'
 import { useApplicationStore } from '../../src/store/modules/application.js'
 

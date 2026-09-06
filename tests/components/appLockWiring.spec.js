@@ -20,10 +20,9 @@
  * @spec openspec/specs/encryption-suites/spec.md#requirement-session-mechanism
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-
-import { handleLockTransition } from '../../src/router/guards.js'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import App from '../../src/App.vue'
+import { handleLockTransition } from '../../src/router/guards.js'
 
 vi.mock('../../src/router/guards.js', async (importOriginal) => {
 	const actual = await importOriginal()

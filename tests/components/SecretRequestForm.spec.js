@@ -7,11 +7,10 @@
  * @spec openspec/changes/implement-secret-requests/tasks.md#13.3
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import axios from '@nextcloud/axios'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-import axios from '@nextcloud/axios'
-
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import SecretRequestForm from '../../src/components/secretRequest/SecretRequestForm.vue'
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
@@ -62,8 +61,13 @@ describe('SecretRequestForm', () => {
 		})
 		await wrapper.find('[data-testid="field-key"]').setChecked(true)
 		await wrapper.find('form').trigger('submit.prevent')
+		// `flush()` is a SINGLE macrotask tick, and the submit path awaits an
+		// async chain before it posts. One tick is not guaranteed to drain it,
+		// so this asserted on a call that had not happened yet and failed about
+		// once in twenty full-suite runs while passing every time in isolation.
+		// waitFor retries until the call lands, and still fails if it never does.
 		await flush()
-		expect(post).toHaveBeenCalled()
+		await vi.waitFor(() => expect(post).toHaveBeenCalled())
 		const body = post.mock.calls[0][1]
 		expect(body.requestedFields).toEqual(['key'])
 		expect(body.secretId).toBe('sec-1')

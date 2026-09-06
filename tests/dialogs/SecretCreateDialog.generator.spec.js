@@ -18,13 +18,12 @@
  * @spec openspec/changes/implement-key-generator/tasks.md#8.3
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import SecretCreateDialog from '../../src/dialogs/SecretCreateDialog.vue'
-import { useSecretTypeStore } from '../../src/store/modules/secretType.js'
 import { useFolderStore } from '../../src/store/modules/folder.js'
+import { useSecretTypeStore } from '../../src/store/modules/secretType.js'
 import { useSessionStore } from '../../src/store/modules/session.js'
 
 const ncStubs = {

@@ -106,6 +106,23 @@
 			<template #menu>
 				<KeepiqAppNav :manifest="manifest" />
 			</template>
+			<!-- Secret detail as a right sidebar over the vault list (restyle
+			     Stage 8). CnAppRoot's #sidebar slot is the NcContent-level
+			     mount NcAppSidebar needs to slide in correctly (ADR-017).
+			     Open/closed state lives in the route's optional :id? segment
+			     (src/utils/detailRoute.js), so /secrets/<id> deep links render
+			     the list WITH the sidebar open and closing drops the segment.
+			     The vault guard already gates these routes, so a locked vault
+			     never reaches this render. -->
+			<template #sidebar>
+				<!-- No :key on purpose: switching rows swaps the prop and the
+				     component reloads via its secretId watcher — remounting
+				     would replay the slide-in animation on every row click. -->
+				<SecretDetailSidebar
+					v-if="detailSidebarSecretId"
+					:secretId="detailSidebarSecretId"
+					@close="closeDetailSidebar" />
+			</template>
 			<!-- User-settings dialog body (opened from the manifest's
 		     `action: "user-settings"` menu entry via CnAppRoot's
 		     cnOpenUserSettings inject). Sections preserve the legacy
@@ -330,6 +347,7 @@ import KeepiqAppNav from './components/KeepiqAppNav/KeepiqAppNav.vue'
 import MasterPasswordForm from './components/MasterPasswordForm.vue'
 import MigrationResumeBanner from './components/MigrationResumeBanner.vue'
 import PasskeyManager from './components/PasskeyManager.vue'
+import SecretDetailSidebar from './components/SecretDetailSidebar.vue'
 import {
 	handleLockTransition,
 	isPublicRoute,
@@ -340,6 +358,7 @@ import { useEncryptionSuiteStore } from './store/modules/encryptionSuite.js'
 import { useOfflineStore } from './store/modules/offline.js'
 import { useSessionStore } from './store/modules/session.js'
 import { initializeStores } from './store/store.js'
+import { activeDetailSecretId, closeDetailLocation } from './utils/detailRoute.js'
 
 export default {
 	name: 'App',
@@ -361,6 +380,7 @@ export default {
 		CompromiseRecoveryForm,
 		KeepiqAppNav,
 		MigrationResumeBanner,
+		SecretDetailSidebar,
 	},
 
 	props: {
@@ -561,6 +581,18 @@ export default {
 		},
 
 		/**
+		 * The secret id whose detail sidebar is open, or null. Derived from
+		 * the list routes' optional `:id?` segment (restyle Stage 8) — other
+		 * id-carrying routes (ApplicationDetail) never open it.
+		 *
+		 * @return {string|null} The open secret's id, or null when closed.
+		 * @spec openspec/specs/secrets/spec.md#requirement-read-secret
+		 */
+		detailSidebarSecretId() {
+			return activeDetailSecretId(this.$route)
+		},
+
+		/**
 		 * Whether the current route is the lock/setup screen. Drives the
 		 * `--locked` shell modifier that hides the app navigation: the
 		 * unlock prompt must be the only interactive surface, and no
@@ -690,6 +722,18 @@ export default {
 
 	methods: {
 		/**
+		 * Close the secret-detail sidebar: return to the same list view
+		 * (root or folder) without the `:id` segment, so bookmarks/back
+		 * behave like plain navigation.
+		 *
+		 * @return {void}
+		 * @spec openspec/specs/secrets/spec.md#requirement-read-secret
+		 */
+		closeDetailSidebar() {
+			this.$router.push(closeDetailLocation(this.$route))
+		},
+
+		/**
 		 * Translate function passed down to CnAppRoot / CnAppNav /
 		 * CnPageRenderer. Closes over the Nextcloud `translate` import
 		 * so the lib never has to know our app id.
@@ -804,6 +848,27 @@ export default {
 </script>
 
 <style scoped>
+/*
+ * Anonymous recipient shell: centre the single card each public view
+ * renders. The guest layout gives the page a full-bleed background and
+ * mounts the app top-left with no chrome, so without this the card sat
+ * pinned in the corner. Flex + `margin: auto` on the child (the routed
+ * view's root) centres both axes AND stays scrollable when the card is
+ * taller than the viewport — unlike `align-items: center`, which clips
+ * overflowing flex children at the top edge.
+ */
+.keepiq-public-shell {
+	box-sizing: border-box;
+	display: flex;
+	min-height: 100vh;
+	width: 100%;
+	padding: clamp(16px, 4vh, 48px) 16px;
+}
+
+.keepiq-public-shell > :deep(*) {
+	margin: auto;
+}
+
 /*
  * Lock/setup route: the master-password prompt must be the only visible
  * and interactive surface. LockScreen.vue's fixed overlay covers the

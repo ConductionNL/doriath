@@ -15,6 +15,19 @@ import { useSessionStore } from './session.js'
  * decrypts the blobs it receives using the session CryptoKey. The server
  * never sees plaintext (ADR-003).
  */
+
+/**
+ * The query that means "every secret in this vault".
+ *
+ * The bulk paths (export, transfer, import reconciliation) pass this
+ * EXPLICITLY so they never inherit the list's stored folder / type / search
+ * filters. Without it, making a bare `fetchSecrets()` reuse the stored query
+ * would quietly shrink an export to whichever folder the user happened to be
+ * browsing — the mirror image of the bug that motivated storing it at all.
+ *
+ * @type {{folderId: null, typeId: null, search: string}}
+ */
+const WHOLE_VAULT = { folderId: null, typeId: null, search: '' }
 export const useSecretStore = defineStore('secret', {
 	state: () => ({
 		/** @type {Array<object>} The current page of secrets (metadata + ciphertext). */
@@ -37,7 +50,41 @@ export const useSecretStore = defineStore('secret', {
 
 	actions: {
 		/**
+		 * Record what the vault list is currently showing, so a refresh that
+		 * knows nothing about the view can reproduce it.
+		 *
+		 * The list used to pass `folderId` / `typeId` / `search` on every call
+		 * and nothing ever wrote them to `filters`, so they were permanently
+		 * null. Any bare `fetchSecrets()` — the sidebar's post-edit/move/delete
+		 * refresh, FolderMoveDialog's — therefore silently dropped the folder
+		 * filter and replaced a folder's contents with the WHOLE vault: move a
+		 * secret out of a folder and every other secret appeared in it. The
+		 * sidebar's own comment claimed a bare call "reuses the store's active
+		 * filters"; this is what makes that true.
+		 *
+		 * Sort lives here too, so a refresh does not silently reorder the list.
+		 *
+		 * @param {object} query The list's active query.
+		 * @param {string|null} [query.folderId] Folder being browsed (null = vault root).
+		 * @param {string} [query.search] Active search term.
+		 * @param {string|null} [query.typeId] Active secret-type filter.
+		 * @param {string} [query.sort] Active sort field.
+		 * @return {void}
+		 * @spec openspec/specs/secrets/spec.md#requirement-list-and-pagination
+		 */
+		setListQuery(query = {}) {
+			if ('folderId' in query) this.filters.folderId = query.folderId ?? null
+			if ('search' in query) this.filters.search = query.search ?? ''
+			if ('typeId' in query) this.filters.typeId = query.typeId ?? null
+			if ('sort' in query && query.sort) this.sort.field = query.sort
+		},
+
+		/**
 		 * Fetch a page of secrets (list or search).
+		 *
+		 * Anything not passed falls back to the stored list query, so the
+		 * sidebar and the folder dialogs can refresh with `fetchSecrets()` and
+		 * get the list the user is actually looking at. See setListQuery.
 		 *
 		 * @param {object} options Optional overrides for filters/sort/page.
 		 * @return {Promise<void>}
@@ -51,15 +98,28 @@ export const useSecretStore = defineStore('secret', {
 				// instead of the live API (offline-readonly-cache §4.2).
 				const offline = useOfflineStore()
 				if (offline.servedFromCache && offline.vault) {
-					const folderId = options.folderId ?? this.filters.folderId
+					// PRESENCE, not nullishness: an explicit null means "no filter"
+					// (vault root, or a bulk fetch of the whole vault), which `??`
+					// would silently turn back into the stored filter.
+					const folderId =
+						'folderId' in options
+							? options.folderId
+							: this.filters.folderId
 					const search = (
-						options.search
-						?? this.filters.search
+						('search' in options ? options.search : this.filters.search)
 						?? ''
 					).toLowerCase()
+					// Same presence semantics as folderId, mirroring the online
+					// branch's params.typeId — without it a type-filtered list
+					// silently showed the whole vault while offline.
+					const typeId =
+						'typeId' in options ? options.typeId : this.filters.typeId
 					let items = offline.vault.secrets
 					if (folderId) {
 						items = items.filter((s) => s.folderId === folderId)
+					}
+					if (typeId) {
+						items = items.filter((s) => s.typeId === typeId)
 					}
 					if (search) {
 						items = items.filter(
@@ -80,17 +140,21 @@ export const useSecretStore = defineStore('secret', {
 					sort: options.sort ?? this.sort.field,
 					direction: options.direction ?? this.sort.direction,
 				}
-				const folderId = options.folderId ?? this.filters.folderId
+				// PRESENCE, not nullishness — see the offline branch above.
+				const folderId =
+					'folderId' in options ? options.folderId : this.filters.folderId
 				if (folderId) {
 					params.folderId = folderId
 				}
-				const search = options.search ?? this.filters.search
+				const search =
+					'search' in options ? options.search : this.filters.search
 				if (search) {
 					params.search = search
 				}
 				// Server-side secret-type filter (passkey-item-type §3.3):
 				// lets the vault list show only one type, e.g. passkeys.
-				const typeId = options.typeId ?? this.filters.typeId
+				const typeId =
+					'typeId' in options ? options.typeId : this.filters.typeId
 				if (typeId) {
 					params.typeId = typeId
 				}
@@ -131,12 +195,13 @@ export const useSecretStore = defineStore('secret', {
 		 *
 		 * @param {object} options Optional filters ({ folderId, typeId, search }).
 		 * @return {Promise<Array<object>>} the full secret list.
+		 * @spec openspec/specs/secrets/spec.md#requirement-list-and-pagination
 		 */
 		async fetchAllSecrets(options = {}) {
 			// Offline: fetchSecrets already returns the whole cached snapshot.
 			const offline = useOfflineStore()
 			if (offline.servedFromCache && offline.vault) {
-				await this.fetchSecrets({ ...options, page: 1 })
+				await this.fetchSecrets({ ...WHOLE_VAULT, ...options, page: 1 })
 				return this.secrets
 			}
 
@@ -148,7 +213,12 @@ export const useSecretStore = defineStore('secret', {
 			let page = 1
 			// Defensive bound; PAGE_SIZE * 100000 covers any realistic vault.
 			while (page <= 100000) {
-				await this.fetchSecrets({ ...options, page, limit: PAGE_SIZE })
+				await this.fetchSecrets({
+					...WHOLE_VAULT,
+					...options,
+					page,
+					limit: PAGE_SIZE,
+				})
 				const batch = this.secrets || []
 				all.push(...batch)
 				if (batch.length < PAGE_SIZE || all.length >= this.totalCount) {

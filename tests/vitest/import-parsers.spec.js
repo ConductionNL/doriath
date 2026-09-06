@@ -16,15 +16,15 @@
  * @spec openspec/changes/secret-import/specs/secret-import/spec.md#requirement-supported-import-formats
  */
 
-import { describe, it, expect } from 'vitest'
-import { parseCsvImport, detectMapping } from '../../src/import/parsers/csv.js'
+import { describe, expect, it } from 'vitest'
+import { dedupeKey, isKdbx, normalizeUrl } from '../../src/import/model.js'
 import {
-	parseBitwardenJson,
 	parseBitwardenCsv,
+	parseBitwardenJson,
 } from '../../src/import/parsers/bitwarden.js'
+import { detectMapping, parseCsvImport } from '../../src/import/parsers/csv.js'
 import { parseKeepassXml } from '../../src/import/parsers/keepassXml.js'
 import { parseNcPasswords } from '../../src/import/parsers/ncPasswords.js'
-import { isKdbx, dedupeKey, normalizeUrl } from '../../src/import/model.js'
 
 describe('CSV parser', () => {
 	it('auto-detects common headers case-insensitively', () => {

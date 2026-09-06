@@ -6,8 +6,8 @@
  * secret ciphertext stored as-is, plaintext metadata encrypted at rest,
  * and a full round-trip that only opens with the right key.
  */
-import { describe, it, expect } from 'vitest'
-import { encryptSnapshot, decryptSnapshot } from '../../src/offline/snapshot.js'
+import { describe, expect, it } from 'vitest'
+import { decryptSnapshot, encryptSnapshot } from '../../src/offline/snapshot.js'
 
 /**
  * A fresh non-extractable AES-256-GCM key.

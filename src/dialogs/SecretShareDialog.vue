@@ -32,25 +32,30 @@
 						)
 					}}
 				</NcNoteCard>
-				<div class="share-dialog__row">
-					<span class="share-dialog__label">{{
-						t('keepiq', 'Link')
-					}}</span>
-					<span class="share-dialog__value">{{ createdUrl }}</span>
-					<CopyButton
-						:value="createdUrl"
-						:label="t('keepiq', 'Copy link')" />
-				</div>
-				<div class="share-dialog__row">
-					<span class="share-dialog__label">{{
-						t('keepiq', 'Password')
-					}}</span>
-					<span class="share-dialog__value share-dialog__value--mono">{{
-						createdPassword
-					}}</span>
-					<CopyButton
-						:value="createdPassword"
-						:label="t('keepiq', 'Copy password')" />
+				<!-- The one-time credentials as a highlighted panel, so they read
+				     as THE thing to take away from this dialog. -->
+				<div class="share-dialog__credentials">
+					<div class="share-dialog__row">
+						<span class="share-dialog__label">{{
+							t('keepiq', 'Link')
+						}}</span>
+						<span class="share-dialog__value">{{ createdUrl }}</span>
+						<CopyButton
+							:value="createdUrl"
+							:label="t('keepiq', 'Copy link')" />
+					</div>
+					<div class="share-dialog__row">
+						<span class="share-dialog__label">{{
+							t('keepiq', 'Password')
+						}}</span>
+						<span
+							class="share-dialog__value share-dialog__value--mono"
+							>{{ createdPassword }}</span
+						>
+						<CopyButton
+							:value="createdPassword"
+							:label="t('keepiq', 'Copy password')" />
+					</div>
 				</div>
 			</div>
 
@@ -312,8 +317,23 @@ export default {
 .share-dialog {
 	display: flex;
 	flex-direction: column;
-	gap: 16px;
-	padding: 4px 0;
+	gap: 24px;
+	padding: 8px 12px 16px;
+}
+
+.share-dialog__reveal {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+/* The one-time link + password as a highlighted panel: these two values
+   are the whole point of the dialog once created, and they cannot be
+   retrieved again. */
+.share-dialog__credentials {
+	padding: 8px 16px;
+	background: var(--color-background-hover, #f5f5f5);
+	border-radius: var(--border-radius-large, 12px);
 }
 
 .share-dialog__row,
@@ -321,12 +341,16 @@ export default {
 	display: flex;
 	align-items: center;
 	gap: 12px;
-	padding: 6px 0;
-	border-bottom: 1px solid var(--color-border);
+	padding: 10px 0;
+}
+
+.share-dialog__row + .share-dialog__row,
+.share-dialog__share-row + .share-dialog__share-row {
+	border-top: 1px solid var(--color-border);
 }
 
 .share-dialog__label {
-	width: 90px;
+	width: 100px;
 	flex: 0 0 auto;
 	color: var(--color-text-maxcontrast);
 }
@@ -338,14 +362,33 @@ export default {
 }
 
 .share-dialog__value--mono {
-	font-family: monospace;
+	font-family: var(--font-face-mono, monospace);
+	font-size: 14px;
 }
 
-.share-dialog__empty {
+.share-dialog__intro {
+	margin: 0 0 12px 0;
 	color: var(--color-text-maxcontrast);
 }
 
+.share-dialog__existing h4 {
+	margin: 0 0 4px 0;
+	font-size: 15px;
+	font-weight: 600;
+}
+
+.share-dialog__share-row {
+	padding: 6px 0;
+}
+
+.share-dialog__empty {
+	margin: 4px 0;
+	color: var(--color-text-maxcontrast);
+}
+
+/* Deferred affordance, visually separated from the working controls. */
 .share-dialog__user {
-	margin-top: 4px;
+	padding-top: 16px;
+	border-top: 1px solid var(--color-border);
 }
 </style>

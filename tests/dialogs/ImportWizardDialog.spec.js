@@ -15,10 +15,9 @@
  * @spec openspec/changes/secret-import/specs/secret-import/spec.md
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import ImportWizardDialog from '../../src/dialogs/ImportWizardDialog.vue'
 import { useImportStore } from '../../src/store/modules/import.js'
 import { useSessionStore } from '../../src/store/modules/session.js'
@@ -50,7 +49,7 @@ const ncStubs = {
 	NcEmptyContent: { props: ['name'], template: '<div><slot /></div>' },
 }
 
-const mountOpts = { global: { stubs: ncStubs, mocks: { t: (app, s, vars) => s } } }
+const mountOpts = { global: { stubs: ncStubs, mocks: { t: (app, s, _vars) => s } } }
 
 describe('ImportWizardDialog', () => {
 	beforeEach(() => {

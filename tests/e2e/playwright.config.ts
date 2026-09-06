@@ -40,8 +40,7 @@
 
 import { defineConfig, devices } from '@playwright/test'
 import * as path from 'path'
-
-import { BASE_URL } from './base-url'
+import { BASE_URL } from './base-url.ts'
 
 const APP_ROOT = path.resolve(__dirname, '..', '..')
 

@@ -40,53 +40,55 @@
 import { h } from 'vue'
 
 /** Render every slot this design system commonly exposes, in a stable order. */
-const slotChildren = (vm) => [
-	vm.$slots.default?.(),
-	vm.$slots.actions?.(),
-	vm.$slots.icon?.(),
-]
+function slotChildren(vm) {
+	return [vm.$slots.default?.(), vm.$slots.actions?.(), vm.$slots.icon?.()]
+}
 
-const passthrough = (name) => ({
-	name,
-	props: [
-		'modelValue',
-		'value',
-		'open',
-		'type',
-		'variant',
-		'size',
-		'disabled',
-		'inputLabel',
-		'options',
-		'reduce',
-		'clearable',
-		'ariaLabel',
-		'name',
-		'label',
-	],
-	emits: ['update:modelValue', 'update:open', 'input'],
-	render() {
-		return h('div', { 'data-stub': name }, slotChildren(this))
-	},
-})
+function passthrough(name) {
+	return {
+		name,
+		props: [
+			'modelValue',
+			'value',
+			'open',
+			'type',
+			'variant',
+			'size',
+			'disabled',
+			'inputLabel',
+			'options',
+			'reduce',
+			'clearable',
+			'ariaLabel',
+			'name',
+			'label',
+		],
+		emits: ['update:modelValue', 'update:open', 'input'],
+		render() {
+			return h('div', { 'data-stub': name }, slotChildren(this))
+		},
+	}
+}
 
-const buttonLike = (name) => ({
-	name,
-	props: ['type', 'variant', 'disabled', 'ariaLabel'],
-	emits: ['click'],
-	render() {
-		return h(
-			'button',
-			{
-				disabled: this.disabled,
-				'data-stub': name,
-				'aria-label': this.ariaLabel,
-				onClick: (e) => this.$emit('click', e),
-			},
-			[this.$slots.icon?.(), this.$slots.default?.()],
-		)
-	},
-})
+function buttonLike(name) {
+	return {
+		name,
+		props: ['type', 'variant', 'disabled', 'ariaLabel'],
+		emits: ['click'],
+		render() {
+			return h(
+				'button',
+				{
+					disabled: this.disabled,
+					'data-stub': name,
+					'aria-label': this.ariaLabel,
+					onClick: (e) => this.$emit('click', e),
+				},
+				[this.$slots.icon?.(), this.$slots.default?.()],
+			)
+		},
+	}
+}
 
 export const NcDialog = {
 	name: 'NcDialog',

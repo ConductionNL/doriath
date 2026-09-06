@@ -17,7 +17,6 @@
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-
 import SecretEditDialog from '../../src/dialogs/SecretEditDialog.vue'
 import { useSecretStore } from '../../src/store/modules/secret.js'
 import { useSecretTypeStore } from '../../src/store/modules/secretType.js'
@@ -61,7 +60,7 @@ const stubs = {
  *
  * @return {Promise<object>} The mounted wrapper.
  */
-const mountOver = async (members) => {
+async function mountOver(members) {
 	const store = useSecretStore()
 	store.fetchSecret = vi.fn().mockResolvedValue({
 		id: 's1',

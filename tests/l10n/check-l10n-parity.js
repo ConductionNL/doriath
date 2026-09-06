@@ -139,7 +139,7 @@ function loadJsonSet (file) {
 
 /** True when a translation value is empty (string) or has an empty plural. */
 function isEmpty (v) {
-	if (v == null) {
+	if ((v === null || v === undefined)) {
 		return true
 	}
 	if (Array.isArray(v)) {
@@ -192,8 +192,8 @@ for (const set of sets) {
 		}
 		comparedLocaleFiles++
 		comparedKeys += enKeys.length
-		const missing = enKeys.filter((k) => !Object.prototype.hasOwnProperty.call(locObj, k))
-		const empty = enKeys.filter((k) => Object.prototype.hasOwnProperty.call(locObj, k) && isEmpty(locObj[k]))
+		const missing = enKeys.filter((k) => !Object.hasOwn(locObj, k))
+		const empty = enKeys.filter((k) => Object.hasOwn(locObj, k) && isEmpty(locObj[k]))
 		if (missing.length || empty.length) {
 			failures.push({ set: set.kind, loc, kind: 'INCOMPLETE', missing, empty, total: enKeys.length })
 		}
@@ -282,7 +282,7 @@ for (const f of failures) {
 		hardEnforced.push(f)
 		continue
 	}
-	const bound = Object.prototype.hasOwnProperty.call(RATCHET, ratchetKey(f)) ? RATCHET[ratchetKey(f)] : 0
+	const bound = Object.hasOwn(RATCHET, ratchetKey(f)) ? RATCHET[ratchetKey(f)] : 0
 	if (shortfall(f) > bound) {
 		regressions.push({ f, bound })
 	} else {
@@ -300,8 +300,8 @@ if (TIGHTEN) {
 	for (const f of failures) {
 		const k = ratchetKey(f)
 		const cur = shortfall(f)
-		const bound = Object.prototype.hasOwnProperty.call(RATCHET, k) ? RATCHET[k] : 0
-		next[k] = Math.min(cur, bound === 0 && !Object.prototype.hasOwnProperty.call(RATCHET, k) ? cur : bound)
+		const bound = Object.hasOwn(RATCHET, k) ? RATCHET[k] : 0
+		next[k] = Math.min(cur, bound === 0 && !Object.hasOwn(RATCHET, k) ? cur : bound)
 	}
 	const ordered = {}
 	for (const k of Object.keys(next).sort()) {

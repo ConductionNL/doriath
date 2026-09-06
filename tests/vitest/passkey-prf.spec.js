@@ -6,21 +6,21 @@
  * §5.2/§5.3): deterministic HKDF KEK, wrap→unwrap round-trip,
  * wrong-PRF rejection, and feature detection.
  */
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
-	deriveKekFromPrf,
-	wrapUnlockKey,
-	unwrapUnlockKey,
-	isPrfSupported,
-	toBase64Url,
-	fromBase64Url,
-} from '../../src/crypto/passkey.js'
-import {
-	deriveUnlockKeyRaw,
 	decryptPrivateKeyWithRawKey,
+	deriveUnlockKeyRaw,
 	encryptPrivateKey,
 } from '../../src/crypto/aes.js'
 import { decodeEnvelope } from '../../src/crypto/envelope.js'
+import {
+	deriveKekFromPrf,
+	fromBase64Url,
+	isPrfSupported,
+	toBase64Url,
+	unwrapUnlockKey,
+	wrapUnlockKey,
+} from '../../src/crypto/passkey.js'
 
 const PRF_A = new Uint8Array(32).fill(7)
 const PRF_B = new Uint8Array(32).fill(9)

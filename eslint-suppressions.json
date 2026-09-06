@@ -32,11 +32,6 @@
       "count": 1
     }
   },
-  "src/components/application/PrivateKeyDownloadDialog.vue": {
-    "@typescript-eslint/no-unused-vars": {
-      "count": 2
-    }
-  },
   "src/components/dashboard/CaHealthCard.vue": {
     "no-console": {
       "count": 1

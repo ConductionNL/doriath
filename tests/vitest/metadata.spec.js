@@ -5,8 +5,8 @@
  * Tests for at-rest metadata encryption under the vault unlock key
  * (offline-readonly-cache §6.2 / D1).
  */
-import { describe, it, expect } from 'vitest'
-import { encryptMetadata, decryptMetadata } from '../../src/crypto/metadata.js'
+import { describe, expect, it } from 'vitest'
+import { decryptMetadata, encryptMetadata } from '../../src/crypto/metadata.js'
 
 /**
  * A fresh non-extractable AES-256-GCM key (stands in for the vault unlock key).

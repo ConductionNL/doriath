@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 24 24" fill="#fff">
-  <g>
-    <!-- Lock body -->
-    <rect x="5" y="11" width="14" height="10" rx="2"/>
-    <!-- Lock shackle -->
-    <path fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" d="M8,11V7a4,4,0,0,1,8,0v4"/>
-  </g>
+  <!-- Lock body -->
+  <rect x="5" y="11" width="14" height="10" rx="2"/>
+  <!-- Lock shackle, drawn as a filled outline: ImageMagick's internal SVG
+       renderer (used by theming to generate the favicon) does not draw
+       stroked paths, so the shackle must not rely on a stroke. -->
+  <path fill-rule="evenodd" d="M12 2.25A4.75 4.75 0 0 0 7.25 7v4h1.5V7a3.25 3.25 0 0 1 6.5 0v4h1.5V7A4.75 4.75 0 0 0 12 2.25Z"/>
 </svg>

@@ -9,12 +9,12 @@
  * the possibly-compromised input, and the no-plaintext-leak shape of findings.
  */
 
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
-	analyse,
-	vaultScore,
 	ageInDays,
+	analyse,
 	staleCutoffDays,
+	vaultScore,
 	WEAK_SCORE_THRESHOLD,
 } from '../../src/health/engine.js'
 

@@ -16,11 +16,10 @@
 		data-testid="bulk-move-dialog"
 		@update:open="$emit('close')">
 		<div class="bulk-move">
-			<NcSelect
-				v-model="targetFolder"
-				:options="folderOptions"
-				:inputLabel="t('keepiq', 'Target folder')"
-				label="label"
+			<DestinationSelect
+				v-model="targetFolderId"
+				mode="folders"
+				:label="t('keepiq', 'Target folder')"
 				data-testid="bulk-move-folder" />
 			<BulkRunPanel @retry="onRetry" />
 		</div>
@@ -30,7 +29,7 @@
 			</NcButton>
 			<NcButton
 				variant="primary"
-				:disabled="!targetFolder || bulk.progress.running"
+				:disabled="!targetFolderId || bulk.progress.running"
 				data-testid="bulk-move-run"
 				@click="onRun">
 				{{ t('keepiq', 'Move') }}
@@ -40,20 +39,19 @@
 </template>
 
 <script>
-import { NcButton, NcDialog, NcSelect } from '@nextcloud/vue'
+import { NcButton, NcDialog } from '@nextcloud/vue'
 import BulkRunPanel from '../components/BulkRunPanel.vue'
+import DestinationSelect from '../components/DestinationSelect.vue'
 import { useBulkStore } from '../store/modules/bulk.js'
-import { useFolderStore } from '../store/modules/folder.js'
 import { useSecretStore } from '../store/modules/secret.js'
-import { folderPathLabel } from '../utils/vaultList.js'
 
 export default {
 	name: 'BulkMoveDialog',
 	components: {
+		BulkRunPanel,
+		DestinationSelect,
 		NcButton,
 		NcDialog,
-		NcSelect,
-		BulkRunPanel,
 	},
 
 	props: {
@@ -66,34 +64,19 @@ export default {
 	emits: ['close', 'done'],
 	data() {
 		return {
-			targetFolder: null,
+			/**
+			 * @type {string|null} The chosen vault or folder; null means nothing
+			 * has been picked yet. There is no vault-root destination — a secret
+			 * always lives in a vault — so a null value and "unchosen" are the
+			 * same state and Move can key off the value directly.
+			 */
+			targetFolderId: null,
 		}
 	},
 
 	computed: {
 		bulk() {
 			return useBulkStore()
-		},
-
-		/**
-		 * The move-target picker options: the vault root plus every folder
-		 * the user owns, at ANY depth. Labelled with the full "A / B / C"
-		 * path so a nested folder is distinguishable from a same-named one
-		 * elsewhere (restyle Stage 6).
-		 *
-		 * @return {Array<{id: string|null, label: string}>}
-		 * @spec openspec/specs/bulk-actions/spec.md#requirement-the-four-bulk-operations
-		 */
-		folderOptions() {
-			const folders = useFolderStore().folders
-			const options = [{ id: null, label: this.t('keepiq', 'Vault root') }]
-			for (const folder of folders) {
-				options.push({
-					id: folder.id,
-					label: folderPathLabel(folders, folder.id) || folder.name,
-				})
-			}
-			return options
 		},
 	},
 
@@ -103,10 +86,11 @@ export default {
 		 *
 		 * @param {string} secretId The secret id.
 		 * @return {Promise<object>}
+		 * @spec openspec/specs/bulk-actions/spec.md#requirement-the-four-bulk-operations
 		 */
 		async moveOne(secretId) {
 			await useSecretStore().updateSecret(secretId, {
-				folderId: this.targetFolder.id,
+				folderId: this.targetFolderId,
 			})
 			return { status: 'ok' }
 		},

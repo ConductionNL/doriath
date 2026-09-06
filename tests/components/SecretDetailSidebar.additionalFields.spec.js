@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction / Keepiq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
- * How the detail view renders additional fields — including none.
+ * How the detail sidebar renders additional fields — including none.
  *
  * The empty case only became reachable with owner-editable additional fields.
  * Before that the sole writers were the application dialog, import, and a request
@@ -16,19 +16,17 @@
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-
-import SecretDetail from '../../src/views/SecretDetail.vue'
+import SecretDetailSidebar from '../../src/components/SecretDetailSidebar.vue'
 import { useSecretStore } from '../../src/store/modules/secret.js'
 import { useSecretTypeStore } from '../../src/store/modules/secretType.js'
 
 const stubAll = {
+	NcAppSidebar: { template: '<aside><slot /></aside>' },
 	NcButton: { template: '<button><slot /></button>' },
 	NcEmptyContent: { template: '<div><slot /></div>' },
-	NcLoadingIcon: { template: '<span />' },
 	NcNoteCard: { template: '<div><slot /></div>' },
 	NcActions: { template: '<div><slot /></div>' },
 	NcActionButton: { template: '<button><slot /></button>' },
-	ArrowLeft: { template: '<span />' },
 	Delete: { template: '<span />' },
 	Lock: { template: '<span />' },
 	Pencil: { template: '<span />' },
@@ -42,13 +40,13 @@ const stubAll = {
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
 
 /**
- * Mount the detail view over a secret with the given decrypted blob.
+ * Mount the detail sidebar over a secret with the given decrypted blob.
  *
  * @param {object|null} additionalFields The decrypted members.
  *
  * @return {Promise<object>} The mounted wrapper.
  */
-const mountDetail = async (additionalFields) => {
+async function mountDetail(additionalFields) {
 	const secret = {
 		id: 's-1',
 		name: 'Supplier API',
@@ -60,14 +58,10 @@ const mountDetail = async (additionalFields) => {
 	useSecretStore().fetchSecret = vi.fn().mockResolvedValue(secret)
 	useSecretTypeStore().fetchTypes = vi.fn().mockResolvedValue([])
 
-	const wrapper = mount(SecretDetail, {
-		propsData: {},
+	const wrapper = mount(SecretDetailSidebar, {
+		props: { secretId: 's-1' },
 		global: {
 			stubs: stubAll,
-			mocks: {
-				$route: { params: { id: 's-1' } },
-				$router: { push: vi.fn() },
-			},
 		},
 	})
 	await flush()
@@ -76,7 +70,7 @@ const mountDetail = async (additionalFields) => {
 	return wrapper
 }
 
-describe('SecretDetail — additional fields', () => {
+describe('SecretDetailSidebar — additional fields', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
 		vi.restoreAllMocks()

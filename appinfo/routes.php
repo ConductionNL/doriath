@@ -157,6 +157,29 @@ return \OCA\OpenRegister\AppHost\Routes::standard([
     // but as #[PublicPage], so account-less recipients reach the SPA.
     ['name' => 'publicShell#page', 'url' => '/public', 'verb' => 'GET'],
 
+    // The public shell's SPA catch-all: the router runs createWebHistory
+    // with base /apps/keepiq/public, so recipient links are PATHS
+    // (/public/share/link/{token}, /public/send/{token},
+    // /public/share/request/{token}) and a load or refresh of any of them
+    // must serve the shell. Mirrors the AppHost dashboard#page +
+    // dashboard#catchAll split: a distinct name, because Symfony silently
+    // replaces same-named routes. Sits in $extra, so it precedes the
+    // authenticated /{path} fallback.
+    //
+    // NEVER ROUTE AN AUTHENTICATED ENDPOINT UNDER /public/. This catch-all
+    // ('path' => '.+') matches every GET below /public/ and hands it to a
+    // #[PublicPage] controller, so a session-gated route placed here is
+    // shadowed: the router matches this entry first, the anonymous shell
+    // renders, and the intended handler never runs. The author sees a working
+    // page, not a 404 — a routing slip becomes a silent auth bypass. The shell
+    // itself exposes no data (it returns the HTML template and nothing else),
+    // so there is no live vulnerability; the shape is the hazard.
+    // tests/Unit/AppInfo/PublicRouteSurfaceContractTest.php enforces this:
+    // every /public route must declare #[PublicPage], or the unit suite fails
+    // and names the route.
+    ['name' => 'publicShell#pageCatchAll', 'url' => '/public/{path}', 'verb' => 'GET',
+        'requirements' => ['path' => '.+']],
+
     // Compliance reporting (compliance-reporting §4) — admin-only, the
     // gate runs in the controller body before any report logic.
     ['name' => 'complianceReport#generate', 'url' => '/api/v1/compliance/reports',               'verb' => 'POST'],

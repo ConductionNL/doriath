@@ -8,10 +8,9 @@
  * @spec openspec/changes/implement-application-mgmt/tasks.md#15.1
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { setActivePinia, createPinia } from 'pinia'
 import axios from '@nextcloud/axios'
-
+import { createPinia, setActivePinia } from 'pinia'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useApplicationStore } from '../../src/store/modules/application.js'
 
 describe('useApplicationStore', () => {

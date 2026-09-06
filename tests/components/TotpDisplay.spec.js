@@ -14,10 +14,9 @@
  * @spec openspec/changes/add-totp-secrets/specs/secrets/spec.md#requirement-client-side-totp-code-generation
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { setActivePinia, createPinia } from 'pinia'
-
+import { createPinia, setActivePinia } from 'pinia'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import TotpDisplay from '../../src/components/TotpDisplay.vue'
 import { useSessionStore } from '../../src/store/modules/session.js'
 

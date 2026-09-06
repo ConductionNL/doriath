@@ -1,3 +1,5 @@
+import type { Page } from '@playwright/test'
+
 /*
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -20,7 +22,7 @@
  *     and decrypts in-browser; the suite's `certificate` field is a full
  *     CA-signed X.509 certificate.
  */
-import { type Page, expect } from '@playwright/test'
+import { expect } from '@playwright/test'
 
 export const APP_BASE = '/index.php/apps/keepiq'
 
@@ -163,37 +165,37 @@ export async function unlockVault(
 }
 
 /**
- * Open the vault list WITHIN the unlocked SPA by clicking the "Vault" nav link
- * (a vue-router-link). A full `page.goto` reload would wipe the in-memory
- * CryptoKey and bounce to the lock screen; a router-link click navigates the
- * SPA in place and keeps the session unlocked. The click is dispatched natively
- * because the themed nav entry can swallow Playwright's synthetic click.
+ * Open the vault list WITHIN the unlocked SPA. A full `page.goto` reload would
+ * wipe the in-memory CryptoKey and bounce to the lock screen, so this navigates
+ * the router in place and the session stays unlocked.
  *
  * @param page The Playwright page (must already be unlocked).
  */
 export async function openVault(page: Page): Promise<void> {
-	// The router runs in hash mode (createWebHashHistory / mode:'hash'), so the
-	// in-app Vault route is `#/secrets`. Click the manifest nav entry whose href
-	// is the hash route; fall back to an in-place `location.hash` navigation
-	// (which does NOT reload the page, so the in-memory CryptoKey survives and
-	// the vault stays unlocked, unlike a full `page.goto`).
-	await page.evaluate(() => {
-		const a = Array.from(document.querySelectorAll('a')).find((x) =>
-			/(#\/secrets$)|(\/apps\/keepiq\/?#\/secrets$)/.test(
-				x.getAttribute('href') || '',
-			),
-		)
-		if (a) {
-			;(a as HTMLElement).click()
-		} else if (!/#\/secrets$/.test(window.location.hash)) {
-			window.location.hash = '#/secrets'
-		}
-	})
+	await gotoVaultRoute(page, 'secrets')
 	await expect(page.locator('.secret-list-view')).toBeVisible({ timeout: 20_000 })
 }
 
 /**
- * Click an entry inside the vault toolbar's "More actions" overflow.
+ * Open the vault page's single "Actions" overflow menu — the actions bar's
+ * own NcActions (`data-testid="cn-actions"`), which since the Stage-8
+ * toolbar consolidation carries EVERY page action (Refresh, Select all,
+ * the create/import actions, the "My data" entries and the type filter).
+ * The themed trigger button swallows Playwright's synthetic click, so the
+ * click is fired natively (same as the unlock button above).
+ *
+ * @param page The Playwright page (must be on the vault list, unlocked).
+ */
+export async function openActionsMenu(page: Page): Promise<void> {
+	await page
+		.getByTestId('cn-actions')
+		.locator('button')
+		.first()
+		.evaluate((el: HTMLElement) => el.click())
+}
+
+/**
+ * Click an entry inside the vault page's "Actions" overflow menu.
  *
  * The overflow entries are NcActionButtons (restyle Stage 5), and NcActionButton
  * renders its `data-testid` on the `<li role="presentation">` WRAPPER while the
@@ -211,10 +213,7 @@ export async function clickOverflowAction(
 	page: Page,
 	testid: string,
 ): Promise<void> {
-	await page
-		.getByRole('button', { name: /More actions/i })
-		.first()
-		.evaluate((el: HTMLElement) => el.click())
+	await openActionsMenu(page)
 	const inner = page.getByTestId(testid).locator('button').first()
 	await inner.waitFor({ state: 'attached', timeout: 10_000 })
 	await inner.evaluate((el: HTMLElement) => el.click())
@@ -223,22 +222,55 @@ export async function clickOverflowAction(
 /**
  * Navigate to an in-app route WITHIN the already-unlocked SPA, in place.
  *
- * The router runs in hash mode, so routes are `#/<route>`. A full `page.goto`
- * to a path-form URL (e.g. `/apps/keepiq/secrets`) reloads the page, which
- * wipes the in-memory CryptoKey and bounces back to the lock gate. Setting
- * `location.hash` navigates the SPA in place and keeps the vault unlocked.
+ * ⚠️ This MUST NOT reload the page. The vault's CryptoKey lives only in memory,
+ * so a `page.goto` to any in-app route drops it and the router guard bounces
+ * straight back to the lock gate.
+ *
+ * The router moved from hash mode to `createWebHistory` (clean path URLs), and
+ * that is why this helper is written against the router instance rather than
+ * the URL. Under hash mode, `location.hash = '#/secrets'` both changed the URL
+ * and drove the route. Under path mode the same line still "works" — it appends
+ * a fragment and fires `hashchange` — but `createWebHistory` does not listen to
+ * `hashchange`, so the route never changes and NOTHING throws. Every caller
+ * then failed much later, on a missing `.secret-list-item`, which reads as a
+ * broken vault rather than a navigation that silently did nothing.
+ *
+ * `$router.push` is an in-place SPA navigation, so the key survives. The
+ * pushState fallback exists only for the case where the app handle is not
+ * exposed; it drives `createWebHistory`'s own `popstate` listener.
  *
  * @param page  The Playwright page (must already be unlocked).
- * @param route The in-app route WITHOUT the leading hash, e.g. 'secrets',
+ * @param route The in-app route WITHOUT a leading slash, e.g. 'secrets',
  *              'password-health', or '' for the dashboard root.
  */
 export async function gotoVaultRoute(page: Page, route: string): Promise<void> {
-	const hash = `#/${route}`.replace(/\/$/, route === '' ? '/' : '')
-	await page.evaluate((h) => {
-		window.location.hash = h
-	}, hash)
-	// Let the hashchange-driven router transition settle. Polling surfaces never
-	// reach networkidle, so wait on the DOM instead.
+	const path = `/${route}`.replace(/\/+$/, '') || '/'
+	await page.evaluate((p) => {
+		const host = document.querySelector('#keepiq-app') as
+			| (HTMLElement & {
+					__vue_app__?: {
+						config?: {
+							globalProperties?: {
+								$router?: { push: (to: string) => unknown }
+							}
+						}
+					}
+			  })
+			| null
+		const router = host?.__vue_app__?.config?.globalProperties?.$router
+		if (router) {
+			router.push(p)
+			return
+		}
+		// No app handle: drive createWebHistory's popstate listener directly.
+		// The base is derived exactly as `routerBase()` in src/main.js does, so
+		// both the `/apps/` and `/index.php/apps/` URL forms resolve.
+		const base =
+			window.location.pathname.match(/^(.*\/apps\/keepiq)(?:\/|$)/)?.[1] ?? ''
+		window.history.pushState({}, '', `${base}${p}`)
+		window.dispatchEvent(new PopStateEvent('popstate', { state: {} }))
+	}, path)
+	// Polling surfaces never reach networkidle, so wait on the DOM instead.
 	await page.waitForLoadState('domcontentloaded')
 	await page.waitForTimeout(500)
 }

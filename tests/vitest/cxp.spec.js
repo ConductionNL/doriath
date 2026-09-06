@@ -5,12 +5,12 @@
  * cases (version mismatch, suite downgrade, misdirected envelope rejected before
  * a decrypt attempt).
  */
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
 	createImportRequest,
-	sealForRequest,
-	openEnvelope,
 	CXP_VERSION,
+	openEnvelope,
+	sealForRequest,
 } from '../../src/crypto/cxp.js'
 
 const enc = new TextEncoder()

@@ -5,14 +5,14 @@
  * the real WebCrypto (X25519 / HKDF-SHA256 / AES-256-GCM), matching the repo's
  * crypto-spec convention of driving crypto.subtle end to end.
  */
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
-	seal,
-	open,
-	generateRecipientKeyPair,
-	KEM_ID,
-	KDF_ID,
 	AEAD_ID,
+	generateRecipientKeyPair,
+	KDF_ID,
+	KEM_ID,
+	open,
+	seal,
 } from '../../src/crypto/hpke.js'
 
 const enc = new TextEncoder()

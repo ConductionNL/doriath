@@ -96,4 +96,33 @@ class PublicShellController extends Controller {
 
 		return $response;
 	}//end page()
+
+	/**
+	 * The public shell's SPA catch-all: same shell for every subpath.
+	 *
+	 * The SPA routes with createWebHistory under the /public base, so the
+	 * recipient links are paths (/public/share/link/{token},
+	 * /public/send/{token}, /public/share/request/{token}) and loading or
+	 * refreshing any of them must serve the shell — the vue-router resolves
+	 * the rest client-side. A separate method rather than a second route on
+	 * page() because Symfony silently replaces same-named routes (see the
+	 * AppHost dashboard#page / dashboard#catchAll split this mirrors).
+	 *
+	 * @param string $path The SPA subpath (resolved client-side, unused here)
+	 *
+	 * @return TemplateResponse
+	 *
+	 * @spec openspec/specs/ephemeral-send/spec.md#requirement-anonymous-recipient-access-with-no-account
+	 *
+	 * @contract exclude renders a TemplateResponse, not an API response —
+	 * the same shell page() serves, reachable at every SPA subpath. See the
+	 * exclusion rationale on page().
+	 */
+	#[PublicPage]
+	#[NoCSRFRequired]
+	#[AnonRateLimit(limit: 120, period: 60)]
+	public function pageCatchAll(string $path = ''): TemplateResponse {
+		unset($path);
+		return $this->page();
+	}//end pageCatchAll()
 }//end class

@@ -14,12 +14,14 @@
  * than going out to a real network).
  */
 
-const notStubbed = (method) => () =>
-	Promise.reject(
-		new Error(
-			`[test stub] @nextcloud/axios.${method} called without a vi.spyOn() override`,
-		),
-	)
+function notStubbed(method) {
+	return () =>
+		Promise.reject(
+			new Error(
+				`[test stub] @nextcloud/axios.${method} called without a vi.spyOn() override`,
+			),
+		)
+}
 
 const axios = {
 	get: notStubbed('get'),

@@ -8,7 +8,7 @@
  * AES-128-GCM), but DHKEM's KEM suite_id depends only on kem_id (0x0020),
  * identical to A.1 — so the shared_secret is directly comparable.
  */
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { _internals } from '../../src/crypto/hpke.js'
 
 function hexToBytes(hex) {

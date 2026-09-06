@@ -7,13 +7,12 @@
  * @spec openspec/changes/implement-dashboard-settings/tasks.md#5.3
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const flushPromises = () => new Promise((resolve) => setTimeout(resolve, 0))
-import { createPinia, setActivePinia } from 'pinia'
 import axios from '@nextcloud/axios'
-
+import { createPinia, setActivePinia } from 'pinia'
 import DashboardSettingsView from '../../src/views/DashboardSettingsView.vue'
 
 describe('DashboardSettingsView', () => {

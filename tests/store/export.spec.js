@@ -16,9 +16,9 @@
  * @spec openspec/changes/secret-export-gdpr/specs/secret-export/spec.md
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { setActivePinia, createPinia } from 'pinia'
 import axios from '@nextcloud/axios'
+import { createPinia, setActivePinia } from 'pinia'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useExportStore } from '../../src/store/modules/export.js'
 
 const secrets = [
@@ -35,7 +35,6 @@ const folders = []
 describe('useExportStore', () => {
 	let clickSpy
 	let lsSpy
-	let ssSpy
 
 	beforeEach(() => {
 		setActivePinia(createPinia())
@@ -46,7 +45,8 @@ describe('useExportStore', () => {
 		global.URL.createObjectURL = () => 'blob:mock'
 		global.URL.revokeObjectURL = () => {}
 		lsSpy = vi.spyOn(Storage.prototype, 'setItem')
-		ssSpy = lsSpy // setItem is shared across localStorage/sessionStorage prototypes
+		// setItem is shared across the localStorage / sessionStorage prototypes,
+		// so the one spy covers both.
 	})
 
 	// These spies are installed on SHARED prototypes (HTMLAnchorElement,

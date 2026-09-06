@@ -13,13 +13,13 @@
  * @spec openspec/changes/add-emergency-access/specs/emergency-access/spec.md#requirement-client-side-recovery-envelope-escrow
  */
 
-import { describe, it, expect } from 'vitest'
-import { sharedKeyPair, secondaryKeyPair } from './fixtures/rsa-fixtures.js'
+import { describe, expect, it } from 'vitest'
 import {
 	buildRecoveryEnvelope,
-	openRecoveryEnvelope,
 	ENVELOPE_VERSION,
+	openRecoveryEnvelope,
 } from '../../src/crypto/emergencyEnvelope.js'
+import { secondaryKeyPair, sharedKeyPair } from './fixtures/rsa-fixtures.js'
 
 // A stand-in grantor private-key PEM (the envelope treats it as opaque bytes).
 const GRANTOR_PRIVATE_KEY_PEM =

@@ -25,12 +25,27 @@
 				:label="t('keepiq', 'Name')"
 				:required="true" />
 
-			<NcSelect
-				v-model="typeId"
-				:options="typeOptions"
-				:inputLabel="t('keepiq', 'Type')"
-				:reduce="(opt) => opt.value"
-				:clearable="false" />
+			<!--
+				Type is READ-ONLY once a secret exists, and deliberately so.
+				The payload shape is type-dependent — the card and identity
+				composites below render conditionally on `isCard` / `isIdentity`
+				and serialize into `key` differently — so switching a Login to a
+				Card left the card fields empty and the login fields
+				unreachable, while the diff happily sent the new `typeId`.
+				Bitwarden and 1Password both make type immutable after creation
+				for the same reason. It stays a select in the CREATE dialog,
+				where there is no existing payload to invalidate.
+			-->
+			<div class="secret-form__readonly">
+				<span class="secret-form__readonly-label">
+					{{ t('keepiq', 'Type') }}
+				</span>
+				<span
+					class="secret-form__readonly-value"
+					data-testid="secret-edit-type">
+					{{ typeLabel }}
+				</span>
+			</div>
 
 			<!-- Card / identity composite payloads (card-identity-items §3.1). -->
 			<template v-if="isCard">
@@ -142,7 +157,6 @@ import {
 	NcLoadingIcon,
 	NcNoteCard,
 	NcPasswordField,
-	NcSelect,
 	NcTextField,
 } from '@nextcloud/vue'
 import ContentSave from 'vue-material-design-icons/ContentSave.vue'
@@ -162,6 +176,7 @@ import { evaluateHibp, evaluateScore, fetchPolicy } from '../policy/policy.js'
 import { useSecretStore } from '../store/modules/secret.js'
 import { useSecretTypeStore } from '../store/modules/secretType.js'
 import { membersToObject, objectToMembers } from '../utils/additionalFields.js'
+import { secretTypeLabel } from '../utils/secretTypes.js'
 
 /**
  * Edit a secret. Loads + decrypts on mount; on save sends only changed fields,
@@ -181,7 +196,6 @@ export default {
 		NcLoadingIcon,
 		NcNoteCard,
 		NcPasswordField,
-		NcSelect,
 		NcTextField,
 	},
 
@@ -198,6 +212,8 @@ export default {
 			default: null,
 		},
 	},
+
+	emits: ['saved', 'close'],
 
 	data() {
 		return {
@@ -228,11 +244,16 @@ export default {
 	},
 
 	computed: {
-		typeOptions() {
-			return useSecretTypeStore().types.map((type) => ({
-				value: type.id,
-				label: type.label || type.name,
-			}))
+		/**
+		 * This secret's type as translated display text. Replaces the type
+		 * SELECT this dialog used to render — see the template comment on why
+		 * type is immutable after creation.
+		 *
+		 * @return {string}
+		 * @spec openspec/specs/secrets/spec.md#requirement-secret-types
+		 */
+		typeLabel() {
+			return secretTypeLabel(useSecretTypeStore().typesById[this.typeId])
 		},
 
 		/**
@@ -438,9 +459,11 @@ export default {
 				if (this.name.trim() !== (o.name || '')) {
 					diff.name = this.name.trim()
 				}
-				if ((this.typeId || null) !== (o.typeId || null)) {
-					diff.typeId = this.typeId
-				}
+				// No `typeId` branch: type is read-only in this dialog (see the
+				// template), so it cannot differ from the original — and if a
+				// future change reintroduces a way to alter it, this must not
+				// be the code that quietly ships a type switch to the server
+				// with a payload built for the old shape.
 				if ((this.url || '') !== (o.url || '')) {
 					diff.url = this.url || null
 				}
@@ -495,6 +518,24 @@ export default {
 	flex-direction: column;
 	gap: 12px;
 	padding: 4px 0;
+}
+
+.secret-form__readonly {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+/* Mirrors NcTextField’s label metrics so the read-only Type row lines up
+   with the editable fields above and below it. */
+.secret-form__readonly-label {
+	font-size: var(--default-font-size, 15px);
+	color: var(--color-text-maxcontrast);
+}
+
+.secret-form__readonly-value {
+	padding: 4px 0;
+	font-weight: 500;
 }
 
 .secret-form__loading {

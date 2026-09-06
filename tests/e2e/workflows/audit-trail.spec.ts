@@ -19,13 +19,13 @@
  * development master password, and the dev seed data provides at least one
  * secret to read/update.
  */
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import {
 	DEV_MASTER_PASSWORD,
 	gotoLockSettled,
 	gotoVaultRoute,
 	unlockVault,
-} from './_workflow-helpers'
+} from './_workflow-helpers.ts'
 
 test.describe('audit trail', () => {
 	test('updating a secret records a secret.updated entry on its Activity tab', async ({
@@ -47,7 +47,17 @@ test.describe('audit trail', () => {
 		// so the row never reaches Playwright's "stable" gate — force the click.
 		await firstSecret.click({ force: true })
 
-		// The owner sees the Activity section on the detail view.
+		// Restyle Stage 8: the detail is a right sidebar over the list; the
+		// audit trail sits inside the collapsed "More information"
+		// disclosure (owner-only section) — open it first.
+		await expect(page.locator('.secret-detail__card')).toBeVisible({
+			timeout: 20_000,
+		})
+		await page
+			.getByTestId('secret-detail-more-info')
+			.evaluate((el: HTMLElement) => el.click())
+
+		// The owner sees the Activity section on the detail sidebar.
 		const activity = page.locator('[data-testid="secret-detail-activity"]')
 		await expect(activity).toBeVisible({ timeout: 20_000 })
 

@@ -33,13 +33,13 @@
  * @spec openspec/changes/implement-secrets/tasks.md#13
  */
 
-import { describe, it, expect } from 'vitest'
-import { encryptPrivateKey, decryptPrivateKey } from '../../src/crypto/aes.js'
+import { describe, expect, it } from 'vitest'
+import { decryptPrivateKey, encryptPrivateKey } from '../../src/crypto/aes.js'
 import {
 	decodeEnvelope,
 	ENVELOPE_VERSION,
-	SALT_LENGTH,
 	IV_LENGTH,
+	SALT_LENGTH,
 } from '../../src/crypto/envelope.js'
 
 const SAMPLE_PEM =

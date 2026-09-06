@@ -35,8 +35,12 @@ import {
 } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import { createApp, h } from 'vue'
-import { createRouter, createWebHashHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
+import {
+	applyHashRouteHandoff,
+	matchRouterBase,
+} from './bootstrap/hash-route-handoff.js'
 import { ensureSkipActionsTarget } from './bootstrap/skip-actions.js'
 import appIcons from './icons.js'
 import bundledManifest from './manifest.json'
@@ -133,8 +137,39 @@ function routesFromManifest(manifest) {
 	return routes
 }
 
+/**
+ * The router base for THIS page load.
+ *
+ * The two-form problem (`/apps/keepiq/...` vs `/index.php/apps/keepiq/...`)
+ * and the `/public` extension on the anonymous shell are documented on
+ * `matchRouterBase` — the fallback to `generateUrl()` only covers a pathname
+ * that is not a Keepiq URL at all (component-test mounts, mainly).
+ *
+ * On the anonymous shell the base includes `/public`, so the SAME manifest
+ * routes (`/share/link/:token`, `/send/:token`, `/share/request/:token`)
+ * resolve on both shells: the recipient links the builders now emit
+ * (`/apps/keepiq/public/share/link/<token>`) are served by
+ * `publicShell#pageCatchAll` and match here.
+ *
+ * It matters more here than elsewhere: keepiq's share and send links are
+ * handed to people OUTSIDE the app, in messages and emails, in whichever URL
+ * shape the sender's client produced. A swallowed deep link there is a share
+ * that silently does nothing.
+ *
+ * @return {string} The base path vue-router should strip from the URL.
+ */
+function routerBase() {
+	return matchRouterBase(window.location.pathname) ?? generateUrl('/apps/keepiq')
+}
+
+// Legacy hash links (`/public#/share/link/<token>` and friends) predate the
+// move to createWebHistory and cannot be regenerated — they sit in
+// recipients' inboxes. Rewrite them to the path form IN PLACE, and do it
+// BEFORE createRouter(): the history reads the location at construction.
+applyHashRouteHandoff()
+
 const router = createRouter({
-	history: createWebHashHistory(generateUrl('/apps/keepiq')),
+	history: createWebHistory(routerBase()),
 	routes: routesFromManifest(mergedManifest),
 })
 

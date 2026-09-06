@@ -7,11 +7,10 @@
  * @spec openspec/changes/team-folder-sharing/tasks.md#6.1
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import axios from '@nextcloud/axios'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-import axios from '@nextcloud/axios'
-
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import TeamFolderDialog from '../../src/modals/TeamFolderDialog.vue'
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0))

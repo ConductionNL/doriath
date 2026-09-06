@@ -22,14 +22,14 @@
  * enabled and the admin owns one active EncryptionSuite seeded with the dev
  * master password.
  */
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import {
 	clickOverflowAction,
 	DEV_MASTER_PASSWORD,
 	gotoLockSettled,
 	gotoVaultRoute,
 	unlockVault,
-} from './_workflow-helpers'
+} from './_workflow-helpers.ts'
 
 const CSV =
 	'name,url,username,password,folder\n'
@@ -45,9 +45,9 @@ test.describe('secret import', () => {
 		await unlockVault(page, DEV_MASTER_PASSWORD)
 		await gotoVaultRoute(page, 'secrets')
 
-		// Import lives in the "More actions" overflow (restyle Stage 5). The
-		// helper clicks the NcActionButton's INNER button — the testid sits on
-		// the presentational <li>, whose click fires nothing.
+		// Import lives in the actions bar's "Actions" overflow (restyle
+		// Stage 8). The helper clicks the NcActionButton's INNER button — the
+		// testid sits on the presentational <li>, whose click fires nothing.
 		await clickOverflowAction(page, 'import-secrets')
 
 		// Upload the CSV via the file input (read entirely client-side).
@@ -85,9 +85,9 @@ test.describe('secret import', () => {
 		await unlockVault(page, DEV_MASTER_PASSWORD)
 		await gotoVaultRoute(page, 'secrets')
 
-		// Import lives in the "More actions" overflow (restyle Stage 5). The
-		// helper clicks the NcActionButton's INNER button — the testid sits on
-		// the presentational <li>, whose click fires nothing.
+		// Import lives in the actions bar's "Actions" overflow (restyle
+		// Stage 8). The helper clicks the NcActionButton's INNER button — the
+		// testid sits on the presentational <li>, whose click fires nothing.
 		await clickOverflowAction(page, 'import-secrets')
 		await page.getByTestId('import-file').setInputFiles({
 			name: 'sample.csv',

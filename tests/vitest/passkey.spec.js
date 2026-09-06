@@ -17,15 +17,15 @@
  * @spec openspec/changes/passkey-item-type/specs/passkey-item-type/spec.md#requirement-passkey-creation-via-api-and-bitwarden-import
  */
 
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
+import { parseBitwardenJson } from '../../src/import/parsers/bitwarden.js'
 import {
 	buildPasskeyCredential,
-	serializePasskey,
 	parsePasskey,
 	passkeyRpId,
+	serializePasskey,
 	truncateCredentialId,
 } from '../../src/passkey/passkey.js'
-import { parseBitwardenJson } from '../../src/import/parsers/bitwarden.js'
 
 const FULL_CREDENTIAL = {
 	credentialId: 'BASE64URL_CREDENTIAL_ID_HERE',

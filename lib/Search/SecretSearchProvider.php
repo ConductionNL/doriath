@@ -143,9 +143,13 @@ class SecretSearchProvider implements IProvider {
 			$subtitle = $url;
 		}
 
+		// A path, not the retired '#/secrets/' hash form: the SPA routes with
+		// createWebHistory, which never reads the fragment. The route is
+		// gated, so the click lands on the lock screen with this path as
+		// returnUrl and resumes here after unlock.
 		$deepLink = $this->urlGenerator->linkToRouteAbsolute(
 			'keepiq.dashboard.page'
-		) . '#/secrets/' . $secret->getId();
+		) . 'secrets/' . $secret->getId();
 
 		$icon = $this->urlGenerator->imagePath(Application::APP_ID, 'app.svg');
 

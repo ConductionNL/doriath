@@ -22,10 +22,9 @@
  * @spec openspec/changes/implement-key-generator/tasks.md#8.2
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
 import axios from '@nextcloud/axios'
-
+import { mount } from '@vue/test-utils'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import KeyGeneratorModal from '../../src/dialogs/KeyGeneratorModal.vue'
 
 const ncStubs = {

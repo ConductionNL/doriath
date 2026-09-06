@@ -7,10 +7,9 @@
  * @spec openspec/changes/implement-secret-requests/tasks.md#13.1
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { setActivePinia, createPinia } from 'pinia'
 import axios from '@nextcloud/axios'
-
+import { createPinia, setActivePinia } from 'pinia'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useSecretRequestStore } from '../../src/store/modules/secretRequest.js'
 
 vi.mock('../../src/crypto/index.js', () => ({

@@ -1,3 +1,4 @@
+import { createVerify, verify as nodeVerify } from 'node:crypto'
 /**
  * @spec openspec/changes/extension-passkey-provider/specs/extension-passkey-provider/spec.md
  *
@@ -7,12 +8,11 @@
  * client-side ES256 signing + authenticatorData + DER encoding are correct — not
  * merely self-consistent.
  */
-import { describe, it, expect } from 'vitest'
-import { createVerify, verify as nodeVerify } from 'node:crypto'
+import { describe, expect, it } from 'vitest'
 import {
+	_internals,
 	createCredential,
 	getAssertion,
-	_internals,
 } from '../../browser-extension/src/passkey/webauthn.js'
 
 function pemFrom(b64, label) {

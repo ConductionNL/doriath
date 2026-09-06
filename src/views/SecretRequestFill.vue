@@ -313,12 +313,15 @@ export default {
 
 <style scoped>
 .keepiq-secret-request-fill {
+	box-sizing: border-box;
+	width: 100%;
 	max-width: 480px;
-	margin: 48px auto;
-	padding: 24px;
-	border: 1px solid var(--color-border, #ddd);
-	border-radius: var(--border-radius-large, 12px);
+	/* Centred by the public shell's flex wrapper (App.vue). */
+	margin: auto;
+	padding: 32px;
+	border-radius: var(--border-radius-container, 16px);
 	background-color: var(--color-main-background, #fff);
+	box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2);
 }
 
 .keepiq-secret-request-fill__field {

@@ -9,8 +9,8 @@
  * @spec openspec/changes/add-secret-audit-trail/tasks.md#task-8.3
  */
 
-import { describe, it, expect } from 'vitest'
-import { csvField, buildCsv } from '../../src/utils/csv.js'
+import { describe, expect, it } from 'vitest'
+import { buildCsv, csvField } from '../../src/utils/csv.js'
 
 describe('csv util', () => {
 	describe('csvField (RFC 4180)', () => {

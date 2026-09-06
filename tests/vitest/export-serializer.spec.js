@@ -11,8 +11,8 @@
  * @spec openspec/changes/secret-export-gdpr/specs/secret-export/spec.md
  */
 
-import { describe, it, expect } from 'vitest'
-import { serializeVault, PAYLOAD_FORMAT } from '../../src/export/serializer.js'
+import { describe, expect, it } from 'vitest'
+import { PAYLOAD_FORMAT, serializeVault } from '../../src/export/serializer.js'
 
 const folders = [
 	{ id: 'f1', name: 'Work', parentId: null },

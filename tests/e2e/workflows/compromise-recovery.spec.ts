@@ -1,3 +1,5 @@
+import type { Page } from '@playwright/test'
+
 /*
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -43,8 +45,8 @@
  * @e2e openspec/changes/restore-suite-migration-loop/specs/secrets/spec.md#requirement-possibly-compromised-flag-lifecycle
  * @e2e openspec/specs/encryption-suites/spec.md#requirement-suite-migration
  */
-import { test, expect, type Page } from '@playwright/test'
-import { APP_BASE } from './_workflow-helpers'
+import { expect, test } from '@playwright/test'
+import { APP_BASE, gotoVaultRoute } from './_workflow-helpers.ts'
 
 /** A fixture account that owns no EncryptionSuite, so setup mode is reachable. */
 const VAULT_USER = process.env.KEEPIQ_VAULT_USER ?? 'alice'
@@ -109,7 +111,7 @@ async function clickByLabel(page: Page, label: string): Promise<void> {
  * @return True when setup ran; false when the user already owned a suite.
  */
 async function setUpVault(page: Page): Promise<boolean> {
-	await page.goto(`${APP_BASE}/#/lock`, { waitUntil: 'domcontentloaded' })
+	await page.goto(`${APP_BASE}/lock`, { waitUntil: 'domcontentloaded' })
 	await page
 		.locator('.lock-screen__card')
 		.waitFor({ state: 'visible', timeout: 30_000 })
@@ -394,9 +396,7 @@ test.describe('Workflow: compromise recovery — encryption-suites/spec.md', () 
 			timeout: 15_000,
 		})
 
-		await page.evaluate(() => {
-			window.location.hash = '#/secrets'
-		})
+		await gotoVaultRoute(page, 'secrets')
 		await page.waitForTimeout(2500)
 
 		const warned = page.locator('[data-testid="secret-possibly-compromised"]')
@@ -410,7 +410,7 @@ test.describe('Workflow: compromise recovery — encryption-suites/spec.md', () 
 		// The negative case is the one that regresses quietly: a banner shown to
 		// everyone gets noticed immediately, one shown to nobody does not.
 		await loginAsVaultUser(page)
-		await page.goto(`${APP_BASE}/#/lock`, { waitUntil: 'domcontentloaded' })
+		await page.goto(`${APP_BASE}/lock`, { waitUntil: 'domcontentloaded' })
 		await page
 			.locator('.lock-screen__card')
 			.waitFor({ state: 'visible', timeout: 30_000 })

@@ -1,3 +1,5 @@
+import type { Page } from '@playwright/test'
+
 /*
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -48,13 +50,13 @@
  * is enough to render the recipient's password prompt — the surface an external
  * recipient actually sees.
  */
-import { test, expect, type Page } from '@playwright/test'
-import { shootComponent } from './_visual-helpers'
+import { expect, test } from '@playwright/test'
 import {
 	APP_BASE,
 	gotoVaultRoute,
 	unlockVault,
-} from '../workflows/_workflow-helpers'
+} from '../workflows/_workflow-helpers.ts'
+import { shootComponent } from './_visual-helpers.ts'
 
 /** A placeholder ciphertext blob. The server never decrypts it. */
 const OPAQUE = 'dmlzdWFsLWJhc2VsaW5lLXBsYWNlaG9sZGVy'
@@ -93,7 +95,7 @@ async function api(
 				body: body ? JSON.stringify(body) : undefined,
 			})
 			const text = await res.text()
-			let parsed: any = null
+			let parsed: any
 			try {
 				parsed = JSON.parse(text)
 			} catch {
@@ -177,7 +179,7 @@ test.describe('Keepiq — routed page baselines', () => {
 			(r: any) => r.status === 'pending',
 		)
 		expect(pending, 'no pending secret request to fill').toBeTruthy()
-		await page.goto(`${APP_BASE}/#/share/request/${pending.token}`, {
+		await page.goto(`${APP_BASE}/share/request/${pending.token}`, {
 			waitUntil: 'domcontentloaded',
 		})
 		await shootComponent(page, 'secret-request-fill', 'secret-request-fill.png')
@@ -205,7 +207,7 @@ test.describe('Keepiq — routed page baselines', () => {
 		).toBeLessThan(300)
 		const token = created.json.token ?? created.json.data?.token
 		expect(token, 'the created link share carries no token').toBeTruthy()
-		await page.goto(`${APP_BASE}/#/share/link/${token}`, {
+		await page.goto(`${APP_BASE}/share/link/${token}`, {
 			waitUntil: 'domcontentloaded',
 		})
 		await shootComponent(page, 'link-share-access', 'link-share-access.png')
@@ -228,7 +230,7 @@ test.describe('Keepiq — routed page baselines', () => {
 		).toBeLessThan(300)
 		const token = created.json.token ?? created.json.data?.token
 		expect(token, 'the created ephemeral send carries no token').toBeTruthy()
-		await page.goto(`${APP_BASE}/#/send/${token}`, {
+		await page.goto(`${APP_BASE}/send/${token}`, {
 			waitUntil: 'domcontentloaded',
 		})
 		await shootComponent(page, 'send-access-page', 'ephemeral-send-access.png')

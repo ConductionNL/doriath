@@ -73,7 +73,7 @@ class LinkShareControllerTest extends TestCase {
 		$this->linkShareService = $this->createMock(originalClassName: LinkShareService::class);
 		$this->suiteService = $this->createMock(originalClassName: EncryptionSuiteService::class);
 		$urlGenerator = $this->createMock(originalClassName: IURLGenerator::class);
-		$urlGenerator->method('linkToRoute')->willReturn('/apps/keepiq/');
+		$urlGenerator->method('linkToRoute')->willReturn('/apps/keepiq/public');
 		$urlGenerator->method('getAbsoluteURL')->willReturnCallback(
 			static fn (string $path): string => 'https://cloud.example.com' . $path
 		);
@@ -168,7 +168,13 @@ class LinkShareControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_CREATED, $response->getStatus());
 		$this->assertSame('abcd1234', $data['token']);
 		$this->assertArrayHasKey('linkUrl', $data);
-		$this->assertStringContainsString('#/share/link/abcd1234', $data['linkUrl']);
+		// The PATH form on the anonymous shell — not the retired hash form,
+		// which the createWebHistory router never reads (recipients got the
+		// lock screen), and not the authenticated path, which answers 401.
+		$this->assertSame(
+			'https://cloud.example.com/apps/keepiq/public/share/link/abcd1234',
+			$data['linkUrl']
+		);
 		$this->assertArrayNotHasKey('encryptedSecretSnapshot', $data);
 	}//end testCreateReturnsCreatedWithLinkUrl()
 

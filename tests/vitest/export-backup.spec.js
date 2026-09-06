@@ -17,12 +17,12 @@
  * @spec openspec/changes/secret-export-gdpr/specs/secret-export/spec.md
  */
 
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
-	encryptBackup,
-	decryptBackup,
 	BACKUP_FORMAT,
 	BACKUP_VERSION,
+	decryptBackup,
+	encryptBackup,
 } from '../../src/export/backup.js'
 
 const payload = {

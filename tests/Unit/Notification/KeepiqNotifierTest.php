@@ -327,7 +327,7 @@ class KeepiqNotifierTest extends TestCase {
 			actual: $recorded['parsedMessage']
 		);
 		$this->assertSame(
-			expected: self::BASE_URL . '/index.php/apps/keepiq/#/secrets/42',
+			expected: self::BASE_URL . '/index.php/apps/keepiq/secrets/42',
 			actual: $recorded['link']
 		);
 	}//end testSecretSharedRendersSharerAndSecret()
@@ -369,7 +369,7 @@ class KeepiqNotifierTest extends TestCase {
 			actual: $recorded['parsedMessage']
 		);
 		$this->assertSame(
-			expected: self::BASE_URL . '/index.php/apps/keepiq/#/secrets/7',
+			expected: self::BASE_URL . '/index.php/apps/keepiq/secrets/7',
 			actual: $recorded['link']
 		);
 	}//end testShareRequestRendersRequester()
@@ -480,7 +480,7 @@ class KeepiqNotifierTest extends TestCase {
 			actual: $recorded['parsedMessage']
 		);
 		$this->assertSame(
-			expected: self::BASE_URL . '/index.php/apps/keepiq/#/secrets/99',
+			expected: self::BASE_URL . '/index.php/apps/keepiq/secrets/99',
 			actual: $recorded['link']
 		);
 	}//end testGroupMemberAddedRendersGroupAndSecret()
@@ -511,7 +511,7 @@ class KeepiqNotifierTest extends TestCase {
 			actual: $recorded['parsedMessage']
 		);
 		$this->assertSame(
-			expected: self::BASE_URL . '/index.php/apps/keepiq/#/secrets/5',
+			expected: self::BASE_URL . '/index.php/apps/keepiq/secrets/5',
 			actual: $recorded['link']
 		);
 	}//end testSecretCompromisedRendersMigrationWarning()

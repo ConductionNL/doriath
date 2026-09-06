@@ -16,13 +16,13 @@
  * @e2e openspec/specs/secrets/spec.md#secret-detail-route-gated-by-lock
  * @e2e openspec/specs/secrets/spec.md#folder-route-gated-by-lock
  */
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import {
+	assertNoKeepiqErrors,
+	collectKeepiqErrors,
 	gotoRoute,
 	lockHeading,
-	collectKeepiqErrors,
-	assertNoKeepiqErrors,
-} from './_helpers'
+} from './_helpers.ts'
 
 const ROUTES = [
 	{ name: 'Dashboard', hash: '#/' },

@@ -120,6 +120,27 @@ export default {
 		},
 	},
 
+	watch: {
+		/**
+		 * The hosting sidebar swaps the `:id` route segment without
+		 * remounting (see SecretDetailSidebar), so a secret switch must
+		 * refetch here — `mounted()` alone leaves the previous secret's
+		 * list on screen.
+		 *
+		 * @spec exclude Component data plumbing: re-runs the panel's existing
+		 * fetch when the hosting sidebar swaps `:id`. It states no attachment
+		 * behaviour of its own — that lives in this file's header anchors.
+		 */
+		async secretId() {
+			this.store.reset()
+			try {
+				await this.store.fetchAttachments(this.secretId)
+			} catch {
+				// Error surfaced via store state.
+			}
+		},
+	},
+
 	async mounted() {
 		try {
 			await this.store.fetchAttachments(this.secretId)

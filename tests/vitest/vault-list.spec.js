@@ -10,7 +10,11 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import { folderPathLabel, subfolderRows } from '../../src/utils/vaultList.js'
+import {
+	folderPathLabel,
+	rootVaultOf,
+	subfolderRows,
+} from '../../src/utils/vaultList.js'
 
 const FOLDERS = [
 	{ id: 'a', name: 'Alpha vault', parentId: null },
@@ -38,6 +42,31 @@ describe('subfolderRows', () => {
 			folderId: 'a1x',
 			name: 'Deep',
 			isFolder: true,
+			customIcon: null,
+			customColor: null,
+		})
+	})
+
+	it('carries the vault customization keys through (restyle Stage 9)', () => {
+		const folders = [
+			{
+				id: 'v1',
+				name: 'Styled',
+				parentId: null,
+				customIcon: 'briefcase',
+				customColor: 'blue',
+			},
+			{ id: 'v2', name: 'Plain', parentId: null },
+		]
+		const rows = subfolderRows(folders, null)
+		expect(rows.find((r) => r.folderId === 'v1')).toMatchObject({
+			customIcon: 'briefcase',
+			customColor: 'blue',
+		})
+		// Unset stays an explicit null, never undefined.
+		expect(rows.find((r) => r.folderId === 'v2')).toMatchObject({
+			customIcon: null,
+			customColor: null,
 		})
 	})
 
@@ -55,6 +84,34 @@ describe('subfolderRows', () => {
 	it('is safe on empty and missing input', () => {
 		expect(subfolderRows([], null)).toEqual([])
 		expect(subfolderRows(undefined, 'a')).toEqual([])
+	})
+})
+
+describe('rootVaultOf', () => {
+	it('walks a nested folder up to its top-level vault', () => {
+		expect(rootVaultOf(FOLDERS, 'a1x')?.id).toBe('a')
+		expect(rootVaultOf(FOLDERS, 'a1')?.id).toBe('a')
+	})
+
+	it('returns a vault as its own root', () => {
+		expect(rootVaultOf(FOLDERS, 'b')?.id).toBe('b')
+	})
+
+	it('yields null for unknown or missing ids', () => {
+		expect(rootVaultOf(FOLDERS, 'nope')).toBeNull()
+		expect(rootVaultOf(FOLDERS, null)).toBeNull()
+		expect(rootVaultOf([], 'a')).toBeNull()
+	})
+
+	it('yields null for a dangling parent and for a parentId cycle', () => {
+		const dangling = [{ id: 'x', name: 'X', parentId: 'ghost' }]
+		expect(rootVaultOf(dangling, 'x')).toBeNull()
+
+		const cycle = [
+			{ id: 'p', name: 'P', parentId: 'q' },
+			{ id: 'q', name: 'Q', parentId: 'p' },
+		]
+		expect(rootVaultOf(cycle, 'p')).toBeNull()
 	})
 })
 

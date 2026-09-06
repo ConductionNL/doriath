@@ -23,8 +23,8 @@
  * ones sat in its findings list. Anchors are now per-test, against the real
  * slugs, so each claim is checkable against the body directly below it.
  */
-import { test, expect } from '@playwright/test'
-import { unlockVault, openVault } from './_workflow-helpers'
+import { expect, test } from '@playwright/test'
+import { openVault, unlockVault } from './_workflow-helpers.ts'
 
 test.describe('Workflow: secret rows are keyboard-operable — secrets-write-ui/spec.md', () => {
 	test('Tab + Enter opens a secret from the list without a mouse', async ({

@@ -26,19 +26,18 @@
  * @spec openspec/changes/implement-link-sharing/tasks.md#task-8.1
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // @vue/test-utils v1 (Vue 2) does not export flushPromises; the
 // canonical equivalent is to await an already-resolved promise twice
 // to drain the microtask queue and let v-if branches re-render.
-const flushPromises = async () => {
+async function flushPromises() {
 	await Promise.resolve()
 	await Promise.resolve()
 	await Promise.resolve()
 }
 import { createPinia, setActivePinia } from 'pinia'
-
 import LinkShareAccess from '../../src/views/LinkShareAccess.vue'
 import { useLinkShareStore } from '../../src/store/modules/linkShare.js'
 
@@ -114,6 +113,79 @@ describe('LinkShareAccess', () => {
 			true,
 		)
 		expect(wrapper.find('[data-testid="link-share-form"]').exists()).toBe(false)
+
+		// The snapshot renders as labelled field rows (not a raw <dl>), and the
+		// secret value is MASKED until the recipient reveals it.
+		expect(
+			wrapper.find('[data-testid="link-share-field-name"]').text(),
+		).toContain('GitHub PAT')
+		expect(
+			wrapper.find('[data-testid="link-share-field-login"]').text(),
+		).toContain('git-user')
+		const value = wrapper.find('[data-testid="link-share-value"]')
+		expect(value.text()).not.toContain('ghp_AAA')
+		await wrapper.find('[data-testid="link-share-toggle-key"]').trigger('click')
+		expect(wrapper.find('[data-testid="link-share-value"]').text()).toContain(
+			'ghp_AAA',
+		)
+	})
+
+	it('renders a card composite as individual labelled rows, sensitive ones masked', async () => {
+		const store = useLinkShareStore()
+		store.fetchPublicLinkShare = vi.fn().mockResolvedValue({
+			encryptedSecretSnapshot: 'CIPHERTEXT_B64',
+			argon2idSalt: 'SALT_B64',
+			usageLimit: 1,
+			usageCount: 0,
+		})
+		store.decryptPublicSnapshot = vi.fn().mockResolvedValue({
+			name: 'Corporate card',
+			// A card secret stores a JSON composite in `key`
+			// (card-identity-items D1/D2) — the raw JSON must never be shown.
+			key: JSON.stringify({
+				number: '5310750047138122',
+				expiry: '12/24',
+				cvv: '123',
+				pin: '4321',
+				cardholder: 'T. Ester',
+			}),
+			additionalFields: { 'zgw-client-id': 'client-9' },
+		})
+		store.confirmPublicLinkShare = vi.fn().mockResolvedValue({})
+
+		const wrapper = mount(LinkShareAccess)
+		await flushPromises()
+		wrapper.vm.password = 'pw'
+		await wrapper.vm.onUnlock()
+		await flushPromises()
+
+		const snapshot = wrapper.find('[data-testid="link-share-snapshot"]')
+		// No raw JSON blob on screen.
+		expect(snapshot.text()).not.toContain('{"number"')
+		// Sensitive members masked; recognisable metadata visible.
+		expect(
+			wrapper.find('[data-testid="link-share-field-key-number"]').text(),
+		).not.toContain('5310750047138122')
+		expect(
+			wrapper.find('[data-testid="link-share-field-key-expiry"]').text(),
+		).toContain('12/24')
+		expect(
+			wrapper.find('[data-testid="link-share-field-key-cardholder"]').text(),
+		).toContain('T. Ester')
+		// Reveal shows the masked member.
+		await wrapper
+			.find('[data-testid="link-share-toggle-key-number"]')
+			.trigger('click')
+		expect(
+			wrapper.find('[data-testid="link-share-field-key-number"]').text(),
+		).toContain('5310750047138122')
+		// Additional fields render as rows of their own, masked.
+		const extra = wrapper.find(
+			'[data-testid="link-share-field-extra-zgw-client-id"]',
+		)
+		expect(extra.exists()).toBe(true)
+		expect(extra.text()).toContain('zgw-client-id')
+		expect(extra.text()).not.toContain('client-9')
 	})
 
 	it('wrong password: surfaces error and re-fetches with failed=true (brute-force counter)', async () => {
@@ -146,7 +218,7 @@ describe('LinkShareAccess', () => {
 		wrapper.vm.password = 'wrong-password'
 		await wrapper.vm.onUnlock()
 
-		expect(wrapper.vm.unlockError).toContain('does not match')
+		expect(wrapper.vm.unlockError).toContain('Invalid password')
 		expect(store.confirmPublicLinkShare).not.toHaveBeenCalled()
 		// The re-fetch was triggered with failed=true.
 		expect(store.fetchPublicLinkShare).toHaveBeenCalledTimes(2)

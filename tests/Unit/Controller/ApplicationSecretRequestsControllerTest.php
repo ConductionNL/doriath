@@ -160,12 +160,14 @@ class ApplicationSecretRequestsControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_CREATED, $response->getStatus());
 		$data = $response->getData();
 		$this->assertSame('tok-abc', $data['token']);
-		// fillLinkUrl is what an application hands to a PERSON, so it must be the
-		// anonymous SPA shell carrying the router hash route. It previously
-		// resolved to the JSON endpoint, which would have sent the recipient a
-		// blob of JSON including the vault's public certificate.
+		// fillLinkUrl is what an application hands to a PERSON, so it must be
+		// the anonymous SPA shell carrying the route as a PATH. It previously
+		// resolved to the JSON endpoint (which would have sent the recipient a
+		// blob of JSON including the vault's public certificate), then to the
+		// retired hash form, which the createWebHistory router never reads —
+		// recipients got the lock screen.
 		$this->assertSame(
-			'https://nc.example/index.php/apps/keepiq/public#/share/request/tok-abc',
+			'https://nc.example/index.php/apps/keepiq/public/share/request/tok-abc',
 			$data['fillLinkUrl']
 		);
 		// The machine-readable endpoint stays available for polling.

@@ -19,10 +19,11 @@
  * @spec openspec/specs/cxf-import-export/spec.md#requirement-unmapped-item-report
  */
 
-import { describe, it, expect } from 'vitest'
-import { parseCxfDocument, cxfToRows, buildCxfDocument } from '../../src/cxf/cxf.js'
-import { parsePasskey, serializePasskey } from '../../src/passkey/passkey.js'
+import { describe, expect, it } from 'vitest'
+import { buildCxfDocument, cxfToRows, parseCxfDocument } from '../../src/cxf/cxf.js'
 import { getParser } from '../../src/import/parserRegistry.js'
+import { parsePasskey, serializePasskey } from '../../src/passkey/passkey.js'
+
 import '../../src/import/parsers/index.js'
 
 const SAMPLE_DOC = {
