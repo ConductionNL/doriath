@@ -145,17 +145,17 @@ class Version000004Date20260523000000 extends SimpleMigrationStep {
 		$schema = $schemaClosure();
 
 		if ($schema->hasTable('doriath_ca_certs') === false) {
-			return null;
+			return $schema;
 		}
 
 		$table = $schema->getTable('doriath_ca_certs');
 		if ($table->hasColumn('is_active') === false) {
-			return null;
+			return $schema;
 		}
 
 		$column = $table->getColumn('is_active');
 		if ($column->getType()->getName() === Types::BOOLEAN) {
-			return null;
+			return $schema;
 		}
 
 		$column->setType(\Doctrine\DBAL\Types\Type::getType(Types::BOOLEAN));

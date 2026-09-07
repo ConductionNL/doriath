@@ -45,7 +45,7 @@ class Version000006Date20260604000000 extends SimpleMigrationStep {
 		$schema = $schemaClosure();
 
 		if ($schema->hasTable('doriath_secret_types') === true) {
-			return null;
+			return $schema;
 		}
 
 		$table = $schema->createTable('doriath_secret_types');

@@ -50,7 +50,7 @@ class Version000018Date20260707000000 extends SimpleMigrationStep {
 		$schema = $schemaClosure();
 
 		if ($schema->hasTable('doriath_emergency_contacts') === true) {
-			return null;
+			return $schema;
 		}
 
 		$table = $schema->createTable('doriath_emergency_contacts');

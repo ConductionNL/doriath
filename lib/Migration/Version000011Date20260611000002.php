@@ -51,7 +51,7 @@ class Version000011Date20260611000002 extends SimpleMigrationStep {
 		$schema = $schemaClosure();
 
 		if ($schema->hasTable('doriath_dashboard_settings') === true) {
-			return null;
+			return $schema;
 		}
 
 		$table = $schema->createTable('doriath_dashboard_settings');

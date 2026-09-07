@@ -55,7 +55,7 @@ class Version000015Date20260614000000 extends SimpleMigrationStep {
 		$schema = $schemaClosure();
 
 		if ($schema->hasTable('doriath_audit_log') === true) {
-			return null;
+			return $schema;
 		}
 
 		$table = $schema->createTable('doriath_audit_log');

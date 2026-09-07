@@ -67,20 +67,20 @@ class Version000033Date20260817120000 extends SimpleMigrationStep {
 		$schema = $schemaClosure();
 
 		if ($schema->hasTable('doriath_secrets') === false) {
-			return null;
+			return $schema;
 		}
 
 		$table = $schema->getTable('doriath_secrets');
 
 		if ($table->hasColumn('key') === false) {
-			return null;
+			return $schema;
 		}
 
 		$column = $table->getColumn('key');
 
 		// Idempotent: re-running must not emit a redundant ALTER.
 		if ($column->getDefault() === '') {
-			return null;
+			return $schema;
 		}
 
 		$column->setDefault('');

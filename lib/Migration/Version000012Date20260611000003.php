@@ -50,7 +50,7 @@ class Version000012Date20260611000003 extends SimpleMigrationStep {
 		$schema = $schemaClosure();
 
 		if ($schema->hasTable('doriath_applications') === true) {
-			return null;
+			return $schema;
 		}
 
 		$table = $schema->createTable('doriath_applications');

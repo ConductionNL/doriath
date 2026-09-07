@@ -53,7 +53,7 @@ class Version000014Date20260612000000 extends SimpleMigrationStep {
 		$schema = $schemaClosure();
 
 		if ($schema->hasTable('doriath_secret_delegations') === true) {
-			return null;
+			return $schema;
 		}
 
 		$table = $schema->createTable('doriath_secret_delegations');

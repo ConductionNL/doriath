@@ -51,7 +51,7 @@ class Version000001Date20260331000000 extends SimpleMigrationStep {
 		$schema = $schemaClosure();
 
 		if ($schema->hasTable('doriath_enc_suites') === true) {
-			return null;
+			return $schema;
 		}
 
 		$table = $schema->createTable('doriath_enc_suites');

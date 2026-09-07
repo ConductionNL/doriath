@@ -56,7 +56,7 @@ class Version000035Date20260901000000 extends SimpleMigrationStep {
 		$schema = $schemaClosure();
 
 		if ($schema->hasTable('doriath_folders') === false) {
-			return null;
+			return $schema;
 		}
 
 		$table = $schema->getTable('doriath_folders');
@@ -87,7 +87,7 @@ class Version000035Date20260901000000 extends SimpleMigrationStep {
 		}
 
 		if ($changed === false) {
-			return null;
+			return $schema;
 		}
 
 		return $schema;

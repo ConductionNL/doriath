@@ -48,7 +48,7 @@ class Version000005Date20260603000000 extends SimpleMigrationStep {
 		$schema = $schemaClosure();
 
 		if ($schema->hasTable('doriath_link_shares') === true) {
-			return null;
+			return $schema;
 		}
 
 		$table = $schema->createTable('doriath_link_shares');

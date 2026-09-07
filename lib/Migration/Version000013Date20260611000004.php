@@ -52,7 +52,7 @@ class Version000013Date20260611000004 extends SimpleMigrationStep {
 		$schema = $schemaClosure();
 
 		if ($schema->hasTable('doriath_group_shares') === true) {
-			return null;
+			return $schema;
 		}
 
 		$table = $schema->createTable('doriath_group_shares');

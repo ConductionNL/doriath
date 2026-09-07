@@ -49,7 +49,7 @@ class Version000021Date20260718100000 extends SimpleMigrationStep {
 		$schema = $schemaClosure();
 
 		if ($schema->hasTable('doriath_secret_versions') === true) {
-			return null;
+			return $schema;
 		}
 
 		$table = $schema->createTable('doriath_secret_versions');

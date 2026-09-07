@@ -68,12 +68,12 @@ class Version000016Date20260614000001 extends SimpleMigrationStep {
 		$schema = $schemaClosure();
 
 		if ($schema->hasTable('doriath_secrets') === false) {
-			return null;
+			return $schema;
 		}
 
 		$table = $schema->getTable('doriath_secrets');
 		if ($table->hasColumn('key_updated_at') === true) {
-			return null;
+			return $schema;
 		}
 
 		$table->addColumn('key_updated_at', Types::DATETIME, ['notnull' => false]);

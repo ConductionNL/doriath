@@ -54,7 +54,7 @@ class Version000017Date20260614000002 extends SimpleMigrationStep {
 		$schema = $schemaClosure();
 
 		if ($schema->hasTable('doriath_secrets') === false) {
-			return null;
+			return $schema;
 		}
 
 		$table = $schema->getTable('doriath_secrets');
@@ -71,7 +71,7 @@ class Version000017Date20260614000002 extends SimpleMigrationStep {
 		}
 
 		if ($changed === false) {
-			return null;
+			return $schema;
 		}
 
 		return $schema;

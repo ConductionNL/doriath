@@ -70,7 +70,7 @@ class Version000002Date20260331000001 extends SimpleMigrationStep {
 		$schema = $schemaClosure();
 
 		if ($schema->hasTable('doriath_ca_certs') === true) {
-			return null;
+			return $schema;
 		}
 
 		$this->createCaCertsTable(schema: $schema);
