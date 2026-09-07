@@ -68,39 +68,51 @@ const REQUIRED = (process.env.L10N_REQUIRED_LOCALES || EUROPEAN)
 	.split(',').map((s) => s.trim()).filter(Boolean)
 
 // ---------------------------------------------------------------------------
-// Two-tier enforcement.
+// Enforcement.
 //
-// REQUIRED (above) is the set this app intends to fully support — all 36.
-// ENFORCED is the subset that must be at FULL parity right now; anything in
-// REQUIRED but not in ENFORCED is still MEASURED, and is held to a
-// no-regression ratchet instead.
+// ENFORCED holds the locales that must be at FULL parity. Every REQUIRED
+// locale is now at zero missing keys, so this defaults to the whole required
+// set: a missing or empty value in ANY of the 36 is a hard failure, and adding
+// an English source string without translating it turns this gate red on the
+// same PR. That is the drift this file exists to catch.
 //
-// Why the split: when this gate was first wired up, the 36 required locales
-// were 20,433 translations short (see keepiq#180). A gate that is red on
-// every PR from day one gets switched off, and a gate that is not wired up at
-// all — which is what this file was for its entire life — measures nothing.
-// The ratchet is the honest middle: the debt is printed in full on every run
-// and can never grow, while ENFORCED widens as locales are completed.
+// It could not always hold that line. When the gate was first wired up the 36
+// required locales were 20,433 translations short (keepiq#180). A gate that is
+// red on every PR from day one gets switched off, and a gate that is not wired
+// up at all — which is what this file was for its entire life — measures
+// nothing. So it ran two-tier: ENFORCED started EMPTY, because no locale was
+// complete enough to go in it — nl, the closest, was still 362 keys short in
+// each of its two sets — and every required locale was held to the
+// no-regression ratchet below instead. The whole remaining debt then cleared
+// in one pass on 2026-09-05: 38,804 missing/empty values across all 72 locale
+// sets (544 per set for the 35 non-nl locales, 362 per set for nl), after
+// which the split had nothing left to separate. tests/l10n/parity-ratchet.json
+// is deleted rather than left holding stale slack that would silently absorb a
+// regression.
 //
-// This is deliberately NOT a suppression. Compared to the previous state
-// (the script had zero callers) every one of these checks is new:
-//   • ENFORCED locales must be at exact full parity — hard fail.
-//   • EVERY required locale has a hard upper bound on its missing count —
-//     so adding an English source string without translating it turns this
-//     gate red, which is precisely the drift this file exists to catch.
-// Nothing that was being measured before is measured less.
-// ENFORCED starts EMPTY, and that is a measured fact, not a shrug: no locale
-// in REQUIRED is at full parity today (the closest, nl, is 413 keys short), so
-// there is no locale that could be put here without turning the gate red on
-// every PR. The first draft of this defaulted to 'en' — which LOOKS like
-// enforcement but is not, because `en` is the source language and is not a
-// member of REQUIRED at all. That default passed while enforcing precisely
-// nothing. Guard below makes that class of mistake impossible to repeat.
-const ENFORCED = (process.env.L10N_PARITY_ENFORCED || '')
-	.split(',').map((s) => s.trim()).filter(Boolean)
+// Defaulting to REQUIRED rather than to a hard-coded list of 36 is deliberate:
+// an override of L10N_REQUIRED_LOCALES then carries enforcement with it,
+// instead of quietly leaving the newly-required locales unenforced. The first
+// draft of this defaulted to 'en' — which LOOKS like enforcement but is not,
+// because `en` is the source language and is not a member of REQUIRED at all.
+// That default passed while enforcing precisely nothing. The guard below makes
+// that class of mistake impossible to repeat.
+const ENFORCED = (process.env.L10N_PARITY_ENFORCED
+	? process.env.L10N_PARITY_ENFORCED.split(',').map((s) => s.trim()).filter(Boolean)
+	: [...REQUIRED])
 
 // Ratchet: locale -> highest missing count tolerated. A locale absent from the
 // file is tolerated at 0, so a NEW locale must land complete.
+//
+// With ENFORCED defaulting to REQUIRED the ratchet is UNREACHABLE, not merely
+// dormant: every row in `failures` is drawn from REQUIRED, and the split below
+// sends each ENFORCED locale to hardEnforced before any bound is consulted. A
+// locale added to REQUIRED is therefore automatically ENFORCED and hard-fails
+// — it cannot fall through to a bound of its own. The only way back into this
+// machinery is an explicit L10N_PARITY_ENFORCED naming a PROPER SUBSET of
+// REQUIRED, which is how a future bulk-translation push would stage itself
+// again. `--write` is meaningful only in that configuration; under the default
+// it writes a file the next run will not read.
 const RATCHET_FILE = path.join(__dirname, 'parity-ratchet.json')
 const RATCHET = fs.existsSync(RATCHET_FILE) ? readJson(RATCHET_FILE) : {}
 const TIGHTEN = process.argv.includes('--write')
@@ -296,6 +308,14 @@ const totalDebt = failures.reduce((n, f) => (n + (f.kind === 'INCOMPLETE' ? shor
 // TIGHTENS: a locale that got worse is still a failure and is not recorded,
 // otherwise "--write" would be a one-command way to erase a regression.
 if (TIGHTEN) {
+	if (ENFORCED.length >= REQUIRED.length) {
+		console.error('l10n-parity: REFUSING TO WRITE — every required locale is ENFORCED, so '
+			+ 'the ratchet is never consulted and this file would be dead weight that a later '
+			+ 'run could mistake for sanctioned slack. Translate the keys listed by a normal '
+			+ 'run, or narrow enforcement with L10N_PARITY_ENFORCED first if you are '
+			+ 'deliberately staging a bulk push.')
+		process.exit(2)
+	}
 	const next = {}
 	for (const f of failures) {
 		const k = ratchetKey(f)
@@ -361,6 +381,14 @@ for (const { f, bound } of regressions) {
 	}
 }
 console.error('\nA locale may never lose ground. Translate the keys listed above — or, if you '
-	+ 'just added an English source string, add it to every locale file. '
-	+ 'Run `node tests/l10n/check-l10n-parity.js --write` ONLY to record genuine progress.')
+	+ 'just added an English source string, add it to every locale file.')
+// The ratchet — and therefore `--write` — does anything only while ENFORCED is a
+// PROPER SUBSET of REQUIRED. Advertising it under the default would send the
+// reader off to write a file that the next run does not read, leaving the gate
+// red: they would conclude the tool is broken rather than that the keys listed
+// above still need translating.
+if (ENFORCED.length < REQUIRED.length) {
+	console.error('Run `node tests/l10n/check-l10n-parity.js --write` ONLY to record genuine '
+		+ 'progress on the locales left outside L10N_PARITY_ENFORCED.')
+}
 process.exit(1)
