@@ -921,6 +921,12 @@ export default {
 		 * last (CnBreadcrumbs renders it unlinked with aria-current). Empty
 		 * at the root — no trail is rendered there.
 		 *
+		 * The Home crumb carries a `label` even though nothing renders it:
+		 * NcBreadcrumb prints the name only for crumbs WITHOUT an icon, but
+		 * declares `name` as a required String, so an icon-only crumb warns
+		 * once per crumb per render ("type check failed for prop name").
+		 * The word matches the nav item pointing at the same route.
+		 *
 		 * @return {Array<object>} CnBreadcrumbs `crumbs` entries.
 		 * @spec openspec/specs/secrets/spec.md#requirement-folder-management
 		 */
@@ -930,7 +936,11 @@ export default {
 				return []
 			}
 			return [
-				{ icon: 'Home', to: { name: 'SecretList' } },
+				{
+					icon: 'Home',
+					label: t('keepiq', 'Vaults'),
+					to: { name: 'SecretList' },
+				},
 				...trail.map((folder, index) =>
 					index === trail.length - 1
 						? { label: folder.name }
