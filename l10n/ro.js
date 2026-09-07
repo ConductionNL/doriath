@@ -1127,7 +1127,10 @@ OC.L10N.register(
         "Everything you did, from the audit trail.": "Tot ce ați făcut, din urma de audit.",
         "Reports": "Rapoarte",
         "Vault unlocked. Opening your vault…": "Seiful a fost deblocat. Se deschide seiful dvs.…",
-        "Deleted {ok} of {total} secrets": "Șterse {ok} din {total} secrete"
+        "Deleted {ok} of {total} secrets": "Șterse {ok} din {total} secrete",
+        "Moved {ok} of {total} secrets": "Mutate {ok} din {total} secrete",
+        "Shared {ok} of {total} secrets": "Partajate {ok} din {total} secrete",
+        "Added {ok} of {total} secrets to the team folder": "Adăugate {ok} din {total} secrete în dosarul de echipă"
     },
     "nplurals=2; plural=(n != 1);"
 )

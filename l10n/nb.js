@@ -1127,7 +1127,10 @@ OC.L10N.register(
         "Everything you did, from the audit trail.": "Alt du gjorde, fra revisjonssporet.",
         "Reports": "Rapporter",
         "Vault unlocked. Opening your vault…": "Hvelvet er låst opp. Åpner hvelvet ditt…",
-        "Deleted {ok} of {total} secrets": "Slettet {ok} av {total} hemmeligheter"
+        "Deleted {ok} of {total} secrets": "Slettet {ok} av {total} hemmeligheter",
+        "Moved {ok} of {total} secrets": "Flyttet {ok} av {total} hemmeligheter",
+        "Shared {ok} of {total} secrets": "Delte {ok} av {total} hemmeligheter",
+        "Added {ok} of {total} secrets to the team folder": "Lagt til {ok} av {total} hemmeligheter i teammappen"
     },
     "nplurals=2; plural=(n != 1);"
 )

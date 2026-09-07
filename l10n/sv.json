@@ -1126,7 +1126,10 @@
         "Everything you did, from the audit trail.": "Allt du gjorde, från granskningsloggen.",
         "Reports": "Rapporter",
         "Vault unlocked. Opening your vault…": "Valvet upplåst. Öppnar ditt valv…",
-        "Deleted {ok} of {total} secrets": "{ok} av {total} hemligheter borttagna"
+        "Deleted {ok} of {total} secrets": "{ok} av {total} hemligheter borttagna",
+        "Moved {ok} of {total} secrets": "{ok} av {total} hemligheter flyttade",
+        "Shared {ok} of {total} secrets": "{ok} av {total} hemligheter delade",
+        "Added {ok} of {total} secrets to the team folder": "{ok} av {total} hemligheter tillagda i teammappen"
     },
     "plurals": null
 }

@@ -1126,7 +1126,10 @@
         "Everything you did, from the audit trail.": "Allt sem þú gerðir, úr endurskoðunarsporinu.",
         "Reports": "Skýrslur",
         "Vault unlocked. Opening your vault…": "Hvelfingin var opnuð. Opna hvelfinguna þína…",
-        "Deleted {ok} of {total} secrets": "Eytt {ok} af {total} leyndarmálum"
+        "Deleted {ok} of {total} secrets": "Eytt {ok} af {total} leyndarmálum",
+        "Moved {ok} of {total} secrets": "Færð {ok} af {total} leyndarmálum",
+        "Shared {ok} of {total} secrets": "Deilt {ok} af {total} leyndarmálum",
+        "Added {ok} of {total} secrets to the team folder": "Bætt {ok} af {total} leyndarmálum í hópmöppuna"
     },
     "plurals": null
 }

@@ -1127,7 +1127,10 @@ OC.L10N.register(
         "Everything you did, from the audit trail.": "Усё, што вы зрабілі, з журнала аўдыту.",
         "Reports": "Звіты",
         "Vault unlocked. Opening your vault…": "Сховішча разблакіравана. Адкрыццё вашага сховішча…",
-        "Deleted {ok} of {total} secrets": "Выдалена {ok} з {total} сакрэтаў"
+        "Deleted {ok} of {total} secrets": "Выдалена {ok} з {total} сакрэтаў",
+        "Moved {ok} of {total} secrets": "Перамешчана {ok} з {total} сакрэтаў",
+        "Shared {ok} of {total} secrets": "Дадзены доступ да {ok} з {total} сакрэтаў",
+        "Added {ok} of {total} secrets to the team folder": "Дадана {ok} з {total} сакрэтаў у камандную папку"
     },
     "nplurals=2; plural=(n != 1);"
 )

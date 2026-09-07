@@ -1127,7 +1127,10 @@ OC.L10N.register(
         "Everything you did, from the audit trail.": "Gach rud a rinne tú, ón lorg iniúchta.",
         "Reports": "Tuarascálacha",
         "Vault unlocked. Opening your vault…": "Vailt díghlasáilte. Do vailt á oscailt…",
-        "Deleted {ok} of {total} secrets": "Scriosadh {ok} as {total} rún"
+        "Deleted {ok} of {total} secrets": "Scriosadh {ok} as {total} rún",
+        "Moved {ok} of {total} secrets": "Bogadh {ok} as {total} rún",
+        "Shared {ok} of {total} secrets": "Comhroinneadh {ok} as {total} rún",
+        "Added {ok} of {total} secrets to the team folder": "Cuireadh {ok} as {total} rún leis an bhfillteán foirne"
     },
     "nplurals=2; plural=(n != 1);"
 )

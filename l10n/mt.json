@@ -1126,7 +1126,10 @@
         "Everything you did, from the audit trail.": "Kollox li għamilt, mit-traċċa tal-verifika.",
         "Reports": "Rapporti",
         "Vault unlocked. Opening your vault…": "Il-vault inħall. Qed jinfetaħ il-vault tiegħek…",
-        "Deleted {ok} of {total} secrets": "Tħassru {ok} minn {total} sigrieti"
+        "Deleted {ok} of {total} secrets": "Tħassru {ok} minn {total} sigrieti",
+        "Moved {ok} of {total} secrets": "Tċaqalqu {ok} minn {total} sigrieti",
+        "Shared {ok} of {total} secrets": "Inqasmu {ok} minn {total} sigrieti",
+        "Added {ok} of {total} secrets to the team folder": "Żdiedu {ok} minn {total} sigrieti mal-folder tat-tim"
     },
     "plurals": null
 }

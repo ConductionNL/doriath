@@ -1126,7 +1126,10 @@
         "Everything you did, from the audit trail.": "Alt hvad du gjorde, fra revisionssporet.",
         "Reports": "Rapporter",
         "Vault unlocked. Opening your vault…": "Boks låst op. Åbner din boks…",
-        "Deleted {ok} of {total} secrets": "Slettede {ok} af {total} hemmeligheder"
+        "Deleted {ok} of {total} secrets": "Slettede {ok} af {total} hemmeligheder",
+        "Moved {ok} of {total} secrets": "Flyttede {ok} af {total} hemmeligheder",
+        "Shared {ok} of {total} secrets": "Delte {ok} af {total} hemmeligheder",
+        "Added {ok} of {total} secrets to the team folder": "Tilføjede {ok} af {total} hemmeligheder til teammappen"
     },
     "plurals": null
 }

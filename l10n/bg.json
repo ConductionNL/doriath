@@ -1126,7 +1126,10 @@
         "Everything you did, from the audit trail.": "Всичко, което направихте, от одитната следа.",
         "Reports": "Доклади",
         "Vault unlocked. Opening your vault…": "Хранилището е отключено. Отваряне на вашето хранилище…",
-        "Deleted {ok} of {total} secrets": "Изтрити {ok} от {total} тайни"
+        "Deleted {ok} of {total} secrets": "Изтрити {ok} от {total} тайни",
+        "Moved {ok} of {total} secrets": "Преместени {ok} от {total} тайни",
+        "Shared {ok} of {total} secrets": "Споделени {ok} от {total} тайни",
+        "Added {ok} of {total} secrets to the team folder": "Добавени {ok} от {total} тайни към екипната папка"
     },
     "plurals": null
 }

@@ -1127,7 +1127,10 @@ OC.L10N.register(
         "Everything you did, from the audit trail.": "Viskas, ką padarėte, iš audito įrašo.",
         "Reports": "Ataskaitos",
         "Vault unlocked. Opening your vault…": "Saugykla atblokuota. Atveriama jūsų saugykla…",
-        "Deleted {ok} of {total} secrets": "Ištrinta {ok} iš {total} paslapčių"
+        "Deleted {ok} of {total} secrets": "Ištrinta {ok} iš {total} paslapčių",
+        "Moved {ok} of {total} secrets": "Perkelta {ok} iš {total} paslapčių",
+        "Shared {ok} of {total} secrets": "Bendrinta {ok} iš {total} paslapčių",
+        "Added {ok} of {total} secrets to the team folder": "Į komandos aplanką įtraukta {ok} iš {total} paslapčių"
     },
     "nplurals=2; plural=(n != 1);"
 )

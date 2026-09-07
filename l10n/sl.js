@@ -1127,7 +1127,10 @@ OC.L10N.register(
         "Everything you did, from the audit trail.": "Vse, kar ste storili, iz revizijske sledi.",
         "Reports": "Poročila",
         "Vault unlocked. Opening your vault…": "Trezor odklenjen. Odpiranje vašega trezorja…",
-        "Deleted {ok} of {total} secrets": "Izbrisano {ok} od {total} skrivnosti"
+        "Deleted {ok} of {total} secrets": "Izbrisano {ok} od {total} skrivnosti",
+        "Moved {ok} of {total} secrets": "Premaknjeno {ok} od {total} skrivnosti",
+        "Shared {ok} of {total} secrets": "V souporabo danih {ok} od {total} skrivnosti",
+        "Added {ok} of {total} secrets to the team folder": "V ekipno mapo dodanih {ok} od {total} skrivnosti"
     },
     "nplurals=2; plural=(n != 1);"
 )

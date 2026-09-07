@@ -1127,7 +1127,10 @@ OC.L10N.register(
         "Everything you did, from the audit trail.": "Minden, amit tett, az ellenőrzési nyomvonalból.",
         "Reports": "Jelentések",
         "Vault unlocked. Opening your vault…": "A tároló feloldva. A tároló megnyitása…",
-        "Deleted {ok} of {total} secrets": "{total} titok közül {ok} törölve"
+        "Deleted {ok} of {total} secrets": "{total} titok közül {ok} törölve",
+        "Moved {ok} of {total} secrets": "{total} titok közül {ok} áthelyezve",
+        "Shared {ok} of {total} secrets": "{total} titok közül {ok} megosztva",
+        "Added {ok} of {total} secrets to the team folder": "{total} titok közül {ok} hozzáadva a csoportmappához"
     },
     "nplurals=2; plural=(n != 1);"
 )

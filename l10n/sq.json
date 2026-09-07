@@ -1126,7 +1126,10 @@
         "Everything you did, from the audit trail.": "Gjithçka që bëtë, nga gjurma e auditimit.",
         "Reports": "Raportet",
         "Vault unlocked. Opening your vault…": "Kasaforta u shkyç. Po hapet kasaforta juaj…",
-        "Deleted {ok} of {total} secrets": "U fshinë {ok} nga {total} sekrete"
+        "Deleted {ok} of {total} secrets": "U fshinë {ok} nga {total} sekrete",
+        "Moved {ok} of {total} secrets": "U zhvendosën {ok} nga {total} sekrete",
+        "Shared {ok} of {total} secrets": "U ndanë {ok} nga {total} sekrete",
+        "Added {ok} of {total} secrets to the team folder": "U shtuan {ok} nga {total} sekrete në dosjen e ekipit"
     },
     "plurals": null
 }

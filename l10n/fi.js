@@ -1127,7 +1127,10 @@ OC.L10N.register(
         "Everything you did, from the audit trail.": "Kaikki mitä teit, tarkastusjäljestä.",
         "Reports": "Raportit",
         "Vault unlocked. Opening your vault…": "Holvi avattu. Avataan holviasi…",
-        "Deleted {ok} of {total} secrets": "Poistettu {ok} / {total} salaisuutta"
+        "Deleted {ok} of {total} secrets": "Poistettu {ok} / {total} salaisuutta",
+        "Moved {ok} of {total} secrets": "Siirretty {ok} / {total} salaisuutta",
+        "Shared {ok} of {total} secrets": "Jaettu {ok} / {total} salaisuutta",
+        "Added {ok} of {total} secrets to the team folder": "Lisätty tiimikansioon {ok} / {total} salaisuutta"
     },
     "nplurals=2; plural=(n != 1);"
 )

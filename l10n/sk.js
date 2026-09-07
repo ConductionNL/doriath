@@ -1127,7 +1127,10 @@ OC.L10N.register(
         "Everything you did, from the audit trail.": "Všetko, čo ste urobili, zo záznamu auditu.",
         "Reports": "Reporty",
         "Vault unlocked. Opening your vault…": "Trezor odomknutý. Otvára sa váš trezor…",
-        "Deleted {ok} of {total} secrets": "Odstránené {ok} z {total} tajomstiev"
+        "Deleted {ok} of {total} secrets": "Odstránené {ok} z {total} tajomstiev",
+        "Moved {ok} of {total} secrets": "Presunuté {ok} z {total} tajomstiev",
+        "Shared {ok} of {total} secrets": "Zdieľané {ok} z {total} tajomstiev",
+        "Added {ok} of {total} secrets to the team folder": "Pridané {ok} z {total} tajomstiev do tímovej zložky"
     },
     "nplurals=2; plural=(n != 1);"
 )

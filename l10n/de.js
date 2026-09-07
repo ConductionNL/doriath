@@ -1127,7 +1127,10 @@ OC.L10N.register(
         "Everything you did, from the audit trail.": "Alles, was Sie getan haben, aus dem Prüfprotokoll.",
         "Reports": "Berichte",
         "Vault unlocked. Opening your vault…": "Tresor entsperrt. Ihr Tresor wird geöffnet…",
-        "Deleted {ok} of {total} secrets": "{ok} von {total} Geheimnissen gelöscht"
+        "Deleted {ok} of {total} secrets": "{ok} von {total} Geheimnissen gelöscht",
+        "Moved {ok} of {total} secrets": "{ok} von {total} Geheimnissen verschoben",
+        "Shared {ok} of {total} secrets": "{ok} von {total} Geheimnissen geteilt",
+        "Added {ok} of {total} secrets to the team folder": "{ok} von {total} Geheimnissen dem Teamordner hinzugefügt"
     },
     "nplurals=2; plural=(n != 1);"
 )

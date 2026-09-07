@@ -1126,7 +1126,10 @@
         "Everything you did, from the audit trail.": "Vše, co jste udělali, ze záznamu auditu.",
         "Reports": "Reporty",
         "Vault unlocked. Opening your vault…": "Trezor odemčen. Otevírání vašeho trezoru…",
-        "Deleted {ok} of {total} secrets": "Smazáno {ok} z {total} tajemství"
+        "Deleted {ok} of {total} secrets": "Smazáno {ok} z {total} tajemství",
+        "Moved {ok} of {total} secrets": "Přesunuto {ok} z {total} tajemství",
+        "Shared {ok} of {total} secrets": "Nasdíleno {ok} z {total} tajemství",
+        "Added {ok} of {total} secrets to the team folder": "Přidáno {ok} z {total} tajemství do týmové složky"
     },
     "plurals": null
 }

@@ -1127,7 +1127,10 @@ OC.L10N.register(
         "Everything you did, from the audit trail.": "Viss, ko darījāt, no audita pieraksta.",
         "Reports": "Pārskati",
         "Vault unlocked. Opening your vault…": "Glabātuve atslēgta. Atver jūsu glabātuvi…",
-        "Deleted {ok} of {total} secrets": "Izdzēsti {ok} no {total} noslēpumiem"
+        "Deleted {ok} of {total} secrets": "Izdzēsti {ok} no {total} noslēpumiem",
+        "Moved {ok} of {total} secrets": "Pārvietoti {ok} no {total} noslēpumiem",
+        "Shared {ok} of {total} secrets": "Kopīgoti {ok} no {total} noslēpumiem",
+        "Added {ok} of {total} secrets to the team folder": "Komandas mapei pievienoti {ok} no {total} noslēpumiem"
     },
     "nplurals=2; plural=(n != 1);"
 )

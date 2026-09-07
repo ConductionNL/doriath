@@ -1127,7 +1127,10 @@ OC.L10N.register(
         "Everything you did, from the audit trail.": "Tut quai che vus avais fatg, dal protocol da revisiun.",
         "Reports": "Rapports",
         "Vault unlocked. Opening your vault…": "Cassaforta debloccada. Vossa cassaforta vegn averta…",
-        "Deleted {ok} of {total} secrets": "{ok} da {total} secrets stizzads"
+        "Deleted {ok} of {total} secrets": "{ok} da {total} secrets stizzads",
+        "Moved {ok} of {total} secrets": "{ok} da {total} secrets spustads",
+        "Shared {ok} of {total} secrets": "{ok} da {total} secrets cundividids",
+        "Added {ok} of {total} secrets to the team folder": "{ok} da {total} secrets agiuntads a la cartella da team"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -9,17 +9,23 @@
   batch endpoint. No plaintext ever leaves the browser; a recipient
   without an active suite fails fast before any work runs.
 
+  Two phases in one dialog (see BulkDeleteDialog for the report that started
+  this): it ASKS until the run finishes, then it REPORTS. The host reloads
+  the list on `done`, which empties the reconciled selection, so a recipient
+  field and a live Share button left on screen would offer to share nothing —
+  and pressing Share again would replace the report with an empty one.
+
   @spec openspec/changes/bulk-actions/specs/bulk-actions/spec.md#requirement-bulk-share
 -->
 <template>
 	<NcDialog
-		:name="t('keepiq', 'Share {count} secrets', { count: bulk.selectionCount })"
+		:name="title"
 		:open="open"
 		size="normal"
 		data-testid="bulk-share-dialog"
 		@update:open="$emit('close')">
 		<div class="bulk-share">
-			<label class="bulk-share__field">
+			<label v-if="!finished" class="bulk-share__field">
 				<span>{{ t('keepiq', 'Recipient user ID') }}</span>
 				<input
 					v-model="targetUserId"
@@ -29,13 +35,20 @@
 			<p v-if="error" class="bulk-share__error" data-testid="bulk-share-error">
 				{{ error }}
 			</p>
-			<BulkRunPanel @retry="onRetry" />
+			<!-- Gated on THIS dialog's run: the store's report outlives the
+			     dialog, so an ungated panel showed the previous run's table on
+			     a fresh open. -->
+			<BulkRunPanel v-if="ran || bulk.progress.running" @retry="onRetry" />
 		</div>
 		<template #actions>
-			<NcButton variant="tertiary" @click="$emit('close')">
+			<NcButton
+				:variant="finished ? 'primary' : 'tertiary'"
+				data-testid="bulk-share-close"
+				@click="$emit('close')">
 				{{ t('keepiq', 'Close') }}
 			</NcButton>
 			<NcButton
+				v-if="!finished"
 				variant="primary"
 				:disabled="targetUserId === '' || bulk.progress.running"
 				data-testid="bulk-share-run"
@@ -76,12 +89,42 @@ export default {
 			targetUserId: '',
 			certificate: '',
 			error: null,
+			/** Whether a run was started FROM THIS DIALOG (the store's report outlives it). */
+			ran: false,
 		}
 	},
 
 	computed: {
 		bulk() {
 			return useBulkStore()
+		},
+
+		/**
+		 * Whether the dialog has switched from asking to reporting.
+		 *
+		 * @return {boolean}
+		 */
+		finished() {
+			return this.ran && !this.bulk.progress.running
+		},
+
+		/**
+		 * The dialog title: a command while it asks, an outcome once it
+		 * reports — counted off the report, never off the selection, which
+		 * the host's post-run reload empties.
+		 *
+		 * @return {string}
+		 */
+		title() {
+			if (this.finished) {
+				return this.t('keepiq', 'Shared {ok} of {total} secrets', {
+					ok: this.bulk.report.filter((r) => r.status === 'ok').length,
+					total: this.bulk.report.length,
+				})
+			}
+			return this.t('keepiq', 'Share {count} secrets', {
+				count: this.bulk.selectionCount,
+			})
 		},
 	},
 
@@ -166,6 +209,10 @@ export default {
 				return
 			}
 
+			// Set only once the certificate resolved: a recipient without an
+			// active suite returns above, and that is a dialog that never ran
+			// — it must keep asking, with the reason on screen.
+			this.ran = true
 			await this.bulk.run(
 				this.bulk.selectedIds,
 				(id) => this.shareOne(id),

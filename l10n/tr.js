@@ -1127,7 +1127,10 @@ OC.L10N.register(
         "Everything you did, from the audit trail.": "Yaptığınız her şey, denetim izinden.",
         "Reports": "Raporlar",
         "Vault unlocked. Opening your vault…": "Kasa kilidi açıldı. Kasanız açılıyor…",
-        "Deleted {ok} of {total} secrets": "{total} gizliden {ok} tanesi silindi"
+        "Deleted {ok} of {total} secrets": "{total} gizliden {ok} tanesi silindi",
+        "Moved {ok} of {total} secrets": "{total} gizliden {ok} tanesi taşındı",
+        "Shared {ok} of {total} secrets": "{total} gizliden {ok} tanesi paylaşıldı",
+        "Added {ok} of {total} secrets to the team folder": "{total} gizliden {ok} tanesi takım klasörüne eklendi"
     },
     "nplurals=2; plural=(n != 1);"
 )

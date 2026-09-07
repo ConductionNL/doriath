@@ -1126,7 +1126,10 @@
         "Everything you did, from the audit trail.": "Όλα όσα κάνατε, από το ίχνος ελέγχου.",
         "Reports": "Εκθέσεις",
         "Vault unlocked. Opening your vault…": "Το θησαυροφυλάκιο ξεκλειδώθηκε. Άνοιγμα του θησαυροφυλακίου σας…",
-        "Deleted {ok} of {total} secrets": "Διαγράφηκαν {ok} από {total} μυστικά"
+        "Deleted {ok} of {total} secrets": "Διαγράφηκαν {ok} από {total} μυστικά",
+        "Moved {ok} of {total} secrets": "Μετακινήθηκαν {ok} από {total} μυστικά",
+        "Shared {ok} of {total} secrets": "Κοινοποιήθηκαν {ok} από {total} μυστικά",
+        "Added {ok} of {total} secrets to the team folder": "Προστέθηκαν {ok} από {total} μυστικά στον φάκελο ομάδας"
     },
     "plurals": null
 }

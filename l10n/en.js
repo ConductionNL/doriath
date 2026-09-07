@@ -1127,7 +1127,10 @@ OC.L10N.register(
         "Everything you did, from the audit trail.": "Everything you did, from the audit trail.",
         "Reports": "Reports",
         "Vault unlocked. Opening your vault…": "Vault unlocked. Opening your vault…",
-        "Deleted {ok} of {total} secrets": "Deleted {ok} of {total} secrets"
+        "Deleted {ok} of {total} secrets": "Deleted {ok} of {total} secrets",
+        "Added {ok} of {total} secrets to the team folder": "Added {ok} of {total} secrets to the team folder",
+        "Moved {ok} of {total} secrets": "Moved {ok} of {total} secrets",
+        "Shared {ok} of {total} secrets": "Shared {ok} of {total} secrets"
     },
     "nplurals=2; plural=(n != 1);"
 )

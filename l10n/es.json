@@ -1126,7 +1126,10 @@
         "Everything you did, from the audit trail.": "Todo lo que hizo, desde el registro de auditoría.",
         "Reports": "Informes",
         "Vault unlocked. Opening your vault…": "Bóveda desbloqueada. Abriendo su bóveda…",
-        "Deleted {ok} of {total} secrets": "Se han eliminado {ok} de {total} secretos"
+        "Deleted {ok} of {total} secrets": "Se han eliminado {ok} de {total} secretos",
+        "Moved {ok} of {total} secrets": "Se han movido {ok} de {total} secretos",
+        "Shared {ok} of {total} secrets": "Se han compartido {ok} de {total} secretos",
+        "Added {ok} of {total} secrets to the team folder": "Se han añadido {ok} de {total} secretos a la carpeta de equipo"
     },
     "plurals": null
 }
