@@ -13,10 +13,6 @@ on:
     # nothing ran; and `feat/**` was uncovered in openregister, because the
     # list said `feature/**`.
     #
-    # The comment that stood here said adding prefixes was not the durable fix,
-    # and that the durable fix was to let the pull_request trigger gate it.
-    # THIS IS THAT CHANGE.
-    #
     # What forced it now: a push to a branch with an open PR ran the SAME 34
     # jobs TWICE on the same commit. `concurrency` cannot dedupe them — the
     # group is suffixed by event name deliberately (.github#540: a
@@ -46,32 +42,6 @@ on:
     branches: [main, master, development, beta]
   workflow_dispatch:
 
-# Deduplicating a `push` run against the `pull_request` run for the SAME head
-# ref is the point of this block, and for a feature branch it is exactly right:
-# two runs of identical jobs, one of them wasted.
-#
-# It is wrong for `main` and `development`, because the push run there is NOT a
-# duplicate — it is the only carrier of the push-only jobs: "Coverage Baseline
-# Check" (`github.event_name == 'push'`), "SBOM" and "Features Extract". And
-# those two branches always have an open PR whose `head_ref` IS the branch
-# name: the standing "Release: merge development into beta" (#126 here).
-# `github.head_ref` on that PR run and `github.ref_name` on the push run both
-# render the identical group `quality-development`, and `cancel-in-progress`
-# then kills whichever started first — normally the push run.
-#
-# HONEST SCOPE OF THE EVIDENCE HERE: unlike most of the fleet, this repo shows
-# NO concurrency-cancelled `development` push run in its last 20 (its two
-# cancellations are the shared workflow's 45-minute cap, not this block), and
-# its push-only jobs demonstrably DO execute — run 31035521461 and 31030407282
-# both report Coverage Baseline Check success. So this change is PREVENTIVE,
-# not a repair of an observed outage: the collision is latent in the expression
-# and has simply not won the race here yet. It is applied for fleet uniformity
-# with openconnector#1158, where the same expression cancelled 15 of the last
-# 20 push runs.
-#
-# Suffixing only the default-branch push keeps feature-branch dedup untouched
-# (`quality-feature/x` for both events, exactly as before) and gives the two
-# default branches' push runs a lane of their own.
 concurrency:
   # SUFFIXED BY EVENT NAME, not just by `-push`.
   #
@@ -92,11 +62,8 @@ concurrency:
   # cancelled and report neither pass nor fail — and a routine that produces
   # no verdict is indistinguishable from one that never ran.
   #
-  # This is hermiq's form, already live there. Pull requests keep the bare
-  # group (so a PR still supersedes its own earlier run); push, dispatch and
-  # schedule each get their own lane.
-  #
-  # THE BRANCH RESTRICTION IS GONE, because it contradicted the sentence above.
+  # Pull requests keep the bare group (so a PR still supersedes its own
+  # earlier run); push, dispatch and schedule each get their own lane.
   #
   # The suffix used to apply only when `ref_name` was `main` or `development`,
   # so on every OTHER branch push and pull_request computed the SAME group —
@@ -143,6 +110,8 @@ permissions:
 
 jobs:
   quality:
+    # Skips the standing "development → beta" sync PR, which would otherwise
+    # re-run the whole pipeline on every merge into development.
     if: (github.event_name != 'pull_request' || github.head_ref != 'development')
     uses: ConductionNL/.github/.github/workflows/quality.yml@main
     with:
@@ -207,10 +176,17 @@ jobs:
       enable-sbom: true
 
       # ── Licensing ────────────────────────────────────────────────────────
-      # REUSE findings fail the build. Off by default for apps that ship no
-      # REUSE.toml; keepiq ships one with a repo-wide blanket, so new files are
-      # compliant on arrival and the only way to fail this is vendoring a file
-      # whose own SPDX header names a licence missing from LICENSES/.
+      # REUSE findings fail the build. The shared workflow defaults this OFF
+      # because most fleet apps ship no REUSE.toml or LICENSES/ directory;
+      # keepiq ships both and lints at 1467/1467, 0 missing, 0 unused,
+      # compliant with version 3.3 of the REUSE specification.
+      #
+      # The blanket `path = "**"` annotation in REUSE.toml makes every new file
+      # compliant on arrival, whatever its type, so ordinary work cannot trip
+      # this. One regression mode remains — vendoring a file whose own SPDX
+      # header names a licence with no text in LICENSES/ — and non-blocking
+      # that surfaces only as REUSE ❌ in the Quality Report comment, which is
+      # easy to miss.
       reuse-blocking: true
 
       # ── E2E browser tests ────────────────────────────────────────────────
