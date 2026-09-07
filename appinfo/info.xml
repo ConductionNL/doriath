@@ -60,12 +60,18 @@ Vrij en open source onder de EUPL-1.2-licentie.
         on, every migration is validated against ensureOracleConstraints(), whose
         Oracle-derived identifier limits Keepiq's schema does not satisfy:
 
-          - "Table name \"oc_doriath_certificate_metadata\" is too long."
-            (28 chars unprefixed; the limit is 27)
-          - the same rule's companion check rejects a default-named primary key
-            on any table whose unprefixed name is >= 23 chars — which covers a
-            dozen Keepiq tables (doriath_team_folder_members,
-            doriath_passkey_credentials, doriath_secret_delegations, …).
+          - the rule rejects a default-named primary key on any table whose
+            unprefixed name is >= 23 chars — which still covers 10 of this
+            app's 33 tables (keepiq_certificate_metadata,
+            keepiq_passkey_credentials, keepiq_team_folder_members,
+            keepiq_app_lease_policies, …).
+
+        The companion "table name is too long" failure no longer applies. It
+        used to: `doriath_certificate_metadata` was 28 chars unprefixed against
+        a limit of 27. The doriath -> keepiq rename took one character off every
+        table name, so the longest is now `keepiq_certificate_metadata` at
+        exactly 27 and the table-name check passes. The primary-key rule above
+        is what keeps these <database> entries load-bearing.
 
         The result was that `occ app:enable keepiq` ABORTED on a fresh install:
         the app was not installable from scratch on a stock Nextcloud at all.
@@ -83,17 +89,30 @@ Vrij en open source onder de EUPL-1.2-licentie.
         app will never hit would be a far larger and riskier change for no
         behavioural gain.
 
-        THE `doriath_` TABLE PREFIX IS DELIBERATE AND STAYS. This app was
-        renamed doriath -> keepiq (2026-08); the app id, namespace, routes and
-        display name all moved, but the physical table names did NOT. These
-        tables hold the vault itself — `doriath_secrets`, `doriath_enc_suites`
-        (RSA-4096 private keys, AES-wrapped), `doriath_ca_certs`,
-        `doriath_passkey_credentials`, `doriath_attachments`. Renaming a table
-        is a data migration on the most sensitive rows in the fleet, with no
-        behavioural gain whatsoever: Doctrine/QBMapper addresses tables by the
-        string in the mapper, not by the app id. Any occurrence of `doriath_`
-        anywhere in this repository is a persisted storage identifier — a
-        table, an index, or an ICache namespace — and must be left alone.
+        THE `doriath_` PREFIX IS GONE, AND `doriath_` SHOULD NOT REAPPEAR.
+        This app was renamed doriath -> keepiq (2026-08). The app id, namespace,
+        routes and display name moved first; the storage identifiers followed
+        (2026-09) once it was clear that leaving them behind meant carrying a
+        dead codename in the schema for the life of the product.
+
+        The schema half is 33 tables, 78 named indexes, 33 primary-key indexes
+        and 2 sequences, moved by OCA\Keepiq\Repair\RenameDoriathTables — see
+        the note on <repair-steps> below for why it is a PRE-migration step and
+        not a migration. ALTER TABLE .. RENAME TO relinks a table in place, so
+        no row is copied and none of the sensitive material in `keepiq_secrets`,
+        `keepiq_enc_suites` (RSA-4096 private keys, AES-wrapped), `keepiq_ca_certs`,
+        `keepiq_passkey_credentials` or `keepiq_attachments` is rewritten.
+
+        The four ICache namespaces moved with it — keepiq_jwt_jti,
+        keepiq_jwt_token, keepiq_cxp_relay, keepiq_breach_range. Each starts
+        empty on the deploy that carries the change, which costs one bounded
+        window: 360s in which a spent jti replays once more, 300s of live bearer
+        tokens 401-ing, in-flight CXP handshakes dropped, and a cold HIBP cache.
+        Accepted deliberately while the app still ships a not-production-ready
+        disclaimer. The per-constant docblocks carry the detail.
+
+        A `doriath_` string appearing in this repository now is a leftover, not
+        a storage identifier, and should be fixed rather than preserved.
     -->
     <dependencies>
         <php min-version="8.3"/>
@@ -143,7 +162,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
 
           - BootstrapCertificateAuthority reads the `ca_status` app-config
             value; without the copy it sees a blank status on an instance that
-            already has a live CA in `doriath_ca_certs`.
+            already has a live CA in `keepiq_ca_certs`.
           - InitializeSettings seeds DEFAULT_CONFIG into any key that reads
             back empty — i.e. it would overwrite the admin's real settings with
             defaults if the copy had not happened yet.

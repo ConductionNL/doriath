@@ -50,27 +50,31 @@ class JwtAuthService {
 	/**
 	 * Distributed cache namespace for jti replay protection.
 	 *
-	 * KEPT ON THE OLD `doriath_` PREFIX ACROSS THE RENAME, deliberately.
-	 * The jti cache IS the replay-protection window: renaming the namespace
-	 * empties it, and every assertion already spent during the preceding
-	 * CLOCK_SKEW+exp window becomes replayable exactly once more. Keeping
-	 * the namespace keeps the window intact across the upgrade. The cost of
-	 * keeping it is zero — no client ever sees this string.
+	 * MOVED TO THE `keepiq_` PREFIX. The jti cache IS the replay-protection
+	 * window, so the move costs one: the namespace starts empty, and every
+	 * assertion already spent during the preceding ACCESS_TOKEN_TTL +
+	 * CLOCK_SKEW_SECONDS window becomes replayable exactly once more. That
+	 * window is 360 seconds, it opens once, on the deploy that carries this
+	 * change, and an upgrade runs under maintenance mode where no assertion
+	 * is verified at all. Accepted deliberately while the app still ships a
+	 * not-production-ready disclaimer, rather than leaving a stale storage
+	 * identifier in place for the life of the product.
 	 *
 	 * @var string
 	 */
-	public const JTI_CACHE_NS = 'doriath_jwt_jti';
+	public const JTI_CACHE_NS = 'keepiq_jwt_jti';
 
 	/**
 	 * Distributed cache namespace for opaque access tokens.
 	 *
-	 * Kept on the old prefix for the same reason as JTI_CACHE_NS: renaming
-	 * it invalidates every live bearer token mid-flight, 401-ing machine
-	 * consumers that hold a token issued seconds before the upgrade.
+	 * Moved for the same reason as JTI_CACHE_NS, and with the same one-off
+	 * cost: the namespace starts empty, so every bearer token issued in the
+	 * ACCESS_TOKEN_TTL before the deploy 401s and its holder must re-auth.
+	 * Bounded at 300 seconds and paid once.
 	 *
 	 * @var string
 	 */
-	public const TOKEN_CACHE_NS = 'doriath_jwt_token';
+	public const TOKEN_CACHE_NS = 'keepiq_jwt_token';
 
 	/**
 	 * Lifetime of issued access tokens in seconds (5 minutes per spec
