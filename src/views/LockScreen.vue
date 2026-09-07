@@ -80,7 +80,7 @@
 			<div class="lock-screen__icon">
 				<LockOpenVariantIcon
 					v-if="unlocked"
-					class="lock-screen__icon-open"
+					class="lock-screen__glyph lock-screen__icon-open"
 					:size="48"
 					data-testid="lock-screen-icon-open" />
 				<!--
@@ -95,6 +95,7 @@
 				<LockIcon
 					v-else
 					:key="rejectionSeq"
+					class="lock-screen__glyph"
 					:class="{ 'lock-screen__icon-rejected': unlockRejected }"
 					:size="48"
 					data-testid="lock-screen-icon-closed" />
@@ -935,6 +936,23 @@ export default {
 }
 
 /*
+ * Both padlocks, in every state. The icon component's root is a span, and
+ * transforms do not apply to inline boxes — without this the keyframes
+ * below are silently dropped.
+ *
+ * It lives here rather than on the two state classes on purpose: those are
+ * flashes that come and go, and `display` is a box property. A state class
+ * that changes the box means the box changes shape every time a flash
+ * clears, which is how a "the icon jumped" bug gets built. The state
+ * classes now carry colour and animation only — nothing geometric. It also
+ * puts both padlocks in the same box, so the swap from closed to open
+ * cannot shift the glyph either.
+ */
+.lock-screen__glyph {
+	display: inline-block;
+}
+
+/*
  * Screen-reader-only live regions: present in the layout at all times but
  * never visible, same clip pattern as Nextcloud's hidden-visually. NOT
  * `display: none` or `visibility: hidden` — either one takes the element
@@ -967,12 +985,8 @@ export default {
  * is left looking at rather than a pop cut off by the redirect.
  */
 .lock-screen__icon-open {
-	/*
-	 * inline-block, because the icon's root is a span and transforms do
-	 * not apply to inline boxes — without this the keyframes below are
-	 * silently dropped.
-	 */
-	display: inline-block;
+	/* The box comes from .lock-screen__glyph — this class is colour and
+	 * motion only, so that nothing about the layout depends on it. */
 	color: var(--color-success-text, #286c39);
 	animation: lock-screen-unlock-in 0.4s ease-out;
 }
@@ -1008,9 +1022,8 @@ export default {
  * the three-per-second threshold of WCAG 2.3.1, and nothing here loops.
  */
 .lock-screen__icon-rejected {
-	/* inline-block for the same reason as the open lock above: the icon's
-	 * root is a span, and transforms do not apply to inline boxes. */
-	display: inline-block;
+	/* Colour and motion only, like the open lock above — the box is
+	 * .lock-screen__glyph's, so clearing this flash moves nothing. */
 	color: var(--color-error-text, #c20505);
 	animation: lock-screen-reject-shake 0.4s ease-in-out;
 }
