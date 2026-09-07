@@ -80,13 +80,17 @@ const REQUIRED = (process.env.L10N_REQUIRED_LOCALES || EUROPEAN)
 // required locales were 20,433 translations short (keepiq#180). A gate that is
 // red on every PR from day one gets switched off, and a gate that is not wired
 // up at all — which is what this file was for its entire life — measures
-// nothing. So it ran two-tier: ENFORCED started at `nl` (completed 2026-09-04)
-// and widened as locales finished, while everything else was held to the
-// no-regression ratchet below. The last 8,704 keys landed on 2026-09-05 and
-// the split collapsed. The ratchet machinery is kept for a locale that is ever
-// ADDED to REQUIRED incomplete; while ENFORCED covers everything it is
-// dormant, and tests/l10n/parity-ratchet.json is deleted rather than left
-// holding stale slack that would silently absorb a regression.
+// nothing. So it ran two-tier: ENFORCED started EMPTY, because no locale was
+// complete enough to go in it — nl, the closest, was still 362 keys short in
+// each of its two sets — and every required locale was held to the
+// no-regression ratchet below instead. The whole remaining debt then cleared
+// in one pass on 2026-09-05: 38,804 missing/empty values across all 72 locale
+// sets (544 per set for the 35 non-nl locales, 362 per set for nl), after
+// which the split had nothing left to separate. The ratchet machinery is kept
+// for a locale that is ever ADDED to REQUIRED incomplete; while ENFORCED
+// covers everything it is dormant, and tests/l10n/parity-ratchet.json is
+// deleted rather than left holding stale slack that would silently absorb a
+// regression.
 //
 // Defaulting to REQUIRED rather than to a hard-coded list of 36 is deliberate:
 // an override of L10N_REQUIRED_LOCALES then carries enforcement with it,
