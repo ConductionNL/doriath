@@ -19,11 +19,12 @@ const isDev = buildMode === 'development'
 // polyfill was never in a bundle to begin with; it was pure install-tree weight,
 // and `@nextcloud/webpack-vue-config` was the subtree's only dependent.
 //
-// Only the fields below were ever actually inherited. `module.rules` and
-// `resolve` were already REPLACED wholesale further down — this app runs no
-// babel-loader and no ts-loader (there is no .babelrc and no tsconfig.json), so
-// the package's rule set was dead code. Its `devServer` block went with it:
-// there is no `webpack serve` script here.
+// Only the fields below were ever actually inherited, and of those exactly one
+// is deliberately NOT kept: `output.publicPath` (see the comment on it).
+// `module.rules` and `resolve` were already REPLACED wholesale further down —
+// this app runs no babel-loader and no ts-loader (there is no .babelrc and no
+// tsconfig.json), so the package's rule set was dead code. Its `devServer`
+// block went with it: there is no `webpack serve` script here.
 //
 // The base also carried a DefinePlugin defining `appName`/`appVersion` from
 // `npm_package_*`. They are not repeated here — the two DefinePlugin calls
@@ -40,7 +41,16 @@ const webpackConfig = {
 
 	output: {
 		path: path.resolve('./js'),
-		publicPath: path.join('/apps/', appId, '/js/'),
+
+		// Lazy-loaded chunks (the argon2-browser WASM loader for link-share
+		// encryption) must resolve relative to the script that loaded them.
+		// Nextcloud serves the entry bundle from `/custom_apps/<app>/js/`, but the
+		// base config's `/apps/<app>/js/` publicPath — the one field of it that is
+		// deliberately NOT kept — points lazy chunks at a path that 401s.
+		// `publicPath: 'auto'` makes webpack derive the chunk base from the
+		// executing script's own URL, so chunks load from the same
+		// `/custom_apps/keepiq/js/` directory as the main bundle.
+		publicPath: 'auto',
 
 		// Output file names
 		filename: `${appId}-[name].js?v=[contenthash]`,
@@ -120,17 +130,6 @@ const webpackConfig = {
 			contextRegExp: /moment[/\\]min$/,
 		}),
 	],
-}
-
-// Lazy-loaded chunks (the argon2-browser WASM loader for link-share encryption)
-// must resolve relative to the script that loaded them. Nextcloud serves the
-// entry bundle from `/custom_apps/<app>/js/`, but the default publicPath points
-// lazy chunks at `/apps/<app>/js/` which 401s. `publicPath: 'auto'` makes
-// webpack derive the chunk base from the executing script's own URL, so chunks
-// load from the same `/custom_apps/keepiq/js/` directory as the main bundle.
-webpackConfig.output = {
-	...(webpackConfig.output || {}),
-	publicPath: 'auto',
 }
 
 webpackConfig.entry = {
@@ -313,7 +312,6 @@ webpackConfig.resolve.alias['@nextcloud/dialogs$'] = path.resolve(
 // mapped it that way — a dependency with a dead `require('fs')` branch got an
 // empty module, and dropping that would turn the dead branch into a hard error.
 webpackConfig.resolve.fallback = {
-	...(webpackConfig.resolve.fallback || {}),
 	buffer: require.resolve('buffer/'),
 	events: require.resolve('events/'),
 	fs: false,
@@ -336,9 +334,9 @@ webpackConfig.resolve.fallback = {
 // renders blank with no console error (same gotcha that bit
 // docudesk#242).
 webpackConfig.optimization = {
-	...(webpackConfig.optimization || {}),
+	...webpackConfig.optimization,
 	splitChunks: {
-		...(webpackConfig.optimization?.splitChunks || {}),
+		...webpackConfig.optimization.splitChunks,
 		// The service worker must stay a self-contained script — exclude it
 		// from shared-chunk extraction so it never references a chunk it
 		// cannot import at the SW scope (offline-readonly-cache §3).
