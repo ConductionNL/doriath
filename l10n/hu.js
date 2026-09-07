@@ -581,7 +581,8 @@ OC.L10N.register(
         "Pick a report to open it.": "Válasszon egy jelentést a megnyitásához.",
         "Weak, reused and ageing passwords in your unlocked vault.": "Gyenge, újrahasznált és régi jelszavak a feloldott széfben.",
         "Everything you did, from the audit trail.": "Minden, amit tett, az ellenőrzési nyomvonalból.",
-        "Reports": "Jelentések"
+        "Reports": "Jelentések",
+        "Vault unlocked. Opening your vault…": "A tároló feloldva. A tároló megnyitása…"
     },
     "nplurals=2; plural=(n != 1);"
 )

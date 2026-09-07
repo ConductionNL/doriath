@@ -581,7 +581,8 @@ OC.L10N.register(
         "Pick a report to open it.": "Wielt e Bericht fir hien opzemaachen.",
         "Weak, reused and ageing passwords in your unlocked vault.": "Schwaach, méi Mol benotzt an al Passwierder an Ärem opgeschlossene Safe.",
         "Everything you did, from the audit trail.": "Alles wat Dir gemaach hutt, aus dem Auditspur.",
-        "Reports": "Berichter"
+        "Reports": "Berichter",
+        "Vault unlocked. Opening your vault…": "Tresor entspaart. Ären Tresor gëtt opgemaach…"
     },
     "nplurals=2; plural=(n != 1);"
 )

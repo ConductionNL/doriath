@@ -581,7 +581,8 @@ OC.L10N.register(
         "Pick a report to open it.": "Pasirinkite ataskaitą, kad ją atidarytumėte.",
         "Weak, reused and ageing passwords in your unlocked vault.": "Silpni, pakartotinai naudoti ir seni slaptažodžiai atrakintoje saugykloje.",
         "Everything you did, from the audit trail.": "Viskas, ką padarėte, iš audito įrašo.",
-        "Reports": "Ataskaitos"
+        "Reports": "Ataskaitos",
+        "Vault unlocked. Opening your vault…": "Saugykla atblokuota. Atveriama jūsų saugykla…"
     },
     "nplurals=2; plural=(n != 1);"
 )

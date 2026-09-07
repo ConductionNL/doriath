@@ -581,7 +581,8 @@ OC.L10N.register(
         "Pick a report to open it.": "Odaberite izvješće da ga otvorite.",
         "Weak, reused and ageing passwords in your unlocked vault.": "Slabe, ponovno korištene i stare lozinke u otključanom trezoru.",
         "Everything you did, from the audit trail.": "Sve što ste učinili, iz zapisa revizije.",
-        "Reports": "Izvješća"
+        "Reports": "Izvješća",
+        "Vault unlocked. Opening your vault…": "Trezor otključan. Otvaranje vašeg trezora…"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -768,7 +768,8 @@ OC.L10N.register(
         "Pick a report to open it.": "Kies een rapport om het te openen.",
         "Weak, reused and ageing passwords in your unlocked vault.": "Zwakke, hergebruikte en verouderde wachtwoorden in je ontgrendelde kluis.",
         "Everything you did, from the audit trail.": "Alles wat je deed, uit het audittrail.",
-        "Reports": "Rapportages"
+        "Reports": "Rapportages",
+        "Vault unlocked. Opening your vault…": "Kluis ontgrendeld. Uw kluis wordt geopend…"
     },
     "nplurals=2; plural=(n != 1);"
 )

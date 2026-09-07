@@ -581,7 +581,8 @@ OC.L10N.register(
         "Pick a report to open it.": "Açmak için bir rapor seçin.",
         "Weak, reused and ageing passwords in your unlocked vault.": "Kilidi açılmış kasanızdaki zayıf, yeniden kullanılmış ve eski şifreler.",
         "Everything you did, from the audit trail.": "Yaptığınız her şey, denetim izinden.",
-        "Reports": "Raporlar"
+        "Reports": "Raporlar",
+        "Vault unlocked. Opening your vault…": "Kasa kilidi açıldı. Kasanız açılıyor…"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -580,7 +580,8 @@
         "Pick a report to open it.": "Выберите отчёт, чтобы открыть его.",
         "Weak, reused and ageing passwords in your unlocked vault.": "Слабые, повторно использованные и старые пароли в разблокированном хранилище.",
         "Everything you did, from the audit trail.": "Всё, что вы сделали, из журнала аудита.",
-        "Reports": "Отчёты"
+        "Reports": "Отчёты",
+        "Vault unlocked. Opening your vault…": "Хранилище разблокировано. Открытие вашего хранилища…"
     },
     "plurals": null
 }

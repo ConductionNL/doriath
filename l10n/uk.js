@@ -581,7 +581,8 @@ OC.L10N.register(
         "Pick a report to open it.": "Виберіть звіт, щоб відкрити його.",
         "Weak, reused and ageing passwords in your unlocked vault.": "Слабкі, повторно використані та старі пароли у розблокованому сховищі.",
         "Everything you did, from the audit trail.": "Усе, що ви зробили, із журналу аудиту.",
-        "Reports": "Звіти"
+        "Reports": "Звіти",
+        "Vault unlocked. Opening your vault…": "Сховище розблоковано. Відкриття вашого сховища…"
     },
     "nplurals=2; plural=(n != 1);"
 )

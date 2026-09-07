@@ -580,7 +580,8 @@
         "Pick a report to open it.": "Zgjidhni një raport për të hapur.",
         "Weak, reused and ageing passwords in your unlocked vault.": "Fjalëkalime të dobëta, të përsëritura dhe të vjetra në kasafortën e zhbllokuar.",
         "Everything you did, from the audit trail.": "Gjithçka që bëtë, nga gjurma e auditimit.",
-        "Reports": "Raportet"
+        "Reports": "Raportet",
+        "Vault unlocked. Opening your vault…": "Kasaforta u shkyç. Po hapet kasaforta juaj…"
     },
     "plurals": null
 }

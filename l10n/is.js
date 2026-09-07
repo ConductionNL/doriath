@@ -581,7 +581,8 @@ OC.L10N.register(
         "Pick a report to open it.": "Veldu skýrslu til að opna hana.",
         "Weak, reused and ageing passwords in your unlocked vault.": "Veik, endurnotuð og gömul lykilorð í opnaðri hirslu þinni.",
         "Everything you did, from the audit trail.": "Allt sem þú gerðir, úr endurskoðunarsporinu.",
-        "Reports": "Skýrslur"
+        "Reports": "Skýrslur",
+        "Vault unlocked. Opening your vault…": "Hvelfingin var opnuð. Opna hvelfinguna þína…"
     },
     "nplurals=2; plural=(n != 1);"
 )

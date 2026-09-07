@@ -581,7 +581,8 @@ OC.L10N.register(
         "Pick a report to open it.": "Roghnaigh tuarascáil chun í a oscailt.",
         "Weak, reused and ageing passwords in your unlocked vault.": "Pasfhocail laga, athúsáidte agus sean i do thaisce dhíghlasáilte.",
         "Everything you did, from the audit trail.": "Gach rud a rinne tú, ón lorg iniúchta.",
-        "Reports": "Tuarascálacha"
+        "Reports": "Tuarascálacha",
+        "Vault unlocked. Opening your vault…": "Vailt díghlasáilte. Do vailt á oscailt…"
     },
     "nplurals=2; plural=(n != 1);"
 )

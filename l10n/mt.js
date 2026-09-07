@@ -581,7 +581,8 @@ OC.L10N.register(
         "Pick a report to open it.": "Agħżel rapport biex tiftaħ.",
         "Weak, reused and ageing passwords in your unlocked vault.": "Passwords dgħajfa, użati mill-ġdid u qodma fil-kaxxa mhux imsakkra.",
         "Everything you did, from the audit trail.": "Kollox li għamilt, mit-traċċa tal-verifika.",
-        "Reports": "Rapporti"
+        "Reports": "Rapporti",
+        "Vault unlocked. Opening your vault…": "Il-vault inħall. Qed jinfetaħ il-vault tiegħek…"
     },
     "nplurals=2; plural=(n != 1);"
 )

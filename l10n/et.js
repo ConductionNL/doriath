@@ -581,7 +581,8 @@ OC.L10N.register(
         "Pick a report to open it.": "Valige aruanne, et see avada.",
         "Weak, reused and ageing passwords in your unlocked vault.": "Nõrgad, korduvkasutatud ja vanad paroolid teie avatud hoidlas.",
         "Everything you did, from the audit trail.": "Kõik, mida tegite, auditijäljest.",
-        "Reports": "Aruanded"
+        "Reports": "Aruanded",
+        "Vault unlocked. Opening your vault…": "Seif on avatud. Teie seifi avamine…"
     },
     "nplurals=2; plural=(n != 1);"
 )

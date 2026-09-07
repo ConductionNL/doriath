@@ -581,7 +581,8 @@ OC.L10N.register(
         "Pick a report to open it.": "Trieu un informe per obrir-lo.",
         "Weak, reused and ageing passwords in your unlocked vault.": "Contrasenyes febles, reutilitzades i antigues a la caixa forta desbloquejada.",
         "Everything you did, from the audit trail.": "Tot el que heu fet, des del registre d'auditoria.",
-        "Reports": "Informes"
+        "Reports": "Informes",
+        "Vault unlocked. Opening your vault…": "Caixa forta desbloquejada. S'està obrint la vostra caixa forta…"
     },
     "nplurals=2; plural=(n != 1);"
 )

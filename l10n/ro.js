@@ -581,7 +581,8 @@ OC.L10N.register(
         "Pick a report to open it.": "Alegeți un raport pentru a-l deschide.",
         "Weak, reused and ageing passwords in your unlocked vault.": "Parole slabe, reutilizate și vechi în seiful deblocat.",
         "Everything you did, from the audit trail.": "Tot ce ați făcut, din urma de audit.",
-        "Reports": "Rapoarte"
+        "Reports": "Rapoarte",
+        "Vault unlocked. Opening your vault…": "Seiful a fost deblocat. Se deschide seiful dvs.…"
     },
     "nplurals=2; plural=(n != 1);"
 )
