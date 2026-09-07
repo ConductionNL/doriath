@@ -19,8 +19,10 @@
  * fire the moment the animation ends, so one test drives fake timers
  * across that boundary rather than just waiting for the push.
  *
- * The reduced-motion case is the inverse contract: nothing animates, so
- * nothing is waited for and the redirect must NOT be held.
+ * The reduced-motion case is the narrower contract: nothing animates, so
+ * the animation is not waited for — but the hold does not go to zero,
+ * because the polite live region rides on it too and the redirect unmounts
+ * the region along with the screen. Less motion, not less time.
  */
 
 import { mount } from '@vue/test-utils'
@@ -43,6 +45,12 @@ const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
 const ANIMATION_MS = 400
 const SETTLE_MS = 500
 const HOLD_BUDGET = { timeout: (ANIMATION_MS + SETTLE_MS) * 3 }
+
+/**
+ * Mirrors UNLOCK_ANNOUNCE_MS: the shorter hold the reduced-motion path
+ * keeps so the polite live region is still on screen to be spoken.
+ */
+const ANNOUNCE_MS = 500
 
 /** Mirrors LOCK_ERROR_MS: how long a rejected attempt stays red. */
 const ERROR_MS = 1100
@@ -149,8 +157,8 @@ async function submitPassword(wrapper, password) {
 /**
  * The same submit, for tests that have already switched to fake timers —
  * `flush()` would hang there, since its setTimeout only fires if the test
- * advances the clock. Advancing by 0 drains the awaited unlock chain and
- * the arming $nextTick without moving any of the timed windows.
+ * advances the clock. Advancing by 0 drains the awaited unlock chain
+ * without moving any of the timed windows.
  *
  * @param {object} wrapper The mounted lock screen.
  * @param {string} password The master password to submit.
@@ -250,19 +258,43 @@ describe('LockScreen unlock animation', () => {
 		await vi.waitFor(() => expect(push).toHaveBeenCalled(), HOLD_BUDGET)
 	})
 
-	it('navigates without any hold under prefers-reduced-motion', async () => {
+	it('skips the animation under prefers-reduced-motion but still holds long enough to announce', async () => {
+		// The regression this locks down: a reduced-motion path that returned
+		// an already-resolved promise put `unlocked = true` and the redirect
+		// in the same task, so the live region was torn down within a frame
+		// or two of getting its text — nowhere near long enough to be spoken.
+		// Reduced motion is a preference blind screen-reader users commonly
+		// have on, so that dropped the announcement for exactly the viewer
+		// the announcement exists for.
 		stubMotionPreference(true)
 		arrangeUnlockableVault()
 		const { wrapper, push } = await mountUnlockForm({
 			query: { returnUrl: '/vault/7' },
 		})
 
-		await submitPassword(wrapper, 'correct horse battery staple')
+		// Fake timers only from here: the mount above needs real ones to get
+		// through created()'s awaited suite check.
+		vi.useFakeTimers()
+		try {
+			wrapper.vm.masterPassword = 'correct horse battery staple'
+			await wrapper.vm.$nextTick()
+			wrapper.find(SUBMIT).trigger('click')
+			await vi.advanceTimersByTimeAsync(0)
 
-		// Same success signal, no waiting: the icon still reads "open", but
-		// the redirect has already fired.
-		expect(wrapper.find(OPEN_LOCK).exists()).toBe(true)
-		expect(push).toHaveBeenCalledWith('/vault/7')
+			// Success signal and announcement are both on screen, and the
+			// redirect has NOT fired yet.
+			expect(wrapper.find(OPEN_LOCK).exists()).toBe(true)
+			expect(wrapper.find(SR_STATUS).text()).not.toBe('')
+			expect(push).not.toHaveBeenCalled()
+
+			// The hold is the announce beat alone — no animation waited for,
+			// which is what keeps this path the faster of the two.
+			expect(ANNOUNCE_MS).toBeLessThan(ANIMATION_MS + SETTLE_MS)
+			await vi.advanceTimersByTimeAsync(ANNOUNCE_MS)
+			expect(push).toHaveBeenCalledWith('/vault/7')
+		} finally {
+			vi.useRealTimers()
+		}
 	})
 
 	it('leaves the closed padlock in place when the password is wrong', async () => {
@@ -287,8 +319,6 @@ describe('LockScreen unlock animation', () => {
 		const { wrapper } = await mountUnlockForm()
 
 		await submitPassword(wrapper, 'wrong')
-		// The flash is armed on the next tick, so that a repeat rejection
-		// re-triggers the CSS rather than staying on an already-set class.
 		await wrapper.vm.$nextTick()
 		expect(wrapper.find(REJECTED_LOCK).exists()).toBe(true)
 
@@ -310,6 +340,7 @@ describe('LockScreen unlock animation', () => {
 		try {
 			await submitPasswordOnFakeTimers(wrapper, 'wrong')
 			expect(wrapper.find(REJECTED_LOCK).exists()).toBe(true)
+			const firstLock = wrapper.find(REJECTED_LOCK).element
 
 			// Nearly all of the first window has gone.
 			await vi.advanceTimersByTimeAsync(ERROR_MS - 200)
@@ -321,6 +352,15 @@ describe('LockScreen unlock animation', () => {
 			await submitPasswordOnFakeTimers(wrapper, 'wrong again')
 			await vi.advanceTimersByTimeAsync(300)
 			expect(wrapper.find(REJECTED_LOCK).exists()).toBe(true)
+
+			// ...and a FRESH element, which is the part the red alone does not
+			// prove. A CSS animation restarts only when the browser sees the
+			// computed animation-name change across a style recalculation, so
+			// re-setting the class on the surviving element replays no shake
+			// at all. jsdom runs no animations, so element identity is the
+			// only handle the test has on that — and it is the right one: the
+			// key bump is exactly what the fix turns on.
+			expect(wrapper.find(REJECTED_LOCK).element).not.toBe(firstLock)
 
 			await vi.advanceTimersByTimeAsync(ERROR_MS)
 			expect(wrapper.find(REJECTED_LOCK).exists()).toBe(false)

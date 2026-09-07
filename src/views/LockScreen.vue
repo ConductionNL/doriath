@@ -61,10 +61,18 @@
 			  accessibility tree before the text lands in it.
 
 			  Two regions, because the two kinds of news deserve different
-			  urgency: progress and success are polite (role="status"), a
-			  rejected credential interrupts (role="alert"). The unlock's
-			  settle beat is what gives the polite one time to be spoken
-			  before the redirect tears the screen down.
+			  urgency: the unlock's success is polite (role="status"), a
+			  rejected credential interrupts (role="alert"). The navigation
+			  hold is what gives the polite one time to be spoken before the
+			  redirect tears the screen down — which is why reduced motion
+			  drops the ANIMATION but keeps a beat of that hold: reduced
+			  motion means less movement, not less time, and it is a
+			  preference screen-reader users commonly have on.
+
+			  The suite check is deliberately not announced here: its text
+			  would be in the region on the very first render, which is the
+			  one case a live region does not announce, and the spinner's
+			  own visible label already carries it (see `liveStatus`).
 			-->
 			<p class="lock-screen__sr-live" role="status">{{ liveStatus }}</p>
 			<p class="lock-screen__sr-live" role="alert">{{ liveAlert }}</p>
@@ -75,8 +83,18 @@
 					class="lock-screen__icon-open"
 					:size="48"
 					data-testid="lock-screen-icon-open" />
+				<!--
+				  The key is load-bearing, not bookkeeping: a CSS animation
+				  bound to a class only restarts when the browser sees the
+				  computed animation-name change ACROSS a style
+				  recalculation. Toggling the class off and on can never
+				  produce that within one task, so a repeat rejection would
+				  redden without shaking. Bumping the key hands Vue a fresh
+				  element instead, and a fresh element always animates.
+				-->
 				<LockIcon
 					v-else
+					:key="rejectionSeq"
 					:class="{ 'lock-screen__icon-rejected': unlockRejected }"
 					:size="48"
 					data-testid="lock-screen-icon-closed" />
@@ -299,11 +317,26 @@ const UNLOCK_ANIMATION_MS = 400
 const UNLOCK_SETTLE_MS = 500
 
 /**
- * Total navigation hold: the animation, then its settle. Skipped entirely
- * under prefers-reduced-motion, where nothing plays and so there is
- * nothing to hold for.
+ * Total navigation hold when motion is allowed: the animation, then its
+ * settle. Reduced motion holds UNLOCK_ANNOUNCE_MS instead.
  */
 const UNLOCK_HOLD_MS = UNLOCK_ANIMATION_MS + UNLOCK_SETTLE_MS
+
+/**
+ * The navigation hold under prefers-reduced-motion, in milliseconds.
+ *
+ * Not zero, which is what this used to be: the padlock is not the only
+ * channel the unlock speaks through. The polite live region needs the
+ * screen to still exist when the screen reader gets to it, and the
+ * redirect unmounts the screen — so with no hold at all, the one viewer
+ * who cannot see the open padlock is also the one who never hears about
+ * it. Reduced motion means less MOVEMENT, not less time, and it is a
+ * preference blind screen-reader users commonly have on.
+ *
+ * Still the faster path of the two: this is the settle beat on its own,
+ * without the animation in front of it.
+ */
+const UNLOCK_ANNOUNCE_MS = 500
 
 /**
  * How long the closed lock stays red after a rejected password, in
@@ -374,27 +407,39 @@ export default {
 			unlockRejected: false,
 			/** @type {number|null} Timer returning the rejected lock to black. */
 			rejectedTimer: null,
+			/**
+			 * Rejection counter, used as the closed padlock's vnode key so
+			 * every rejection renders a FRESH element. That is what makes
+			 * the shake replay: see the key's own comment in the template.
+			 */
+			rejectionSeq: 0,
 		}
 	},
 
 	computed: {
 		/**
-		 * Polite screen-reader narration of the states that only show
-		 * themselves as a spinner or an icon: the suite check, and the
-		 * unlock's own success. Empty the rest of the time, so the region
-		 * announces on change instead of re-reading itself.
+		 * Polite screen-reader narration of the one state that shows itself
+		 * as nothing but an icon: the unlock's own success. Empty the rest
+		 * of the time, so the region announces on change instead of
+		 * re-reading itself.
+		 *
+		 * The suite check is deliberately NOT in here. `suiteCheck` starts
+		 * 'pending', so a `checking` branch would have its text sitting in
+		 * the region on the very FIRST render — precisely the
+		 * region-and-message-arrive-together case that is not reliably
+		 * announced — and would then go empty when the check settled,
+		 * announcing nothing at all. All it actually did was put a second
+		 * copy of the spinner's own visible "Checking your vault…" into the
+		 * accessibility tree, for a screen reader browsing the page to read
+		 * twice.
 		 *
 		 * @return {string} The status to announce, or '' for silence.
-		 * @spec exclude Accessibility mirror of existing visual state — announces what the spinner and the open-lock icon already show; introduces no state of its own.
+		 * @spec exclude Accessibility mirror of existing visual state — announces what the open-lock icon already shows; introduces no state of its own.
 		 */
 		liveStatus() {
-			if (this.checking) {
-				return t('keepiq', 'Checking your vault…')
-			}
-			if (this.unlocked) {
-				return t('keepiq', 'Vault unlocked. Opening your vault…')
-			}
-			return ''
+			return this.unlocked
+				? t('keepiq', 'Vault unlocked. Opening your vault…')
+				: ''
 		},
 
 		/**
@@ -705,20 +750,24 @@ export default {
 		 * make the icon swap unobservable, and pushing at the keyframes'
 		 * end makes it read as a flicker.
 		 *
-		 * Under prefers-reduced-motion nothing animates, so there is nothing
-		 * to wait for and the redirect is not delayed at all: a viewer who
-		 * asked for less motion gets a faster unlock, never a slower one.
+		 * Under prefers-reduced-motion the animation is dropped and the hold
+		 * shrinks to UNLOCK_ANNOUNCE_MS — but it does not vanish. The hold
+		 * carries the polite live region as well as the keyframes, and the
+		 * redirect unmounts the screen out from under both; a zero hold
+		 * there would leave exactly the viewer who cannot see the padlock
+		 * with no signal at all. So reduced motion still unlocks faster
+		 * than the animated path, just not instantly.
 		 *
 		 * @return {Promise<void>} Resolves when the redirect may proceed.
 		 * @spec exclude Presentation-only success signal — flips the icon flag and waits out its CSS animation; no requirement prescribes the unlock's visuals.
 		 */
 		playUnlockAnimation() {
 			this.unlocked = true
-			if (this.prefersReducedMotion()) {
-				return Promise.resolve()
-			}
+			const hold = this.prefersReducedMotion()
+				? UNLOCK_ANNOUNCE_MS
+				: UNLOCK_HOLD_MS
 			return new Promise((resolve) => {
-				this.unlockTimer = setTimeout(resolve, UNLOCK_HOLD_MS)
+				this.unlockTimer = setTimeout(resolve, hold)
 			})
 		},
 
@@ -726,24 +775,32 @@ export default {
 		 * Flash the closed lock red (and shake it, motion permitting) to
 		 * mark a rejected attempt, then reset it after LOCK_ERROR_MS.
 		 *
-		 * Re-arming from scratch on every call is what makes a second wrong
-		 * password shake again: the animation is bound to the class, so
-		 * without the flag going false and true again the CSS would replay
-		 * nothing and the second rejection would look like no response at
-		 * all. `$nextTick` is load-bearing for the same reason — Vue would
-		 * otherwise coalesce false-then-true into no DOM change at all.
+		 * Bumping `rejectionSeq` is what makes a second wrong password shake
+		 * again, and it replaces an earlier false-then-`$nextTick`-then-true
+		 * dance that did not work. That dance fixed the wrong problem: Vue
+		 * would indeed coalesce the two writes inside one tick, but
+		 * `$nextTick` is a MICROTASK, so the class came off and went back on
+		 * within the same task with no style recalculation between them —
+		 * and a CSS animation restarts only when the computed
+		 * `animation-name` changes across one. The browser saw no change and
+		 * replayed nothing, so a rejection landing inside the still-open
+		 * window re-extended the red without shaking.
+		 *
+		 * A new vnode key sidesteps the restart rule entirely: Vue mounts a
+		 * fresh element, and an element that enters with the class already
+		 * on it animates unconditionally. Setting the flag synchronously
+		 * also keeps the timer inside `beforeUnmount`'s reach — the
+		 * `$nextTick` callback could arm it after teardown had already run.
 		 *
 		 * @spec exclude Presentation-only failure signal — flashes a class for LOCK_ERROR_MS; the rejection itself is reported by the field's error text, which the unlock handlers set.
 		 */
 		flashUnlockRejected() {
 			clearTimeout(this.rejectedTimer)
-			this.unlockRejected = false
-			this.$nextTick(() => {
-				this.unlockRejected = true
-				this.rejectedTimer = setTimeout(() => {
-					this.unlockRejected = false
-				}, LOCK_ERROR_MS)
-			})
+			this.rejectionSeq++
+			this.unlockRejected = true
+			this.rejectedTimer = setTimeout(() => {
+				this.unlockRejected = false
+			}, LOCK_ERROR_MS)
 		},
 
 		/**
@@ -1018,9 +1075,10 @@ export default {
 @media (prefers-reduced-motion: reduce) {
 	/*
 	 * The open-lock glyph stays — it is the state, not motion — but the
-	 * scale/rotate pop goes. playUnlockAnimation() also skips its wait
-	 * here, so the redirect is immediate rather than held for an
-	 * animation that never runs.
+	 * scale/rotate pop goes. playUnlockAnimation() shortens its wait to
+	 * match (UNLOCK_ANNOUNCE_MS instead of the full hold): nothing is
+	 * waiting on keyframes that never run, but the polite live region
+	 * still needs the screen to outlive its own announcement.
 	 */
 	.lock-screen__icon-open {
 		animation: none;
