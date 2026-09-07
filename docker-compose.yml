@@ -2,10 +2,9 @@
 #
 # Brings up PostgreSQL + Nextcloud 32 on http://localhost:8080 (admin/admin),
 # with this repo bind-mounted as the `keepiq` custom app and the sibling
-# `../openregister` and `../thematiq` checkouts mounted alongside it — Keepiq
-# builds on OpenRegister's AppHost engine, and all mounted apps are enabled
-# automatically on every start by the before-starting hook
-# (docker/nextcloud/enable-apps.sh):
+# `../openregister` checkout mounted alongside it — Keepiq builds on
+# OpenRegister's AppHost engine, so both apps are enabled automatically on
+# every start by the before-starting hook (docker/nextcloud/enable-apps.sh):
 #
 #   docker compose up -d
 #
@@ -70,10 +69,8 @@ services:
       - ./custom_apps:/var/www/html/custom_apps
       - .:/var/www/html/custom_apps/keepiq
       - ../openregister:/var/www/html/custom_apps/openregister
-      - ../thematiq:/var/www/html/custom_apps/thematiq
       # before-starting hooks run as www-data on every start, after
-      # install/upgrade — this one enables openregister + keepiq + thematiq.
-      # Do NOT
+      # install/upgrade — this one enables openregister + keepiq. Do NOT
       # replace the image's entrypoint for this (that broke startup before).
       - ./docker/nextcloud/enable-apps.sh:/docker-entrypoint-hooks.d/before-starting/enable-apps.sh:ro
     environment:
