@@ -264,11 +264,24 @@ test.describe('Workflow: vault unlock — encryption-suites/spec.md', () => {
 				;(b as HTMLElement).click()
 			}
 		})
+		// THE MESSAGE IS ON TWO SURFACES ON PURPOSE, and each is asserted on
+		// its own. The helper text under the field is what a sighted reader
+		// sees; the visually-hidden role="alert" is what a screen reader
+		// announces, and it was added deliberately so a rejected credential
+		// interrupts rather than going unspoken.
+		//
+		// A single `.lock-screen`-wide text match resolved to BOTH and failed
+		// under strict mode on a correct page. Narrowing it to either one
+		// alone would let the other be removed without a test noticing, which
+		// for the live region means losing the announcement silently.
+		const wrongPassword = /Wrong master password|decryption failed/i
+		await expect(page.locator('.lock-screen [role="alert"]')).toHaveText(
+			wrongPassword,
+			{ timeout: 15_000 },
+		)
 		await expect(
-			page
-				.locator('.lock-screen')
-				.getByText(/Wrong master password|decryption failed/i),
-		).toBeVisible({ timeout: 15_000 })
+			page.locator('.lock-screen .input-field__helper-text-message'),
+		).toHaveText(wrongPassword, { timeout: 15_000 })
 		await expect(lockHeading(page)).toHaveText(/Unlock Keepiq/i)
 	})
 
