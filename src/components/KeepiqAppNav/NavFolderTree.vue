@@ -427,13 +427,32 @@ export default {
 	background-color: var(--color-background-dark);
 }
 
-/* ...except on the ACTIVE row, which NC paints solid primary: a neutral
-   grey disc there reads as a stray pill (the same finding that sent the
-   COLORED discs to an opaque main-background variant), and the glyph is
-   white on that row, so the disc has to sit ABOVE the primary rather than
-   under a light surface. A low-alpha scrim in the row's own text color
-   works on both highlight generations. */
-.app-navigation-entry.active .keepiq-nav-tree__vault-glyph--plain {
+/* ...except on the ACTIVE row, where the disc has to survive whichever
+   highlight the running server gets. NcAppNavigationItem ships TWO
+   treatments and picks between them on `isLegacy34` (server major < 34),
+   both with !important, so they beat the server's own solid-primary rule
+   in core/css/apps.scss. They need opposite discs:
+
+   - LEGACY (NC 32-33): the row is solid --color-primary-element and the
+     label is whitened, so a neutral grey disc reads as a stray pill —
+     the same finding that sent the COLORED discs to their opaque
+     main-background variant. A low-alpha scrim in the row's own text
+     color sits ABOVE the primary instead.
+   - MODERN (NC 34+, and 34 is our max-version): the row is only a 16%
+     primary tint over --color-main-background and the label stays
+     --color-main-text. A 20% white scrim on that is ~1.05:1 — an
+     invisible disc, i.e. exactly the asymmetry this whole rule exists to
+     remove. So it goes OPAQUE main-background, which is the variant the
+     colored discs already take on that row (see vaultGlyphStyle) and
+     reads as one treatment rather than two.
+
+   Scoped under .keepiq-nav-tree like every other rule here: the --plain
+   class is unique to this component, so the ancestor is not needed to
+   disambiguate, but a rule that skips it reads as an oversight. */
+.keepiq-nav-tree
+	:deep(
+		.app-navigation-entry--legacy.active .keepiq-nav-tree__vault-glyph--plain
+	) {
 	background-color: color-mix(
 		in srgb,
 		var(--color-primary-element-text) 20%,
@@ -441,20 +460,43 @@ export default {
 	);
 }
 
+.keepiq-nav-tree
+	:deep(
+		.app-navigation-entry:not(.app-navigation-entry--legacy).active
+			.keepiq-nav-tree__vault-glyph--plain
+	) {
+	background-color: var(--color-main-background);
+}
+
 /* Icon-column color on the ACTIVE row, keyed to the row's own `.active`
    class (which has MORE sources than the highlightId prop —
    NcAppNavigationItem also activates through vue-router's own link
-   matching). NcAppNavigationItem's modern active rule pins the LINK to
-   --color-main-text (black) with !important while the instance themes
-   paint the row SOLID PRIMARY and whiten only the label — so inherited
-   currentColor resolves black on a blue row. The primary-contrast token
-   makes colorless vault glyphs and the nested FolderOutline white there.
-   COLORED vault glyphs are untouched: their hex rides the svg fill
-   attribute, which inherited color never overrides — on the selected row
-   they render on the opaque main-background disc instead (see
+   matching), and split on the same legacy/modern highlight as the plain
+   disc above, because the row's own label color flips between them:
+
+   - LEGACY: the instance themes paint the row SOLID PRIMARY and whiten
+     only the label, so inherited currentColor resolves black on a blue
+     row. The primary-contrast token makes colorless vault glyphs and the
+     nested FolderOutline white there.
+   - MODERN: the row is a light primary TINT and NcAppNavigationItem pins
+     the link to --color-main-text, so the same white would leave the
+     glyph white-on-near-white (~1.28:1). It follows the label instead.
+
+   COLORED vault glyphs are untouched either way: their hex rides the svg
+   fill attribute, which inherited color never overrides — on the selected
+   row they render on the opaque main-background disc instead (see
    vaultGlyphStyle), keeping the color identity visible. */
-.keepiq-nav-tree :deep(.app-navigation-entry.active .app-navigation-entry-icon) {
+.keepiq-nav-tree
+	:deep(.app-navigation-entry--legacy.active .app-navigation-entry-icon) {
 	color: var(--color-primary-element-text) !important;
+}
+
+.keepiq-nav-tree
+	:deep(
+		.app-navigation-entry:not(.app-navigation-entry--legacy).active
+			.app-navigation-entry-icon
+	) {
+	color: var(--color-main-text) !important;
 }
 
 /* The actions trigger on the ACTIVE row: the default button chrome reads
