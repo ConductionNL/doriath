@@ -92,7 +92,7 @@ export const useFolderStore = defineStore('folder', {
 		 * @param {string} name The folder name.
 		 * @param {string|null} parentId The parent folder ID (null = root).
 		 * @param {object} [extra] Optional customization: `customIcon` /
-		 *   `customColor` catalog keys (restyle Stage 9). Only the two known
+		 *   `customColor` catalog keys. Only the two known
 		 *   keys are forwarded.
 		 * @return {Promise<object>} The created folder.
 		 * @spec openspec/specs/secrets/spec.md#requirement-folder-management

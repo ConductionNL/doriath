@@ -2,7 +2,7 @@
   SPDX-License-Identifier: EUPL-1.2
   SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 
-  Delete confirmation for an EMPTY vault/folder (restyle Stage 9). A folder
+  Delete confirmation for an EMPTY vault/folder. A folder
   with content never reaches this dialog — SubfolderResolutionDialog owns
   that protocol, because there the user must decide per subfolder what
   happens. Here there is nothing to decide, so a plain confirm is the whole

@@ -39,7 +39,7 @@
 				:inputLabel="t('keepiq', 'Parent folder')"
 				:clearable="false" />
 
-			<!-- Vault personalization (restyle Stage 9, Proton pattern):
+			<!-- Vault personalization (Proton pattern):
 			     only TOP-LEVEL folders are Vaults and carry an icon + color;
 			     nested folders keep the plain glyph, so the picker follows
 			     the selected parent like the wording does. Unset = the Safe
@@ -158,7 +158,7 @@ export default {
 		 * folder the user owns — WITHOUT the root, because creating at the
 		 * root is the vault flow and the two never morph into each other —
 		 * path-labelled ("A / B / C") so same-named nested folders stay
-		 * distinguishable (restyle Stage 6).
+		 * distinguishable.
 		 *
 		 * @return {Array<{value: string, label: string}>}
 		 * @spec openspec/specs/secrets-write-ui/spec.md#requirement-create-a-folder-and-move-a-secret

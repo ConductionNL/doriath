@@ -178,7 +178,7 @@ export async function openVault(page: Page): Promise<void> {
 
 /**
  * Open the vault page's single "Actions" overflow menu — the actions bar's
- * own NcActions (`data-testid="cn-actions"`), which since the Stage-8
+ * own NcActions (`data-testid="cn-actions"`), which since the
  * toolbar consolidation carries EVERY page action (Refresh, Select all,
  * the create/import actions, the "My data" entries and the type filter).
  * The themed trigger button swallows Playwright's synthetic click, so the
@@ -197,7 +197,7 @@ export async function openActionsMenu(page: Page): Promise<void> {
 /**
  * Click an entry inside the vault page's "Actions" overflow menu.
  *
- * The overflow entries are NcActionButtons (restyle Stage 5), and NcActionButton
+ * The overflow entries are NcActionButtons, and NcActionButton
  * renders its `data-testid` on the `<li role="presentation">` WRAPPER while the
  * Vue click handler sits on the inner `button.action-button`. A native click on
  * the element that carries the testid therefore hits the presentational list

@@ -3,9 +3,9 @@
 /**
  * Keepiq Migration Version 35
  *
- * Add custom_icon and custom_color to the folders table (restyle Stage 9,
- * Proton-style vault personalization). Both are nullable KEY columns —
- * lowercase kebab identifiers resolved against the frontend's curated
+ * Add custom_icon and custom_color to the folders table (Proton-style vault
+ * personalization). Both are nullable KEY columns — lowercase kebab
+ * identifiers resolved against the frontend's curated
  * catalogs — never free text or hex, so 64 characters is ample.
  *
  * @category Migration

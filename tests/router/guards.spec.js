@@ -77,7 +77,7 @@ const PROTECTED_ROUTES = [
 	'Certificates',
 	'EmergencyAccess',
 	// SecretList/'SecretListFolder' also carry the optional `:id?` detail
-	// segment (restyle Stage 8) — the old SecretDetail page id is gone, but
+	// segment — the old SecretDetail page id is gone, but
 	// /secrets/<id> deep links still resolve to SecretList and stay gated.
 	'SecretList',
 	'SecretListFolder',
@@ -109,7 +109,7 @@ describe('createVaultGuard', () => {
 			const { guard, next } = harness(true)
 
 			// A secret deep link resolves to the SecretList route with the
-			// optional :id segment (restyle Stage 8) — the deep PATH is what
+			// optional :id segment — the deep PATH is what
 			// must survive as returnUrl.
 			guard(route('SecretList', '/secrets/42'), route('Dashboard', '/'), next)
 

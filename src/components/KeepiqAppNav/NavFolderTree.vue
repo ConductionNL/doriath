@@ -2,7 +2,7 @@
   SPDX-License-Identifier: EUPL-1.2
   SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 
-  NavFolderTree — recursive folder tree for the left rail (restyle Stage 7).
+  NavFolderTree — recursive folder tree for the left rail.
 
   Renders folderStore.folderTree nodes as NcAppNavigationItem rows, each
   navigating to its folder's list page. DISPLAY CAP (Option C): folders
@@ -10,7 +10,7 @@
   "…" standing in the chain. Clicking "…" navigates INTO the folder it
   represents when the deepest rendered folder has exactly one hidden
   child; with more than one hidden child it opens the deepest rendered
-  folder's own page instead — its subfolder rows (Stage 6) list all
+  folder's own page instead — its subfolder rows list all
   children, and rows + breadcrumbs take over from there.
 -->
 <template>
@@ -27,16 +27,16 @@
 			:open="openState[node.id] ?? true"
 			:data-testid="`nav-folder-${node.id}`"
 			@update:open="openState[node.id] = $event">
-			<!-- Root-level entries ARE the vaults (Stage 5 terminology), so
-			     they carry the safe glyph — or the user's OWN icon + color
-			     on a Proton-style tinted circle derived from the SAME color
-			     (restyle Stage 9); only nested entries are plain folders.
-			     EVERY vault gets the circle, the default (colorless) one
-			     included: with a disc on some rows and a bare glyph on
-			     others the two sat on different optical baselines, so the
-			     rail read as misaligned. The colorless disc is neutral and
-			     comes from CSS (see --plain below) because its active-row
-			     variant cannot be derived from a vault color. -->
+			<!-- Root-level entries ARE the vaults, so they carry the safe
+			     glyph — or the user's OWN icon + color on a Proton-style
+			     tinted circle derived from the SAME color; only nested
+			     entries are plain folders. EVERY vault gets the circle, the
+			     default (colorless) one included: with a disc on some rows
+			     and a bare glyph on others the two sat on different optical
+			     baselines, so the rail read as misaligned. The colorless
+			     disc is neutral and comes from CSS (see --plain below)
+			     because its active-row variant cannot be derived from a
+			     vault color. -->
 			<template #icon>
 				<span
 					v-if="depth === 0"
@@ -52,7 +52,7 @@
 				</span>
 				<FolderOutline v-else :size="18" />
 			</template>
-			<!-- Vault-level actions (Stage 9): edit/share/move/delete in the
+			<!-- Vault-level actions: edit/share/move/delete in the
 			     NcAppNavigationItem-native actions menu, hosted by
 			     KeepiqAppNav. Proton's dialog approach, touch-friendly.
 			     The trigger is the VERTICAL dots (per review) — NcActions
@@ -143,7 +143,7 @@ import TrashCanOutline from 'vue-material-design-icons/TrashCanOutline.vue'
 /**
  * Maximum folder depth the rail renders. Deeper levels are reachable
  * through the "…" stand-in node plus the list page's subfolder rows and
- * breadcrumbs (Stage 6) — the rail stays legible, nothing becomes
+ * breadcrumbs — the rail stays legible, nothing becomes
  * unreachable.
  *
  * @type {number}
@@ -220,9 +220,9 @@ export default {
 		t,
 
 		/**
-		 * The glyph a depth-0 vault entry renders: the user's picked icon
-		 * (restyle Stage 9), with the Safe default for unset — and for
-		 * UNKNOWN keys, which keeps older bundles forward-compatible with
+		 * The glyph a depth-0 vault entry renders: the user's picked icon,
+		 * with the Safe default for unset — and for UNKNOWN keys, which
+		 * keeps older bundles forward-compatible with
 		 * values written by newer catalogs.
 		 *
 		 * @param {object} node The vault node.

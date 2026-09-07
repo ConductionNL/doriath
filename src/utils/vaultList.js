@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * Vault-list helpers (restyle Stage 6): the subfolder rows the secret list
+ * Vault-list helpers: the subfolder rows the secret list
  * shows above the secrets (file-manager style), and path labels for the
  * move dialogs' folder pickers so same-named folders at different depths
  * stay distinguishable.
@@ -53,7 +53,7 @@ export function subfolderRows(folders, selectedFolderId, searchTerm = '') {
 			folderId: folder.id,
 			name: folder.name,
 			isFolder: true,
-			// Vault personalization keys (restyle Stage 9) ride along so the
+			// Vault personalization keys ride along so the
 			// root rows can render the picked icon + color.
 			customIcon: folder.customIcon ?? null,
 			customColor: folder.customColor ?? null,

@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction / Keepiq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
- * Tests for the vault-list helpers (restyle Stage 6): the subfolder pseudo-
+ * Tests for the vault-list helpers: the subfolder pseudo-
  * rows the secret list shows above the secrets, and the "A / B / C" path
  * labels the move dialogs use to disambiguate nested folders.
  *
@@ -47,7 +47,7 @@ describe('subfolderRows', () => {
 		})
 	})
 
-	it('carries the vault customization keys through (restyle Stage 9)', () => {
+	it('carries the vault customization keys through', () => {
 		const folders = [
 			{
 				id: 'v1',

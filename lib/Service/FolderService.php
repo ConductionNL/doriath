@@ -98,8 +98,8 @@ class FolderService {
 	 * @param string $name The folder name (no slashes)
 	 * @param string|null $parentId The parent folder ID (null = root)
 	 * @param string $userId The owning Nextcloud user ID
-	 * @param string|null $customIcon Optional custom icon key (restyle Stage 9)
-	 * @param string|null $customColor Optional custom color key (restyle Stage 9)
+	 * @param string|null $customIcon Optional custom icon key
+	 * @param string|null $customColor Optional custom color key
 	 *
 	 * @return Folder
 	 *
