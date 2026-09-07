@@ -1643,7 +1643,7 @@ export default {
    guards against design-system themes that flatten the bar's box with
    their own !important rules. */
 .secret-list-view :deep(.cn-index-page) {
-	padding-top: 4px;
+	padding-top: 0;
 }
 
 .secret-list-view :deep(.cn-actions-bar) {
@@ -1653,8 +1653,17 @@ export default {
 	   element its shell reads flat at the small element radius next to the
 	   pill-shaped search and view toggle inside. Other apps keep the
 	   library default — their bars sit mid-page under a title, and that
-	   rounding call is theirs. Fallbacks for older server generations. */
-	border-radius: var(
+	   rounding call is theirs. Fallbacks for older server generations.
+	   Top corners stay square: the bar butts against the page's top edge
+	   (padding-top: 0 above), so rounding there would expose the page
+	   background in two notches instead of reading as a seam. */
+	border-start-start-radius: 0;
+	border-start-end-radius: 0;
+	border-end-start-radius: var(
+		--border-radius-container-large,
+		var(--border-radius-large, 12px)
+	);
+	border-end-end-radius: var(
 		--border-radius-container-large,
 		var(--border-radius-large, 12px)
 	);
