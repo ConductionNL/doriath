@@ -78,7 +78,7 @@ class FolderController extends OCSController {
 	 * Only keys PRESENT in the raw request body are returned: a
 	 * key-present-with-null CLEARS the stored value while an absent key
 	 * leaves it untouched — the distinction the typed method arguments
-	 * cannot make, since both read as null (restyle Stage 9).
+	 * cannot make, since both read as null.
 	 *
 	 * @param string|null $customIcon The custom icon key from the body
 	 * @param string|null $customColor The custom color key from the body
@@ -184,8 +184,8 @@ class FolderController extends OCSController {
 	 *
 	 * @param string $name The folder name (no slashes)
 	 * @param string|null $parentId The parent folder ID (null = root)
-	 * @param string|null $customIcon Optional custom icon key (restyle Stage 9)
-	 * @param string|null $customColor Optional custom color key (restyle Stage 9)
+	 * @param string|null $customIcon Optional custom icon key
+	 * @param string|null $customColor Optional custom color key
 	 *
 	 * @NoAdminRequired
 	 *
@@ -224,7 +224,7 @@ class FolderController extends OCSController {
 	 * The customIcon/customColor attributes apply only when their KEY is
 	 * present in the request body (an explicit null CLEARS the value), so a
 	 * rename/move call that does not mention them can never accidentally
-	 * wipe a customization (restyle Stage 9).
+	 * wipe a customization.
 	 *
 	 * @param string $id The folder ID
 	 * @param string|null $name The new name (null = no rename)

@@ -44,7 +44,7 @@ import Safe from 'vue-material-design-icons/Safe.vue'
 
 /**
  * A secret's vault, as a compact glyph (`dot`) or an icon+name tag (`tag`),
- * rendered with the vault's own Stage 9 icon and color. Renders nothing
+ * rendered with the vault's own icon and color. Renders nothing
  * without a vault, so callers can pass their resolution result straight in.
  */
 export default {
@@ -67,7 +67,7 @@ export default {
 
 	computed: {
 		/**
-		 * The vault's picked icon (restyle Stage 9); Safe for unset — and
+		 * The vault's picked icon; Safe for unset — and
 		 * for UNKNOWN keys, which keeps older bundles forward-compatible
 		 * with newer catalogs.
 		 *

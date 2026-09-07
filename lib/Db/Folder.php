@@ -97,7 +97,7 @@ class Folder extends Entity implements JsonSerializable {
 
 	/**
 	 * Custom icon KEY (lowercase kebab, resolved against the frontend's
-	 * curated catalog; null = the default glyph). Restyle Stage 9.
+	 * curated catalog; null = the default glyph).
 	 *
 	 * @var string|null
 	 */
@@ -105,7 +105,7 @@ class Folder extends Entity implements JsonSerializable {
 
 	/**
 	 * Custom color KEY (lowercase kebab palette key; null = the theme
-	 * default). Restyle Stage 9.
+	 * default).
 	 *
 	 * @var string|null
 	 */

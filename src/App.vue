@@ -99,16 +99,16 @@
 			appId="keepiq"
 			:translate="translateForApp"
 			:permissions="permissions">
-			<!-- Keepiq's own left rail (restyle Stage 7): manifest-driven
+			<!-- Keepiq's own left rail: manifest-driven
 			     entries PLUS the recursive vault/folder tree, which the
 			     default CnAppNav cannot render. The `.keepiq-shell--locked`
 			     rule below keeps hiding it on the lock screen. -->
 			<template #menu>
 				<KeepiqAppNav :manifest="manifest" />
 			</template>
-			<!-- Secret detail as a right sidebar over the vault list (restyle
-			     Stage 8). CnAppRoot's #sidebar slot is the NcContent-level
-			     mount NcAppSidebar needs to slide in correctly (ADR-017).
+			<!-- Secret detail as a right sidebar over the vault list.
+			     CnAppRoot's #sidebar slot is the NcContent-level mount
+			     NcAppSidebar needs to slide in correctly (ADR-017).
 			     Open/closed state lives in the route's optional :id? segment
 			     (src/utils/detailRoute.js), so /secrets/<id> deep links render
 			     the list WITH the sidebar open and closing drops the segment.
@@ -314,7 +314,7 @@
 					</p>
 				</NcAppSettingsSection>
 
-				<!-- Version footer (restyle stage 3): a plain trailing line,
+				<!-- Version footer: a plain trailing line,
 				     matching the legacy UserSettings.vue surface. Hidden when
 				     the initial state is absent. -->
 				<p v-if="appVersion" class="user-settings__version">
@@ -582,7 +582,7 @@ export default {
 
 		/**
 		 * The secret id whose detail sidebar is open, or null. Derived from
-		 * the list routes' optional `:id?` segment (restyle Stage 8) — other
+		 * the list routes' optional `:id?` segment — other
 		 * id-carrying routes (ApplicationDetail) never open it.
 		 *
 		 * @return {string|null} The open secret's id, or null when closed.

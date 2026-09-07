@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction / Keepiq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
- * Route ↔ detail-sidebar mapping (restyle Stage 8): opening a secret keeps
+ * Route ↔ detail-sidebar mapping: opening a secret keeps
  * the list context (root or folder) in the path, closing drops only the
  * `:id` segment, and only the two list routes ever host the sidebar.
  *

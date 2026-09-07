@@ -1,13 +1,13 @@
 <template>
 	<!-- The secret detail as a right-hand sidebar over the vault list
-	     (restyle Stage 8, Proton Pass / Passwork style). Mounted through
+	     (Proton Pass / Passwork style). Mounted through
 	     CnAppRoot's #sidebar slot — the NcContent level is the only place
 	     NcAppSidebar slides in correctly (ADR-017). The open/closed state
 	     lives in the route (src/utils/detailRoute.js); closing emits up so
 	     the shell drops the `:id` segment. The `.secret-detail__*` classes
 	     are a documented e2e contract shared with the old detail page.
 
-	     Deliberately NO tabs (Stage-8 polish, per review): everything the
+	     Deliberately NO tabs (per review): everything the
 	     old detail page showed scrolls in ONE pane, Proton-style — the
 	     action row sits with the title in the header, the input data
 	     renders as grouped rows (icon, muted label, prominent value), and
@@ -35,7 +35,7 @@
 		<template #description>
 			<!-- Proton's vault tag (2026-09-03, per Remko): the one place
 			     you look at a single secret names the vault it lives in,
-			     with the vault's own Stage 9 icon and color. -->
+			     with the vault's own icon and color. -->
 			<VaultIndicator
 				v-if="secret && !error && vault"
 				class="secret-detail__vault"
@@ -883,7 +883,7 @@ import { secretTypeLabel } from '../utils/secretTypes.js'
 import { rootVaultOf } from '../utils/vaultList.js'
 
 /**
- * The secret detail sidebar (restyle Stage 8). Encrypted fields are
+ * The secret detail sidebar. Encrypted fields are
  * decrypted client-side on load (login + additionalFields) while the key
  * stays masked until revealed — the on-demand decryption semantics are
  * unchanged from the old full-page detail this replaces.

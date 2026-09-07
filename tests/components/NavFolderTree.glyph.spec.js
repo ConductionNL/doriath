@@ -2,9 +2,9 @@
  * SPDX-FileCopyrightText: 2026 Conduction / Keepiq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
- * Diagnostic + regression spec for the vault glyph's highlight behavior
- * (restyle Stage 9): the HIGHLIGHTED vault renders a plain currentColor
- * glyph with no tint circle; at rest the picked color + same-hex tint show.
+ * Diagnostic + regression spec for the vault glyph's highlight behavior:
+ * the HIGHLIGHTED vault renders a plain currentColor glyph with no tint
+ * circle; at rest the picked color + same-hex tint show.
  */
 
 import { mount } from '@vue/test-utils'

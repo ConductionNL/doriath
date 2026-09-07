@@ -1,8 +1,8 @@
 <template>
 	<div class="secret-list-view">
-		<!-- Single pane (restyle Stage 7): folder navigation lives in the app
+		<!-- Single pane: folder navigation lives in the app
 		     nav's folder tree (KeepiqAppNav/NavFolderTree) and in the list's
-		     own subfolder rows + breadcrumbs (Stage 6); the in-page folder
+		     own subfolder rows + breadcrumbs; the in-page folder
 		     sidebar is gone. -->
 		<div class="secret-list-view__main">
 			<ExportDialog
@@ -104,7 +104,7 @@
 				@select="onLibrarySelect"
 				@rowClick="onRowOpen"
 				@pageChanged="goToPage">
-				<!-- ONE actions menu (Stage 8 toolbar decision): everything
+				<!-- ONE actions menu: everything
 				     that lived in the title row's Refresh button + "More
 				     actions" overflow, and the inline Select-all checkbox,
 				     folds into the actions bar's own overflow menu.
@@ -114,7 +114,7 @@
 				     entries are turned OFF above — they bypass keepiq's
 				     encrypted import/export flows and duplicated the "My
 				     data" entries. Order: list controls (Select all), the
-				     Stage-5 toolbar actions, the "My data" entries
+				     page's own toolbar actions, the "My data" entries
 				     (secret-export-gdpr §6.5), then the secret-type filter
 				     (passkey-item-type §3.3). data-testids and disabled
 				     conditions are unchanged. -->
@@ -232,7 +232,7 @@
 						</NcActionRadio>
 					</NcActions>
 				</template>
-				<!-- Vault/folder strip (restyle Stage 6, revised): the current
+				<!-- Vault/folder strip (revised): the current
 				     folder's direct subfolders — the VAULTS at root — render as
 				     a distinct section ABOVE the collection in every view mode,
 				     so they never masquerade as secrets in the table or card
@@ -241,7 +241,7 @@
 				     search (team decision: everything visible is searchable),
 				     independent of the secrets' pagination. -->
 				<template #before-collection>
-					<!-- Folder trail (restyle Stage 5): home crumb + parent
+					<!-- Folder trail: home crumb + parent
 					     walk to the current folder (unlinked). BELOW the
 					     actions bar — the bar always owns the top row — and
 					     above the folder strip. Empty at the vault root, so
@@ -333,7 +333,7 @@
 						{{ t('keepiq', 'Delete') }}
 					</NcButton>
 				</template>
-				<!-- Rich empty state (restyle Stage 5). -->
+				<!-- Rich empty state. -->
 				<template #empty>
 					<NcEmptyContent
 						:name="t('keepiq', 'No secrets found')"
@@ -818,9 +818,9 @@ export default {
 		},
 
 		/**
-		 * The current folder's direct subfolders as list rows (restyle
-		 * Stage 6). Filtered by the inline search term — everything visible
-		 * in the list is searchable — and name-sorted as one group.
+		 * The current folder's direct subfolders as list rows.
+		 * Filtered by the inline search term — everything visible in the list
+		 * is searchable — and name-sorted as one group.
 		 *
 		 * NONE at the root (2026-09-03, per Remko, Proton-style): "All
 		 * secrets" is a cross-vault query, not a container the user is
@@ -864,7 +864,7 @@ export default {
 
 		/**
 		 * The page title: the selected folder's name, or "Secrets" at the
-		 * vault root (restyle Stage 5).
+		 * vault root.
 		 *
 		 * @return {string}
 		 * @spec openspec/specs/secrets/spec.md#requirement-folder-management
@@ -916,7 +916,7 @@ export default {
 		},
 
 		/**
-		 * The breadcrumb trail (restyle Stage 5): a Home crumb back to the
+		 * The breadcrumb trail: a Home crumb back to the
 		 * vault root, the ancestor folders as links, the current folder
 		 * last (CnBreadcrumbs renders it unlinked with aria-current). Empty
 		 * at the root — no trail is rendered there.
@@ -1496,7 +1496,7 @@ export default {
 		},
 
 		/**
-		 * Open a secret's detail sidebar (restyle Stage 8): the optional
+		 * Open a secret's detail sidebar: the optional
 		 * `:id?` segment joins the current list route, so the list stays
 		 * mounted behind the sidebar and the folder context survives in
 		 * the path.
@@ -1538,7 +1538,7 @@ export default {
 		},
 
 		/**
-		 * Navigate into a subfolder row (restyle Stage 6).
+		 * Navigate into a subfolder row.
 		 *
 		 * @param {string} folderId The clicked folder's id.
 		 * @return {void}
@@ -1614,7 +1614,7 @@ export default {
 <style scoped>
 /* No own padding: CnIndexPage already pads the page (5 × baseline); the
    old extra 16px doubled every edge and, with the page title visually
-   hidden (Stage 8), left a dead band between the nav toggle and the bar. */
+   hidden, left a dead band between the nav toggle and the bar. */
 .secret-list-view {
 	height: 100%;
 }
@@ -1700,7 +1700,7 @@ export default {
 	gap: 8px;
 }
 
-/* Subfolder rows (restyle Stage 6): full-width, file-manager style. */
+/* Subfolder rows: full-width, file-manager style. */
 .secret-list-view__folder-row {
 	display: flex;
 	align-items: center;

@@ -451,7 +451,7 @@ test.describe('Workflow: secret CRUD + encryption — secrets/spec.md', () => {
 		await expect(page.locator(`${SecretDetail}__card`)).toBeVisible({
 			timeout: 20_000,
 		})
-		// Restyle Stage 8: the detail is a right sidebar over the list; the
+		// The detail is a right sidebar over the list; the
 		// secret's name is the NcAppSidebar header rather than an in-card h2.
 		await expect(
 			page.locator(`${SecretDetail} .app-sidebar-header__mainname`),

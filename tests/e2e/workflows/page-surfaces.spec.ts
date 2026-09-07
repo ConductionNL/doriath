@@ -328,8 +328,8 @@ test.describe('Routed page surfaces — authenticated', () => {
 			placement.Applications,
 			`"Applications" should be in the settings foldout (saw: ${JSON.stringify(placement)})`,
 		).toBe('foldout')
-		// Restyle Stage 1: Certificates and Emergency access moved from the
-		// footer to the settings foldout (RESTYLE-PLAN.md).
+		// Certificates and Emergency access moved from the footer to the
+		// settings foldout.
 		expect(placement.Certificates).toBe('foldout')
 		expect(placement['Emergency access']).toBe('foldout')
 	})

@@ -47,7 +47,7 @@ test.describe('audit trail', () => {
 		// so the row never reaches Playwright's "stable" gate — force the click.
 		await firstSecret.click({ force: true })
 
-		// Restyle Stage 8: the detail is a right sidebar over the list; the
+		// The detail is a right sidebar over the list; the
 		// audit trail sits inside the collapsed "More information"
 		// disclosure (owner-only section) — open it first.
 		await expect(page.locator('.secret-detail__card')).toBeVisible({

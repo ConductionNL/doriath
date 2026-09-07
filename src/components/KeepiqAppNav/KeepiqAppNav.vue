@@ -2,7 +2,7 @@
   SPDX-License-Identifier: EUPL-1.2
   SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 
-  KeepiqAppNav — keepiq's own left rail (restyle Stage 7).
+  KeepiqAppNav — keepiq's own left rail.
 
   The ONE justified custom shell component: CnAppNav verifiably cannot
   render trees, and the vault rail needs the folder tree. Every STATIC
@@ -78,7 +78,7 @@
 				@share="shareFolder = $event"
 				@move="moveFolder = $event"
 				@delete="onDeleteRequested" />
-			<!-- Vault dialogs (restyle Stage 9), opened from the tree
+			<!-- Vault dialogs, opened from the tree
 			     entries' "⋮" menu. The store updates the folder list in
 			     place, so the tree re-renders without a refetch. -->
 			<FolderEditDialog
@@ -245,7 +245,7 @@ export default {
 		return {
 			/**
 			 * The vault whose edit dialog is open (from the tree entries'
-			 * "⋮" menu), or null. Restyle Stage 9.
+			 * "⋮" menu), or null.
 			 */
 			editFolder: null,
 			/** The vault whose team-share dialog is open, or null. */
