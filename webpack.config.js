@@ -1,19 +1,126 @@
 const path = require('path')
 const fs = require('fs')
-const webpack = require('webpack')
-const webpackConfig = require('@nextcloud/webpack-vue-config')
+const MinimizerPlugin = require('minimizer-webpack-plugin')
 const { VueLoaderPlugin } = require('vue-loader')
+const webpack = require('webpack')
+
+const appId = 'keepiq'
 
 const buildMode = process.env.NODE_ENV
 const isDev = buildMode === 'development'
-webpackConfig.devtool = isDev ? 'cheap-source-map' : 'source-map'
 
-webpackConfig.stats = {
-	colors: true,
-	modules: false,
+// This config used to start from `@nextcloud/webpack-vue-config` and mutate the
+// object it exported. That package is gone: it peer-pins
+// `node-polyfill-webpack-plugin@4.0.0`, whose `crypto-browserify` →
+// `browserify-sign` / `create-ecdh` chain terminates at `elliptic`, and elliptic
+// has NO patched release (GHSA-848j-6mx2-7j84, `first_patched_version: null`).
+// That advisory is unresolvable by any version bump — the only way out is to
+// stop installing the chain. Nothing in this app imports node's `crypto`, so the
+// polyfill was never in a bundle to begin with; it was pure install-tree weight,
+// and `@nextcloud/webpack-vue-config` was the subtree's only dependent.
+//
+// Only the fields below were ever actually inherited. `module.rules` and
+// `resolve` were already REPLACED wholesale further down — this app runs no
+// babel-loader and no ts-loader (there is no .babelrc and no tsconfig.json), so
+// the package's rule set was dead code. Its `devServer` block went with it:
+// there is no `webpack serve` script here.
+//
+// The base also carried a DefinePlugin defining `appName`/`appVersion` from
+// `npm_package_*`. They are not repeated here — the two DefinePlugin calls
+// further down already define those same two constants with the same values.
+const webpackConfig = {
+	target: 'web',
+	mode: buildMode,
+	devtool: isDev ? 'cheap-source-map' : 'source-map',
+
+	stats: {
+		colors: true,
+		modules: false,
+	},
+
+	output: {
+		path: path.resolve('./js'),
+		publicPath: path.join('/apps/', appId, '/js/'),
+
+		// Output file names
+		filename: `${appId}-[name].js?v=[contenthash]`,
+		chunkFilename: `${appId}-[name].js?v=[contenthash]`,
+
+		// Clean output before each build
+		clean: true,
+
+		// Make sure sourcemaps have a proper path and do not leak local paths
+		// https://github.com/webpack/webpack/issues/3603
+		devtoolNamespace: appId,
+		devtoolModuleFilenameTemplate(info) {
+			const rootDir = process.cwd()
+			const rel = path.relative(rootDir, info.absoluteResourcePath)
+			return `webpack:///${appId}/${rel}`
+		},
+	},
+
+	optimization: {
+		chunkIds: 'named',
+		splitChunks: {
+			automaticNameDelimiter: '-',
+		},
+		minimize: !isDev,
+		minimizer: [
+			new MinimizerPlugin({
+				minimizerOptions: {
+					format: {
+						comments: false,
+					},
+				},
+				extractComments: true,
+			}),
+		],
+	},
+
+	plugins: [
+		// Kept where the base config had it. The filter further down means to
+		// strip this instance and prepend a fresh one, but vue-loader@17 exports its
+		// plugin as a class named `Plugin`, so `constructor.name !== 'VueLoaderPlugin'`
+		// never matches and both instances survive. That is pre-existing behaviour
+		// from when this list came out of @nextcloud/webpack-vue-config, and the
+		// build has always run with the pair — left as-is rather than changed here.
+		new VueLoaderPlugin(),
+
+		// Replaces NodePolyfillPlugin's ProvidePlugin injection. The plugin was
+		// constructed with `additionalAliases: ['process']`, and its own alias
+		// filter then admitted exactly these two globals — its third, `console`,
+		// is not in the plugin's `defaultPolyfills` set and was filtered out.
+		new webpack.ProvidePlugin({
+			Buffer: [require.resolve('buffer/'), 'Buffer'],
+			process: require.resolve('process/browser'),
+		}),
+
+		// Vue compile-time flags. Documented as optional, but omitting them can
+		// break the build with `ReferenceError: __VUE_PROD_DEVTOOLS__ is not
+		// defined`, and they are what lets the framework tree-shake.
+		// See: https://vuejs.org/api/compile-time-flags.html#compile-time-flags
+		new webpack.DefinePlugin({
+			__VUE_OPTIONS_API__: JSON.parse(
+				process.env.__VUE_OPTIONS_API__ ?? 'true',
+			),
+			__VUE_PROD_DEVTOOLS__: JSON.parse(
+				process.env.__VUE_PROD_DEVTOOLS__ ?? 'false',
+			),
+			__VUE_PROD_HYDRATION_MISMATCH_DETAILS__: JSON.parse(
+				process.env.__VUE_PROD_HYDRATION_MISMATCH_DETAILS__ ?? 'false',
+			),
+		}),
+
+		// @nextcloud/moment since v1.3.0 uses `moment/min/moment-with-locales.js`,
+		// which only works in Node. Its unused `localLocale` requires locales by
+		// the invalid relative path `./locale`; webpack still tries to resolve
+		// that through require.context and fails.
+		new webpack.IgnorePlugin({
+			resourceRegExp: /^\.[/\\]locale$/,
+			contextRegExp: /moment[/\\]min$/,
+		}),
+	],
 }
-
-const appId = 'keepiq'
 
 // Lazy-loaded chunks (the argon2-browser WASM loader for link-share encryption)
 // must resolve relative to the script that loaded them. Nextcloud serves the
@@ -192,13 +299,28 @@ webpackConfig.resolve.alias['@nextcloud/dialogs$'] = path.resolve(
 	'node_modules/@nextcloud/dialogs/dist/index.mjs',
 )
 
-// The dialogs FilePicker chunk imports node's `path`, and webpack 5 no longer
-// auto-polyfills node core modules. `path-browserify` is also an undeclared
-// requirement of @nextcloud/webpack-vue-config@7, so it is a real dependency
-// either way — provide it rather than stubbing `path` to false.
+// Node-core fallbacks. Webpack 5 no longer auto-polyfills node builtins, and
+// NodePolyfillPlugin — which used to inject a full map of them on demand — went
+// out with @nextcloud/webpack-vue-config (see the header). These are the only
+// builtins the graph actually reaches, measured against a real build: `stream`
+// carries the bulk (readable-stream, ~190 modules), `path` comes from the
+// dialogs FilePicker chunk, and the rest are pulled in behind them.
+//
+// Anything NOT listed here now fails the build with webpack's own
+// "Can't resolve 'x' … add a fallback" error rather than being polyfilled
+// silently. That is the intended trade: a loud, one-line fix instead of an
+// unbounded polyfill surface. `fs` stays mapped to `false` because the plugin
+// mapped it that way — a dependency with a dead `require('fs')` branch got an
+// empty module, and dropping that would turn the dead branch into a hard error.
 webpackConfig.resolve.fallback = {
 	...(webpackConfig.resolve.fallback || {}),
+	buffer: require.resolve('buffer/'),
+	events: require.resolve('events/'),
+	fs: false,
 	path: require.resolve('path-browserify'),
+	process: require.resolve('process/browser'),
+	stream: require.resolve('stream-browserify'),
+	string_decoder: require.resolve('string_decoder/'),
 }
 
 // Share Vue + @nextcloud/vue + pinia + icons + @conduction/nextcloud-vue
