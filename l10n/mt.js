@@ -953,7 +953,6 @@ OC.L10N.register(
         "Showing {shown} of {total}.": "Qed jintwerew {shown} minn {total}.",
         "Version history entry": "Entrata tal-istorja tal-verżjonijiet",
         "Checking your vault…": "Qed jiġi vverifikat il-vault tiegħek…",
-        "Vault unlocked. Opening your vault…": "Il-vault inħall. Qed jinfetaħ il-vault tiegħek…",
         "Could not determine whether your vault is already set up. To protect your existing vault, setup and unlock are unavailable until this check succeeds.": "Ma setax jiġi ddeterminat jekk il-vault tiegħek huwiex diġà kkonfigurat. Biex jiġi protett il-vault eżistenti, il-konfigurazzjoni u l-ftuħ mhumiex disponibbli sakemm din il-verifika tirnexxi.",
         "Try again": "Erġa' pprova",
         "Passwords match": "Il-passwords jaqblu",

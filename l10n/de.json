@@ -952,7 +952,6 @@
         "Showing {shown} of {total}.": "{shown} von {total} werden angezeigt.",
         "Version history entry": "Versionsverlaufseintrag",
         "Checking your vault…": "Ihr Tresor wird überprüft…",
-        "Vault unlocked. Opening your vault…": "Tresor entsperrt. Ihr Tresor wird geöffnet…",
         "Could not determine whether your vault is already set up. To protect your existing vault, setup and unlock are unavailable until this check succeeds.": "Es konnte nicht festgestellt werden, ob Ihr Tresor bereits eingerichtet ist. Zum Schutz Ihres bestehenden Tresors sind Einrichtung und Entsperren nicht verfügbar, bis diese Prüfung erfolgreich ist.",
         "Try again": "Erneut versuchen",
         "Passwords match": "Passwörter stimmen überein",

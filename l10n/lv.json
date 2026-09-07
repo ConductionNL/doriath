@@ -952,7 +952,6 @@
         "Showing {shown} of {total}.": "Rāda {shown} no {total}.",
         "Version history entry": "Versiju vēstures ieraksts",
         "Checking your vault…": "Pārbauda jūsu glabātuvi…",
-        "Vault unlocked. Opening your vault…": "Glabātuve atslēgta. Atver jūsu glabātuvi…",
         "Could not determine whether your vault is already set up. To protect your existing vault, setup and unlock are unavailable until this check succeeds.": "Neizdevās noteikt, vai jūsu glabātuve jau ir iestatīta. Lai aizsargātu esošo glabātuvi, iestatīšana un atslēgšana nav pieejamas, kamēr šī pārbaude nav veiksmīga.",
         "Try again": "Mēģināt vēlreiz",
         "Passwords match": "Paroles sakrīt",

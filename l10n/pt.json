@@ -952,7 +952,6 @@
         "Showing {shown} of {total}.": "A mostrar {shown} de {total}.",
         "Version history entry": "Entrada do histórico de versões",
         "Checking your vault…": "A verificar o seu cofre…",
-        "Vault unlocked. Opening your vault…": "Cofre desbloqueado. A abrir o seu cofre…",
         "Could not determine whether your vault is already set up. To protect your existing vault, setup and unlock are unavailable until this check succeeds.": "Não foi possível determinar se o seu cofre já está configurado. Para proteger o cofre existente, a configuração e o desbloqueio ficam indisponíveis até esta verificação ser bem-sucedida.",
         "Try again": "Tentar novamente",
         "Passwords match": "As palavras-passe coincidem",

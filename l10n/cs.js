@@ -953,7 +953,6 @@ OC.L10N.register(
         "Showing {shown} of {total}.": "Zobrazeno {shown} z {total}.",
         "Version history entry": "Záznam historie verzí",
         "Checking your vault…": "Kontrola vašeho trezoru…",
-        "Vault unlocked. Opening your vault…": "Trezor odemčen. Otevírání vašeho trezoru…",
         "Could not determine whether your vault is already set up. To protect your existing vault, setup and unlock are unavailable until this check succeeds.": "Nepodařilo se zjistit, zda je váš trezor již nastaven. Kvůli ochraně stávajícího trezoru nejsou nastavení ani odemčení k dispozici, dokud tato kontrola neproběhne úspěšně.",
         "Try again": "Zkusit znovu",
         "Passwords match": "Hesla se shodují",

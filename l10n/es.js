@@ -953,7 +953,6 @@ OC.L10N.register(
         "Showing {shown} of {total}.": "Mostrando {shown} de {total}.",
         "Version history entry": "Entrada del historial de versiones",
         "Checking your vault…": "Comprobando su bóveda…",
-        "Vault unlocked. Opening your vault…": "Bóveda desbloqueada. Abriendo su bóveda…",
         "Could not determine whether your vault is already set up. To protect your existing vault, setup and unlock are unavailable until this check succeeds.": "No se pudo determinar si su bóveda ya está configurada. Para proteger su bóveda existente, la configuración y el desbloqueo no están disponibles hasta que esta comprobación tenga éxito.",
         "Try again": "Inténtelo de nuevo",
         "Passwords match": "Las contraseñas coinciden",

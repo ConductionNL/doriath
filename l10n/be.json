@@ -952,7 +952,6 @@
         "Showing {shown} of {total}.": "Паказана {shown} з {total}.",
         "Version history entry": "Запіс гісторыі версій",
         "Checking your vault…": "Праверка вашага сховішча…",
-        "Vault unlocked. Opening your vault…": "Сховішча разблакіравана. Адкрыццё вашага сховішча…",
         "Could not determine whether your vault is already set up. To protect your existing vault, setup and unlock are unavailable until this check succeeds.": "Не ўдалося вызначыць, ці наладжана ўжо ваша сховішча. Каб абараніць існае сховішча, наладка і разблакіроўка недаступныя, пакуль гэтая праверка не завершыцца паспяхова.",
         "Try again": "Паспрабаваць зноў",
         "Passwords match": "Паролі супадаюць",

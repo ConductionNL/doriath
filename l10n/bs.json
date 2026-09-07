@@ -952,7 +952,6 @@
         "Showing {shown} of {total}.": "Prikazano {shown} od {total}.",
         "Version history entry": "Unos historije verzija",
         "Checking your vault…": "Provjera vašeg trezora…",
-        "Vault unlocked. Opening your vault…": "Trezor otključan. Otvaranje vašeg trezora…",
         "Could not determine whether your vault is already set up. To protect your existing vault, setup and unlock are unavailable until this check succeeds.": "Nije moguće utvrditi je li vaš trezor već postavljen. Radi zaštite postojećeg trezora, postavljanje i otključavanje nisu dostupni dok ova provjera ne uspije.",
         "Try again": "Pokušaj ponovo",
         "Passwords match": "Lozinke se podudaraju",

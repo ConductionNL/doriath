@@ -953,7 +953,6 @@ OC.L10N.register(
         "Showing {shown} of {total}.": "Приказано {shown} од {total}.",
         "Version history entry": "Унос историје верзија",
         "Checking your vault…": "Provera vašeg trezora…",
-        "Vault unlocked. Opening your vault…": "Трезор је откључан. Отварање вашег трезора…",
         "Could not determine whether your vault is already set up. To protect your existing vault, setup and unlock are unavailable until this check succeeds.": "Nije moguće utvrditi da li je vaš trezor već podešen. Radi zaštite postojećeg trezora, podešavanje i otključavanje nisu dostupni dok ova provera ne uspe.",
         "Try again": "Pokušaj ponovo",
         "Passwords match": "Лозинке се подударају",

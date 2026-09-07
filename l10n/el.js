@@ -953,7 +953,6 @@ OC.L10N.register(
         "Showing {shown} of {total}.": "Εμφάνιση {shown} από {total}.",
         "Version history entry": "Καταχώρηση ιστορικού εκδόσεων",
         "Checking your vault…": "Έλεγχος του θησαυροφυλακίου σας…",
-        "Vault unlocked. Opening your vault…": "Το θησαυροφυλάκιο ξεκλειδώθηκε. Άνοιγμα του θησαυροφυλακίου σας…",
         "Could not determine whether your vault is already set up. To protect your existing vault, setup and unlock are unavailable until this check succeeds.": "Δεν ήταν δυνατό να διαπιστωθεί αν το θησαυροφυλάκιό σας έχει ήδη ρυθμιστεί. Για την προστασία του υπάρχοντος θησαυροφυλακίου, η ρύθμιση και το ξεκλείδωμα δεν είναι διαθέσιμα μέχρι να επιτύχει αυτός ο έλεγχος.",
         "Try again": "Δοκιμάστε ξανά",
         "Passwords match": "Οι κωδικοί πρόσβασης ταιριάζουν",

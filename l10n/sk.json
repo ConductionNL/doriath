@@ -952,7 +952,6 @@
         "Showing {shown} of {total}.": "Zobrazené {shown} z {total}.",
         "Version history entry": "Záznam histórie verzií",
         "Checking your vault…": "Kontrola vášho trezora…",
-        "Vault unlocked. Opening your vault…": "Trezor odomknutý. Otvára sa váš trezor…",
         "Could not determine whether your vault is already set up. To protect your existing vault, setup and unlock are unavailable until this check succeeds.": "Nepodarilo sa zistiť, či je váš trezor už nastavený. Na ochranu existujúceho trezora nie sú nastavenie ani odomknutie dostupné, kým táto kontrola neprebehne úspešne.",
         "Try again": "Skúsiť znova",
         "Passwords match": "Heslá sa zhodujú",

@@ -953,7 +953,6 @@ OC.L10N.register(
         "Showing {shown} of {total}.": "Viser {shown} av {total}.",
         "Version history entry": "Versjonshistorikkpost",
         "Checking your vault…": "Kontrollerer hvelvet ditt…",
-        "Vault unlocked. Opening your vault…": "Hvelvet er låst opp. Åpner hvelvet ditt…",
         "Could not determine whether your vault is already set up. To protect your existing vault, setup and unlock are unavailable until this check succeeds.": "Kunne ikke fastslå om hvelvet ditt allerede er satt opp. For å beskytte det eksisterende hvelvet er oppsett og opplåsing utilgjengelige til denne kontrollen lykkes.",
         "Try again": "Prøv igjen",
         "Passwords match": "Passordene stemmer overens",

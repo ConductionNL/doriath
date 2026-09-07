@@ -953,7 +953,6 @@ OC.L10N.register(
         "Showing {shown} of {total}.": "Se afișează {shown} din {total}.",
         "Version history entry": "Intrare din istoricul versiunilor",
         "Checking your vault…": "Se verifică seiful dvs.…",
-        "Vault unlocked. Opening your vault…": "Seiful a fost deblocat. Se deschide seiful dvs.…",
         "Could not determine whether your vault is already set up. To protect your existing vault, setup and unlock are unavailable until this check succeeds.": "Nu s-a putut stabili dacă seiful dvs. este deja configurat. Pentru a proteja seiful existent, configurarea și deblocarea nu sunt disponibile până când această verificare nu reușește.",
         "Try again": "Încercați din nou",
         "Passwords match": "Parolele se potrivesc",

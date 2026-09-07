@@ -952,7 +952,6 @@
         "Showing {shown} of {total}.": "Kuvatakse {shown} / {total}.",
         "Version history entry": "Versiooniajaloo kirje",
         "Checking your vault…": "Teie seifi kontrollimine…",
-        "Vault unlocked. Opening your vault…": "Seif on avatud. Teie seifi avamine…",
         "Could not determine whether your vault is already set up. To protect your existing vault, setup and unlock are unavailable until this check succeeds.": "Ei õnnestunud kindlaks teha, kas teie seif on juba seadistatud. Olemasoleva seifi kaitsmiseks pole seadistamine ja avamine saadaval, kuni see kontroll õnnestub.",
         "Try again": "Proovi uuesti",
         "Passwords match": "Paroolid ühtivad",

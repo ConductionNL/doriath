@@ -953,7 +953,6 @@ OC.L10N.register(
         "Showing {shown} of {total}.": "Visar {shown} av {total}.",
         "Version history entry": "Post i versionshistoriken",
         "Checking your vault…": "Kontrollerar ditt valv…",
-        "Vault unlocked. Opening your vault…": "Valvet upplåst. Öppnar ditt valv…",
         "Could not determine whether your vault is already set up. To protect your existing vault, setup and unlock are unavailable until this check succeeds.": "Det gick inte att avgöra om ditt valv redan är konfigurerat. För att skydda ditt befintliga valv är konfiguration och upplåsning otillgängliga tills den här kontrollen lyckas.",
         "Try again": "Försök igen",
         "Passwords match": "Lösenorden stämmer överens",

@@ -953,7 +953,6 @@ OC.L10N.register(
         "Showing {shown} of {total}.": "Sýnir {shown} af {total}.",
         "Version history entry": "Færsla í útgáfusögu",
         "Checking your vault…": "Athuga hvelfinguna þína…",
-        "Vault unlocked. Opening your vault…": "Hvelfingin var opnuð. Opna hvelfinguna þína…",
         "Could not determine whether your vault is already set up. To protect your existing vault, setup and unlock are unavailable until this check succeeds.": "Ekki tókst að ganga úr skugga um hvort hvelfingin þín sé þegar uppsett. Til að vernda núverandi hvelfingu eru uppsetning og aflæsing ekki í boði fyrr en þessi athugun tekst.",
         "Try again": "Reyndu aftur",
         "Passwords match": "Lykilorðin stemma",

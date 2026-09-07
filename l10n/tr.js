@@ -953,7 +953,6 @@ OC.L10N.register(
         "Showing {shown} of {total}.": "{total} kaydın {shown} tanesi gösteriliyor.",
         "Version history entry": "Sürüm geçmişi kaydı",
         "Checking your vault…": "Kasanız denetleniyor…",
-        "Vault unlocked. Opening your vault…": "Kasa kilidi açıldı. Kasanız açılıyor…",
         "Could not determine whether your vault is already set up. To protect your existing vault, setup and unlock are unavailable until this check succeeds.": "Kasanızın zaten kurulu olup olmadığı belirlenemedi. Mevcut kasanızı korumak için bu denetim başarılı olana kadar kurulum ve kilit açma kullanılamaz.",
         "Try again": "Yeniden dene",
         "Passwords match": "Parolalar eşleşiyor",

@@ -953,7 +953,6 @@ OC.L10N.register(
         "Showing {shown} of {total}.": "Prikazano {shown} od {total}.",
         "Version history entry": "Vnos zgodovine različic",
         "Checking your vault…": "Preverjanje vašega trezorja…",
-        "Vault unlocked. Opening your vault…": "Trezor odklenjen. Odpiranje vašega trezorja…",
         "Could not determine whether your vault is already set up. To protect your existing vault, setup and unlock are unavailable until this check succeeds.": "Ni bilo mogoče ugotoviti, ali je vaš trezor že nastavljen. Za zaščito obstoječega trezorja nastavitev in odklepanje nista na voljo, dokler to preverjanje ne uspe.",
         "Try again": "Poskusi znova",
         "Passwords match": "Gesli se ujemata",

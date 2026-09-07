@@ -953,7 +953,6 @@ OC.L10N.register(
         "Showing {shown} of {total}.": "Es mostren {shown} de {total}.",
         "Version history entry": "Entrada de l'historial de versions",
         "Checking your vault…": "S'està comprovant la vostra caixa forta…",
-        "Vault unlocked. Opening your vault…": "Caixa forta desbloquejada. S'està obrint la vostra caixa forta…",
         "Could not determine whether your vault is already set up. To protect your existing vault, setup and unlock are unavailable until this check succeeds.": "No s'ha pogut determinar si la caixa forta ja està configurada. Per protegir la caixa forta existent, la configuració i el desbloqueig no estan disponibles fins que aquesta comprovació no tingui èxit.",
         "Try again": "Torna-ho a provar",
         "Passwords match": "Les contrasenyes coincideixen",

@@ -953,7 +953,6 @@ OC.L10N.register(
         "Showing {shown} of {total}.": "Wyświetlono {shown} z {total}.",
         "Version history entry": "Wpis historii wersji",
         "Checking your vault…": "Sprawdzanie skarbca…",
-        "Vault unlocked. Opening your vault…": "Skarbiec odblokowany. Otwieranie skarbca…",
         "Could not determine whether your vault is already set up. To protect your existing vault, setup and unlock are unavailable until this check succeeds.": "Nie udało się ustalić, czy skarbiec jest już skonfigurowany. Aby chronić istniejący skarbiec, konfiguracja i odblokowanie są niedostępne, dopóki ta kontrola się nie powiedzie.",
         "Try again": "Spróbuj ponownie",
         "Passwords match": "Hasła są zgodne",

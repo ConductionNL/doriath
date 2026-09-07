@@ -953,7 +953,6 @@ OC.L10N.register(
         "Showing {shown} of {total}.": "{shown} / {total} megjelenítve.",
         "Version history entry": "Verziótörténeti bejegyzés",
         "Checking your vault…": "A tároló ellenőrzése…",
-        "Vault unlocked. Opening your vault…": "A tároló feloldva. A tároló megnyitása…",
         "Could not determine whether your vault is already set up. To protect your existing vault, setup and unlock are unavailable until this check succeeds.": "Nem állapítható meg, hogy a tárolója be van-e már állítva. A meglévő tároló védelme érdekében a beállítás és a feloldás nem érhető el, amíg ez az ellenőrzés nem sikerül.",
         "Try again": "Próbálja újra",
         "Passwords match": "A jelszavak egyeznek",

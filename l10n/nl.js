@@ -269,7 +269,6 @@ OC.L10N.register(
         "Passwords match": "Wachtwoorden komen overeen",
         "The password does not match. Please try again.": "De wachtwoorden komen niet overeen. Probeer het opnieuw.",
         "Checking your vault…": "Uw kluis wordt gecontroleerd…",
-        "Vault unlocked. Opening your vault…": "Kluis ontgrendeld. Uw kluis wordt geopend…",
         "Could not determine whether your vault is already set up. To protect your existing vault, setup and unlock are unavailable until this check succeeds.": "Kon niet vaststellen of uw kluis al is ingesteld. Om uw bestaande kluis te beschermen, zijn instellen en ontgrendelen niet beschikbaar totdat deze controle slaagt.",
         "Try again": "Probeer opnieuw",
         "Set up your master password": "Stel uw masterwachtwoord in",

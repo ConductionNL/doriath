@@ -952,7 +952,6 @@
         "Showing {shown} of {total}.": "Viser {shown} af {total}.",
         "Version history entry": "Versionshistorikpost",
         "Checking your vault…": "Kontrollerer din boks…",
-        "Vault unlocked. Opening your vault…": "Boks låst op. Åbner din boks…",
         "Could not determine whether your vault is already set up. To protect your existing vault, setup and unlock are unavailable until this check succeeds.": "Kunne ikke afgøre, om din boks allerede er sat op. For at beskytte din eksisterende boks er opsætning og oplåsning utilgængelige, indtil denne kontrol lykkes.",
         "Try again": "Prøv igen",
         "Passwords match": "Adgangskoderne stemmer overens",

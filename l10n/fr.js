@@ -953,7 +953,6 @@ OC.L10N.register(
         "Showing {shown} of {total}.": "Affichage de {shown} sur {total}.",
         "Version history entry": "Entrée d'historique de versions",
         "Checking your vault…": "Vérification de votre coffre…",
-        "Vault unlocked. Opening your vault…": "Coffre déverrouillé. Ouverture de votre coffre…",
         "Could not determine whether your vault is already set up. To protect your existing vault, setup and unlock are unavailable until this check succeeds.": "Impossible de déterminer si votre coffre est déjà configuré. Pour protéger votre coffre existant, la configuration et le déverrouillage sont indisponibles tant que cette vérification n'a pas abouti.",
         "Try again": "Réessayer",
         "Passwords match": "Les mots de passe correspondent",

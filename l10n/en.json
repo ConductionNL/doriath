@@ -952,7 +952,6 @@
         "Showing {shown} of {total}.": "Showing {shown} of {total}.",
         "Version history entry": "Version history entry",
         "Checking your vault…": "Checking your vault…",
-        "Vault unlocked. Opening your vault…": "Vault unlocked. Opening your vault…",
         "Could not determine whether your vault is already set up. To protect your existing vault, setup and unlock are unavailable until this check succeeds.": "Could not determine whether your vault is already set up. To protect your existing vault, setup and unlock are unavailable until this check succeeds.",
         "Try again": "Try again",
         "Passwords match": "Passwords match",

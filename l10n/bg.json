@@ -952,7 +952,6 @@
         "Showing {shown} of {total}.": "Показани {shown} от {total}.",
         "Version history entry": "Запис в историята на версиите",
         "Checking your vault…": "Проверка на вашето хранилище…",
-        "Vault unlocked. Opening your vault…": "Хранилището е отключено. Отваряне на вашето хранилище…",
         "Could not determine whether your vault is already set up. To protect your existing vault, setup and unlock are unavailable until this check succeeds.": "Не можа да се определи дали вашето хранилище вече е настроено. За да се защити съществуващото хранилище, настройката и отключването са недостъпни, докато тази проверка не успее.",
         "Try again": "Опитайте отново",
         "Passwords match": "Паролите съвпадат",

@@ -953,7 +953,6 @@ OC.L10N.register(
         "Showing {shown} of {total}.": "Visualizzati {shown} di {total}.",
         "Version history entry": "Voce della cronologia versioni",
         "Checking your vault…": "Verifica della tua cassaforte…",
-        "Vault unlocked. Opening your vault…": "Cassaforte sbloccata. Apertura della tua cassaforte…",
         "Could not determine whether your vault is already set up. To protect your existing vault, setup and unlock are unavailable until this check succeeds.": "Impossibile determinare se la tua cassaforte è già configurata. Per proteggere la cassaforte esistente, la configurazione e lo sblocco non sono disponibili finché questa verifica non riesce.",
         "Try again": "Riprova",
         "Passwords match": "Le password corrispondono",

@@ -953,7 +953,6 @@ OC.L10N.register(
         "Showing {shown} of {total}.": "Rodoma {shown} iš {total}.",
         "Version history entry": "Versijų istorijos įrašas",
         "Checking your vault…": "Tikrinama jūsų saugykla…",
-        "Vault unlocked. Opening your vault…": "Saugykla atblokuota. Atveriama jūsų saugykla…",
         "Could not determine whether your vault is already set up. To protect your existing vault, setup and unlock are unavailable until this check succeeds.": "Nepavyko nustatyti, ar jūsų saugykla jau sukonfigūruota. Siekiant apsaugoti esamą saugyklą, sąranka ir atrakinimas negalimi, kol ši patikra sėkmingai neįvyks.",
         "Try again": "Bandyti dar kartą",
         "Passwords match": "Slaptažodžiai sutampa",

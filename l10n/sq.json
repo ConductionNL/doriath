@@ -952,7 +952,6 @@
         "Showing {shown} of {total}.": "Po shfaqen {shown} nga {total}.",
         "Version history entry": "Zë i historikut të versioneve",
         "Checking your vault…": "Po kontrollohet kasaforta juaj…",
-        "Vault unlocked. Opening your vault…": "Kasaforta u shkyç. Po hapet kasaforta juaj…",
         "Could not determine whether your vault is already set up. To protect your existing vault, setup and unlock are unavailable until this check succeeds.": "Nuk u përcaktua dot nëse kasaforta juaj është konfiguruar tashmë. Për të mbrojtur kasafortën ekzistuese, konfigurimi dhe shkyçja nuk janë të disponueshme derisa ky kontroll të ketë sukses.",
         "Try again": "Provoni përsëri",
         "Passwords match": "Fjalëkalimet përputhen",

@@ -952,7 +952,6 @@
         "Showing {shown} of {total}.": "Показано {shown} з {total}.",
         "Version history entry": "Запис історії версій",
         "Checking your vault…": "Перевірка вашого сховища…",
-        "Vault unlocked. Opening your vault…": "Сховище розблоковано. Відкриття вашого сховища…",
         "Could not determine whether your vault is already set up. To protect your existing vault, setup and unlock are unavailable until this check succeeds.": "Не вдалося визначити, чи ваше сховище вже налаштоване. Щоб захистити наявне сховище, налаштування та розблокування недоступні, доки ця перевірка не завершиться успішно.",
         "Try again": "Спробувати ще раз",
         "Passwords match": "Паролі збігаються",

@@ -952,7 +952,6 @@
         "Showing {shown} of {total}.": "Показано {shown} из {total}.",
         "Version history entry": "Запись истории версий",
         "Checking your vault…": "Проверка вашего хранилища…",
-        "Vault unlocked. Opening your vault…": "Хранилище разблокировано. Открытие вашего хранилища…",
         "Could not determine whether your vault is already set up. To protect your existing vault, setup and unlock are unavailable until this check succeeds.": "Не удалось определить, настроено ли уже ваше хранилище. Для защиты существующего хранилища настройка и разблокировка недоступны, пока эта проверка не завершится успешно.",
         "Try again": "Попробовать снова",
         "Passwords match": "Пароли совпадают",

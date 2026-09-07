@@ -952,7 +952,6 @@
         "Showing {shown} of {total}.": "{shown} vun {total} ginn ugewisen.",
         "Version history entry": "Versiounsgeschicht-Entrée",
         "Checking your vault…": "Ären Tresor gëtt iwwerpréift…",
-        "Vault unlocked. Opening your vault…": "Tresor entspaart. Ären Tresor gëtt opgemaach…",
         "Could not determine whether your vault is already set up. To protect your existing vault, setup and unlock are unavailable until this check succeeds.": "Et konnt net festgestallt ginn, ob Ären Tresor scho configuréiert ass. Fir Ären existéierenden Tresor ze schützen, sinn Configuratioun an Entspären net verfügbar, bis dës Iwwerpréiwung geléngt.",
         "Try again": "Nach eng Kéier probéieren",
         "Passwords match": "D'Passwierder stëmmen iwwereneen",

@@ -952,7 +952,6 @@
         "Showing {shown} of {total}.": "{shown} as {total} á thaispeáint.",
         "Version history entry": "Iontráil staire leaganacha",
         "Checking your vault…": "Do vailt á sheiceáil…",
-        "Vault unlocked. Opening your vault…": "Vailt díghlasáilte. Do vailt á oscailt…",
         "Could not determine whether your vault is already set up. To protect your existing vault, setup and unlock are unavailable until this check succeeds.": "Níorbh fhéidir a chinneadh an bhfuil do vailt socraithe cheana féin. Chun do vailt reatha a chosaint, níl socrú ná díghlasáil ar fáil go dtí go n-éireoidh leis an tseiceáil seo.",
         "Try again": "Bain triail eile as",
         "Passwords match": "Meaitseálann na pasfhocail",

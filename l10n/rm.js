@@ -953,7 +953,6 @@ OC.L10N.register(
         "Showing {shown} of {total}.": "{shown} da {total} vegnan mussads.",
         "Version history entry": "Endataziun da la cronologia da versiuns",
         "Checking your vault…": "Controllar Vossa cassaforta…",
-        "Vault unlocked. Opening your vault…": "Cassaforta sbloccada. Avrir Vossa cassaforta…",
         "Could not determine whether your vault is already set up. To protect your existing vault, setup and unlock are unavailable until this check succeeds.": "I n'è betg reussì da constatar sche Vossa cassaforta è gia configurada. Per proteger Vossa cassaforta existenta n'èn la configuraziun ed il sbloccar betg disponibels enfin che questa controlla reussescha.",
         "Try again": "Empruvar danovamain",
         "Passwords match": "Ils pleds-clav correspundan",

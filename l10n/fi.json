@@ -952,7 +952,6 @@
         "Showing {shown} of {total}.": "Näytetään {shown} / {total}.",
         "Version history entry": "Versiohistorian tietue",
         "Checking your vault…": "Tarkistetaan holviasi…",
-        "Vault unlocked. Opening your vault…": "Holvi avattu. Avataan holviasi…",
         "Could not determine whether your vault is already set up. To protect your existing vault, setup and unlock are unavailable until this check succeeds.": "Ei voitu selvittää, onko holvisi jo määritetty. Olemassa olevan holvin suojaamiseksi määritys ja lukituksen avaus eivät ole käytettävissä, ennen kuin tämä tarkistus onnistuu.",
         "Try again": "Yritä uudelleen",
         "Passwords match": "Salasanat täsmäävät",
