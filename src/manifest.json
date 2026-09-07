@@ -212,7 +212,7 @@
 							"op": "gt",
 							"value": 0
 						},
-						"_note": "The admin approval queue itself, replacing the earlier keepiq-pending-apps banner (which could only say THAT applications were waiting, not WHICH — the library gained the two pieces this needs: a def-level visibleWhen collapses any widget's grid cell while unmet, and endpointSource tables forward a client-side `limit` so the View-all footer condition can hold). visibleWhen gates on the summary's pending_apps_count: non-admins get null and admins with an empty queue get 0, so the whole card — row included — exists only for an admin with pending work. Rows come from GET /api/v1/applications/pending (a bare array: name, registeredBy — null means an anonymous registration, createdAt ISO-8601 rendered relative via format:date-time). limit 3 + viewAllRoute: the footer appears only when a fourth application is waiting. No rowRoute: applications have no detail page; approval happens on the applications page.",
+						"_note": "The admin approval queue itself, replacing the earlier keepiq-pending-apps banner (which could only say THAT applications were waiting, not WHICH — the library gained the two pieces this needs: a def-level visibleWhen collapses any widget's grid cell while unmet, and endpointSource tables forward a client-side `limit` so the View-all footer condition can hold). visibleWhen gates on the summary's pending_apps_count: non-admins get null and admins with an empty queue get 0, so the whole card — row included — exists only for an admin with pending work. Rows come from GET /api/v1/applications/pending (a bare array: id, name, registeredBy — null means an anonymous registration, createdAt ISO-8601 rendered relative via format:date-time). VIEW-ALL FOOTER, currently dead: `limit` never reaches the widget on @conduction/nextcloud-vue 2.36.3 — the object-table host adapter (objectTableContentToProps in CnWidgetObjectTable/dashboardRegistration.js) destructures `limit` out to fold it into `source`, and an endpointSource table HAS no `source`, so every row renders and the footer's total-greater-than-shown condition can never hold. Fixed upstream; the footer starts appearing at a fourth pending application once keepiq bumps past 2.36.3. rowRoute carries the navigation meanwhile and regardless: any row opens the applications page, router-pushed (a route NAME, never a full page load — the vault master key is memory-only, so a reload would re-lock it and land on /lock). Deliberately NOT ApplicationDetail (/applications/:id, which does exist): the queue's job is to get an admin to the page that handles the whole queue, not to one application. The cost of that choice is one dev-only console line per click — the widget's rowRoute always pushes `params: {id}` and vue-router discards the param this path has no segment for.",
 						"content": {
 							"endpointSource": {
 								"url": "/apps/keepiq/api/v1/applications/pending"
@@ -229,6 +229,7 @@
 							"limit": 3,
 							"viewAllRoute": { "name": "ApplicationRegister" },
 							"viewAllLabel": "View all",
+							"rowRoute": "ApplicationRegister",
 							"borderless": true,
 							"emptyText": "No applications awaiting approval"
 						}
