@@ -215,8 +215,12 @@ While the initial 20,433-string backlog was being paid down the gate ran
 two-tier: `L10N_PARITY_ENFORCED` named the locales that had finished, and
 everything else sat on a no-regression ratchet whose bounds
 `node tests/l10n/check-l10n-parity.js --write` recorded after each pass. Every
-locale is complete now, so the ratchet is dormant and its data file is gone; it
-is kept only for a locale ever added to the required set incomplete.
+locale is complete now, so that data file is gone and the ratchet is
+unreachable under the default: a locale added to the required set is enforced
+along with it and hard-fails rather than falling through to a bound of its own.
+Only an explicit `L10N_PARITY_ENFORCED` naming a **subset** of the required
+list brings the ratchet — and `--write` — back, which is how a future bulk
+translation push would stage itself again.
 
 ### Enable locally
 
