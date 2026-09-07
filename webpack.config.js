@@ -1,6 +1,6 @@
-const path = require('path')
 const fs = require('fs')
 const MinimizerPlugin = require('minimizer-webpack-plugin')
+const path = require('path')
 const { VueLoaderPlugin } = require('vue-loader')
 const webpack = require('webpack')
 
