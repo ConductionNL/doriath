@@ -1126,7 +1126,8 @@ OC.L10N.register(
         "Weak, reused and ageing passwords in your unlocked vault.": "Passwords dgħajfa, użati mill-ġdid u qodma fil-kaxxa mhux imsakkra.",
         "Everything you did, from the audit trail.": "Kollox li għamilt, mit-traċċa tal-verifika.",
         "Reports": "Rapporti",
-        "Vault unlocked. Opening your vault…": "Il-vault inħall. Qed jinfetaħ il-vault tiegħek…"
+        "Vault unlocked. Opening your vault…": "Il-vault inħall. Qed jinfetaħ il-vault tiegħek…",
+        "Deleted {ok} of {total} secrets": "Tħassru {ok} minn {total} sigrieti"
     },
     "nplurals=2; plural=(n != 1);"
 )

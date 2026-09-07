@@ -1126,7 +1126,8 @@ OC.L10N.register(
         "Weak, reused and ageing passwords in your unlocked vault.": "Vājas, atkārtoti izmantotas un vecas paroles jūsu atslēgtajā glabātavā.",
         "Everything you did, from the audit trail.": "Viss, ko darījāt, no audita pieraksta.",
         "Reports": "Pārskati",
-        "Vault unlocked. Opening your vault…": "Glabātuve atslēgta. Atver jūsu glabātuvi…"
+        "Vault unlocked. Opening your vault…": "Glabātuve atslēgta. Atver jūsu glabātuvi…",
+        "Deleted {ok} of {total} secrets": "Izdzēsti {ok} no {total} noslēpumiem"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -1125,7 +1125,8 @@
         "Weak, reused and ageing passwords in your unlocked vault.": "Слаби, повторно користени и стари пароли во отклучениот трезор.",
         "Everything you did, from the audit trail.": "Сè што направивте, од ревизорската трага.",
         "Reports": "Извештаи",
-        "Vault unlocked. Opening your vault…": "Трезорот е отклучен. Се отвора вашиот трезор…"
+        "Vault unlocked. Opening your vault…": "Трезорот е отклучен. Се отвора вашиот трезор…",
+        "Deleted {ok} of {total} secrets": "Избришани {ok} од {total} тајни"
     },
     "plurals": null
 }

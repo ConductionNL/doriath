@@ -1125,7 +1125,8 @@
         "Weak, reused and ageing passwords in your unlocked vault.": "Nõrgad, korduvkasutatud ja vanad paroolid teie avatud hoidlas.",
         "Everything you did, from the audit trail.": "Kõik, mida tegite, auditijäljest.",
         "Reports": "Aruanded",
-        "Vault unlocked. Opening your vault…": "Seif on avatud. Teie seifi avamine…"
+        "Vault unlocked. Opening your vault…": "Seif on avatud. Teie seifi avamine…",
+        "Deleted {ok} of {total} secrets": "Kustutatud {ok} / {total} saladust"
     },
     "plurals": null
 }

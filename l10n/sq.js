@@ -1126,7 +1126,8 @@ OC.L10N.register(
         "Weak, reused and ageing passwords in your unlocked vault.": "Fjalëkalime të dobëta, të përsëritura dhe të vjetra në kasafortën e zhbllokuar.",
         "Everything you did, from the audit trail.": "Gjithçka që bëtë, nga gjurma e auditimit.",
         "Reports": "Raportet",
-        "Vault unlocked. Opening your vault…": "Kasaforta u shkyç. Po hapet kasaforta juaj…"
+        "Vault unlocked. Opening your vault…": "Kasaforta u shkyç. Po hapet kasaforta juaj…",
+        "Deleted {ok} of {total} secrets": "U fshinë {ok} nga {total} sekrete"
     },
     "nplurals=2; plural=(n != 1);"
 )

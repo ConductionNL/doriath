@@ -1126,7 +1126,8 @@ OC.L10N.register(
         "Weak, reused and ageing passwords in your unlocked vault.": "Pasfhocail laga, athúsáidte agus sean i do thaisce dhíghlasáilte.",
         "Everything you did, from the audit trail.": "Gach rud a rinne tú, ón lorg iniúchta.",
         "Reports": "Tuarascálacha",
-        "Vault unlocked. Opening your vault…": "Vailt díghlasáilte. Do vailt á oscailt…"
+        "Vault unlocked. Opening your vault…": "Vailt díghlasáilte. Do vailt á oscailt…",
+        "Deleted {ok} of {total} secrets": "Scriosadh {ok} as {total} rún"
     },
     "nplurals=2; plural=(n != 1);"
 )

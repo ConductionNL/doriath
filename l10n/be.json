@@ -1125,7 +1125,8 @@
         "Weak, reused and ageing passwords in your unlocked vault.": "Слабыя, паўторна выкарыстаныя і старыя паролі ў разблакаваным сховішчы.",
         "Everything you did, from the audit trail.": "Усё, што вы зрабілі, з журнала аўдыту.",
         "Reports": "Звіты",
-        "Vault unlocked. Opening your vault…": "Сховішча разблакіравана. Адкрыццё вашага сховішча…"
+        "Vault unlocked. Opening your vault…": "Сховішча разблакіравана. Адкрыццё вашага сховішча…",
+        "Deleted {ok} of {total} secrets": "Выдалена {ok} з {total} сакрэтаў"
     },
     "plurals": null
 }

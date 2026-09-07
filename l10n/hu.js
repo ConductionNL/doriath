@@ -1126,7 +1126,8 @@ OC.L10N.register(
         "Weak, reused and ageing passwords in your unlocked vault.": "Gyenge, újrahasznált és régi jelszavak a feloldott széfben.",
         "Everything you did, from the audit trail.": "Minden, amit tett, az ellenőrzési nyomvonalból.",
         "Reports": "Jelentések",
-        "Vault unlocked. Opening your vault…": "A tároló feloldva. A tároló megnyitása…"
+        "Vault unlocked. Opening your vault…": "A tároló feloldva. A tároló megnyitása…",
+        "Deleted {ok} of {total} secrets": "{total} titok közül {ok} törölve"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -1126,7 +1126,8 @@ OC.L10N.register(
         "Weak, reused and ageing passwords in your unlocked vault.": "Heikot, uudelleenkäytetyt ja vanhat salasanat avatussa holvissasi.",
         "Everything you did, from the audit trail.": "Kaikki mitä teit, tarkastusjäljestä.",
         "Reports": "Raportit",
-        "Vault unlocked. Opening your vault…": "Holvi avattu. Avataan holviasi…"
+        "Vault unlocked. Opening your vault…": "Holvi avattu. Avataan holviasi…",
+        "Deleted {ok} of {total} secrets": "Poistettu {ok} / {total} salaisuutta"
     },
     "nplurals=2; plural=(n != 1);"
 )

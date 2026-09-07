@@ -1126,7 +1126,8 @@ OC.L10N.register(
         "Weak, reused and ageing passwords in your unlocked vault.": "Parole slabe, reutilizate și vechi în seiful deblocat.",
         "Everything you did, from the audit trail.": "Tot ce ați făcut, din urma de audit.",
         "Reports": "Rapoarte",
-        "Vault unlocked. Opening your vault…": "Seiful a fost deblocat. Se deschide seiful dvs.…"
+        "Vault unlocked. Opening your vault…": "Seiful a fost deblocat. Se deschide seiful dvs.…",
+        "Deleted {ok} of {total} secrets": "Șterse {ok} din {total} secrete"
     },
     "nplurals=2; plural=(n != 1);"
 )

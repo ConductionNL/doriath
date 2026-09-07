@@ -1126,7 +1126,8 @@ OC.L10N.register(
         "Weak, reused and ageing passwords in your unlocked vault.": "Αδύναμοι, επαναχρησιμοποιημένοι και παλιοί κωδικοί στο ξεκλείδωτο θησαυροφυλάκιο.",
         "Everything you did, from the audit trail.": "Όλα όσα κάνατε, από το ίχνος ελέγχου.",
         "Reports": "Εκθέσεις",
-        "Vault unlocked. Opening your vault…": "Το θησαυροφυλάκιο ξεκλειδώθηκε. Άνοιγμα του θησαυροφυλακίου σας…"
+        "Vault unlocked. Opening your vault…": "Το θησαυροφυλάκιο ξεκλειδώθηκε. Άνοιγμα του θησαυροφυλακίου σας…",
+        "Deleted {ok} of {total} secrets": "Διαγράφηκαν {ok} από {total} μυστικά"
     },
     "nplurals=2; plural=(n != 1);"
 )

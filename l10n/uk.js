@@ -1126,7 +1126,8 @@ OC.L10N.register(
         "Weak, reused and ageing passwords in your unlocked vault.": "Слабкі, повторно використані та старі пароли у розблокованому сховищі.",
         "Everything you did, from the audit trail.": "Усе, що ви зробили, із журналу аудиту.",
         "Reports": "Звіти",
-        "Vault unlocked. Opening your vault…": "Сховище розблоковано. Відкриття вашого сховища…"
+        "Vault unlocked. Opening your vault…": "Сховище розблоковано. Відкриття вашого сховища…",
+        "Deleted {ok} of {total} secrets": "Вилучено {ok} з {total} секретів"
     },
     "nplurals=2; plural=(n != 1);"
 )

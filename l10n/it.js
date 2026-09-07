@@ -1126,7 +1126,8 @@ OC.L10N.register(
         "Weak, reused and ageing passwords in your unlocked vault.": "Password deboli, riutilizzate e vecchie nella cassaforte sbloccata.",
         "Everything you did, from the audit trail.": "Tutto ciò che hai fatto, dal registro di controllo.",
         "Reports": "Rapporti",
-        "Vault unlocked. Opening your vault…": "Cassaforte sbloccata. Apertura della tua cassaforte…"
+        "Vault unlocked. Opening your vault…": "Cassaforte sbloccata. Apertura della tua cassaforte…",
+        "Deleted {ok} of {total} secrets": "Eliminati {ok} di {total} segreti"
     },
     "nplurals=2; plural=(n != 1);"
 )

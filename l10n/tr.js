@@ -1126,7 +1126,8 @@ OC.L10N.register(
         "Weak, reused and ageing passwords in your unlocked vault.": "Kilidi açılmış kasanızdaki zayıf, yeniden kullanılmış ve eski şifreler.",
         "Everything you did, from the audit trail.": "Yaptığınız her şey, denetim izinden.",
         "Reports": "Raporlar",
-        "Vault unlocked. Opening your vault…": "Kasa kilidi açıldı. Kasanız açılıyor…"
+        "Vault unlocked. Opening your vault…": "Kasa kilidi açıldı. Kasanız açılıyor…",
+        "Deleted {ok} of {total} secrets": "{total} gizliden {ok} tanesi silindi"
     },
     "nplurals=2; plural=(n != 1);"
 )

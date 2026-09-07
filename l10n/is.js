@@ -1126,7 +1126,8 @@ OC.L10N.register(
         "Weak, reused and ageing passwords in your unlocked vault.": "Veik, endurnotuð og gömul lykilorð í opnaðri hirslu þinni.",
         "Everything you did, from the audit trail.": "Allt sem þú gerðir, úr endurskoðunarsporinu.",
         "Reports": "Skýrslur",
-        "Vault unlocked. Opening your vault…": "Hvelfingin var opnuð. Opna hvelfinguna þína…"
+        "Vault unlocked. Opening your vault…": "Hvelfingin var opnuð. Opna hvelfinguna þína…",
+        "Deleted {ok} of {total} secrets": "Eytt {ok} af {total} leyndarmálum"
     },
     "nplurals=2; plural=(n != 1);"
 )

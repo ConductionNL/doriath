@@ -1126,7 +1126,8 @@ OC.L10N.register(
         "Weak, reused and ageing passwords in your unlocked vault.": "Svake, gjenbrukte og gamle passord i det opplåste hvelvet.",
         "Everything you did, from the audit trail.": "Alt du gjorde, fra revisjonssporet.",
         "Reports": "Rapporter",
-        "Vault unlocked. Opening your vault…": "Hvelvet er låst opp. Åpner hvelvet ditt…"
+        "Vault unlocked. Opening your vault…": "Hvelvet er låst opp. Åpner hvelvet ditt…",
+        "Deleted {ok} of {total} secrets": "Slettet {ok} av {total} hemmeligheter"
     },
     "nplurals=2; plural=(n != 1);"
 )
