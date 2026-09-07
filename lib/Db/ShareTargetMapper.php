@@ -40,7 +40,7 @@ class ShareTargetMapper extends QBMapper {
 	 * @return void
 	 */
 	public function __construct(IDBConnection $db) {
-		parent::__construct(db: $db, tableName: 'doriath_share_targets', entityClass: ShareTarget::class);
+		parent::__construct(db: $db, tableName: 'keepiq_share_targets', entityClass: ShareTarget::class);
 	}//end __construct()
 
 	/**

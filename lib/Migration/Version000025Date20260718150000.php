@@ -3,7 +3,7 @@
 /**
  * Keepiq Migration - Ephemeral sends
  *
- * Adds `doriath_ephemeral_sends` (ephemeral-send §1.1): ad-hoc one-time
+ * Adds `keepiq_ephemeral_sends` (ephemeral-send §1.1): ad-hoc one-time
  * shares that never touch the vault tables. The server stores only the
  * AES-256-GCM ciphertext; with a password only the Argon2id-wrapped
  * content key + salt are stored, and with no password the content key
@@ -47,8 +47,8 @@ class Version000025Date20260718150000 extends SimpleMigrationStep {
 	public function changeSchema(IOutput $output, Closure $schemaClosure, array $options): ?ISchemaWrapper {
 		$schema = $schemaClosure();
 
-		if ($schema->hasTable('doriath_ephemeral_sends') === false) {
-			$table = $schema->createTable('doriath_ephemeral_sends');
+		if ($schema->hasTable('keepiq_ephemeral_sends') === false) {
+			$table = $schema->createTable('keepiq_ephemeral_sends');
 			$table->addColumn('id', Types::STRING, ['notnull' => true, 'length' => 36]);
 			$table->addColumn('owner_id', Types::STRING, ['notnull' => true, 'length' => 64]);
 			$table->addColumn('token', Types::STRING, ['notnull' => true, 'length' => 64]);
@@ -63,9 +63,9 @@ class Version000025Date20260718150000 extends SimpleMigrationStep {
 			$table->addColumn('failed_attempts', Types::INTEGER, ['notnull' => true, 'default' => 0]);
 			$table->addColumn('created_at', Types::DATETIME, ['notnull' => true]);
 			$table->setPrimaryKey(['id']);
-			$table->addUniqueIndex(['token'], 'doriath_es_token');
-			$table->addIndex(['owner_id'], 'doriath_es_owner');
-			$table->addIndex(['expires_at'], 'doriath_es_expires');
+			$table->addUniqueIndex(['token'], 'keepiq_es_token');
+			$table->addIndex(['owner_id'], 'keepiq_es_owner');
+			$table->addIndex(['expires_at'], 'keepiq_es_expires');
 		}
 
 		return $schema;

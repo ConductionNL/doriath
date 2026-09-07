@@ -29,7 +29,7 @@ use OCP\AppFramework\Db\QBMapper;
 use OCP\IDBConnection;
 
 /**
- * Mapper for the doriath_app_lease_policies table.
+ * Mapper for the keepiq_app_lease_policies table.
  *
  * @template-extends QBMapper<ApplicationLeasePolicy>
  */
@@ -42,7 +42,7 @@ class ApplicationLeasePolicyMapper extends QBMapper {
 	 * @return void
 	 */
 	public function __construct(IDBConnection $db) {
-		parent::__construct(db: $db, tableName: 'doriath_app_lease_policies', entityClass: ApplicationLeasePolicy::class);
+		parent::__construct(db: $db, tableName: 'keepiq_app_lease_policies', entityClass: ApplicationLeasePolicy::class);
 	}//end __construct()
 
 	/**

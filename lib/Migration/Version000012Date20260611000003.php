@@ -3,7 +3,7 @@
 /**
  * Keepiq Migration Version 12
  *
- * Create the doriath_applications table — backs the registered-application
+ * Create the keepiq_applications table — backs the registered-application
  * scaffold for the BLOCKED implement-application-mgmt change.
  *
  * @category Migration
@@ -29,7 +29,7 @@ use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
 
 /**
- * Create the doriath_applications table.
+ * Create the keepiq_applications table.
  *
  * Smallest scaffold for the BLOCKED implement-application-mgmt change.
  * Full JWT-Bearer auth + EncryptionSuite provisioning + cross-app
@@ -49,11 +49,11 @@ class Version000012Date20260611000003 extends SimpleMigrationStep {
 		// @var ISchemaWrapper $schema
 		$schema = $schemaClosure();
 
-		if ($schema->hasTable('doriath_applications') === true) {
+		if ($schema->hasTable('keepiq_applications') === true) {
 			return null;
 		}
 
-		$table = $schema->createTable('doriath_applications');
+		$table = $schema->createTable('keepiq_applications');
 
 		$table->addColumn('id', Types::STRING, ['notnull' => true, 'length' => 36]);
 		$table->addColumn('name', Types::STRING, ['notnull' => true, 'length' => 128]);
@@ -67,9 +67,9 @@ class Version000012Date20260611000003 extends SimpleMigrationStep {
 		$table->addColumn('approved_at', Types::DATETIME, ['notnull' => false]);
 
 		$table->setPrimaryKey(['id']);
-		$table->addIndex(['status'], 'doriath_app_status_idx');
-		$table->addIndex(['registered_by'], 'doriath_app_registrant_idx');
-		$table->addIndex(['name'], 'doriath_app_name_idx');
+		$table->addIndex(['status'], 'keepiq_app_status_idx');
+		$table->addIndex(['registered_by'], 'keepiq_app_registrant_idx');
+		$table->addIndex(['name'], 'keepiq_app_name_idx');
 
 		return $schema;
 	}//end changeSchema()

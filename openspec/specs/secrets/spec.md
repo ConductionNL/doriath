@@ -152,7 +152,7 @@ Secrets associated with a revoked suite become accessible again automatically on
 
 ### Requirement: Possibly-Compromised Flag Lifecycle
 
-The system MUST raise, render and clear the `possibly_compromised_at` flag as set out below. The field is already defined in this spec's data model as "Set during compromise recovery migration; null if not compromised. Signals the user should rotate this secret's value.", and exists on `doriath_secrets` only; what follows fixes its behaviour, which is currently unspecified and unimplemented — nothing in the system ever sets the flag, leaving every consumer of it permanently inert.
+The system MUST raise, render and clear the `possibly_compromised_at` flag as set out below. The field is already defined in this spec's data model as "Set during compromise recovery migration; null if not compromised. Signals the user should rotate this secret's value.", and exists on `keepiq_secrets` only; what follows fixes its behaviour, which is currently unspecified and unimplemented — nothing in the system ever sets the flag, leaving every consumer of it permanently inert.
 
 **Raise.** The system MUST set `possibly_compromised_at` on every secret migrated by a compromise-recovery migration, at the moment that secret's re-encrypted value is committed. The flag MUST be raised for the migrated row regardless of whether other rows in the same migration failed, and MUST NOT be raised for rows the migration did not touch. Raising it MUST be idempotent: a re-run or a retry MUST NOT overwrite an already-set timestamp.
 
@@ -568,5 +568,5 @@ Known limitation, stated rather than implied: an EXPIRED request remains `pendin
 - Folder paths are never stored as strings; they are derived at query time by traversing `parent_id` links.
 - Additional fields are encrypted as a JSON blob. Chunking must be implemented before large additional values are supported (see ADR-003 on RSA chunk limits).
 - The key generator feature integrates with secret creation to auto-generate the key value.
-- **Access log** (V1, for dashboard "recently accessed" widget): A `doriath_access_log` table tracks secret access events (secret_id, user_id, accessed_at). Populated by SecretService on each read. Used by the dashboard to show the 5 most recently accessed secrets. The migration for this table should be added when implementing the V1 dashboard features.
+- **Access log** (V1, for dashboard "recently accessed" widget): A `keepiq_access_log` table tracks secret access events (secret_id, user_id, accessed_at). Populated by SecretService on each read. Used by the dashboard to show the 5 most recently accessed secrets. The migration for this table should be added when implementing the V1 dashboard features.
 - Related ADRs: ADR-001 (own DB tables), ADR-003 (encryption architecture)

@@ -4,7 +4,7 @@
  * Keepiq Migration Version 21
  *
  * Secret version history (secret-version-history §1.1). Creates
- * `doriath_secret_versions`: immutable pre-update snapshots of a secret's
+ * `keepiq_secret_versions`: immutable pre-update snapshots of a secret's
  * ciphertext fields. The canonical history lives with the owner's copy;
  * all sensitive fields remain ciphertext under the suite that wrapped
  * them (ADR-003) — the server never decrypts to snapshot.
@@ -36,7 +36,7 @@ use OCP\Migration\SimpleMigrationStep;
  */
 class Version000021Date20260718100000 extends SimpleMigrationStep {
 	/**
-	 * Create doriath_secret_versions.
+	 * Create keepiq_secret_versions.
 	 *
 	 * @param IOutput $output The output interface
 	 * @param Closure $schemaClosure The schema closure
@@ -48,11 +48,11 @@ class Version000021Date20260718100000 extends SimpleMigrationStep {
 		// @var ISchemaWrapper $schema
 		$schema = $schemaClosure();
 
-		if ($schema->hasTable('doriath_secret_versions') === true) {
+		if ($schema->hasTable('keepiq_secret_versions') === true) {
 			return null;
 		}
 
-		$table = $schema->createTable('doriath_secret_versions');
+		$table = $schema->createTable('keepiq_secret_versions');
 
 		$table->addColumn('id', Types::STRING, ['notnull' => true, 'length' => 36]);
 		$table->addColumn('secret_id', Types::STRING, ['notnull' => true, 'length' => 36]);
@@ -68,8 +68,8 @@ class Version000021Date20260718100000 extends SimpleMigrationStep {
 		$table->addColumn('created_at', Types::DATETIME, ['notnull' => false]);
 
 		$table->setPrimaryKey(['id']);
-		$table->addIndex(['secret_id'], 'doriath_sv_secret_idx');
-		$table->addUniqueIndex(['secret_id', 'version_number'], 'doriath_sv_version_uniq');
+		$table->addIndex(['secret_id'], 'keepiq_sv_secret_idx');
+		$table->addUniqueIndex(['secret_id', 'version_number'], 'keepiq_sv_version_uniq');
 
 		return $schema;
 	}//end changeSchema()

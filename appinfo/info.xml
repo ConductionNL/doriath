@@ -154,6 +154,29 @@ Vrij en open source onder de EUPL-1.2-licentie.
         the install path is guaranteed to run.
     -->
     <repair-steps>
+        <!--
+            RenameDoriathTables runs PRE-migration, and that is deliberate.
+
+            Unlike the app-id rename above, the table rename lands as an
+            ORDINARY UPGRADE of `keepiq` - same app id, new version - so
+            Installer::installAppLastSteps() takes the `$previousVersion !== ''`
+            branch and runs pre-migration steps BEFORE MigrationService::migrate().
+            That ordering is what makes a partially-migrated install work: the
+            old tables an install actually has are renamed first, and any
+            migration that has not run yet then creates the rest under the new
+            name.
+
+            It is NOT registered under <install>. Install-path repair runs AFTER
+            the migrations, by which point they have already created empty
+            keepiq_* tables, so the step could only refuse. A genuinely fresh
+            install needs no rename anyway - the migrations create the new names
+            directly - and an instance where the separate `doriath` APP is still
+            installed must keep its tables, which the step's refuse-on-collision
+            behaviour guarantees.
+        -->
+        <pre-migration>
+            <step>OCA\Keepiq\Repair\RenameDoriathTables</step>
+        </pre-migration>
         <post-migration>
             <step>OCA\Keepiq\Repair\MigrateAppConfigKeys</step>
             <step>OCA\Keepiq\Repair\MigrateUserPreferences</step>

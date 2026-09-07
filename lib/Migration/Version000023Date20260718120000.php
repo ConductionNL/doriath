@@ -3,9 +3,9 @@
 /**
  * Keepiq Migration - Machine secret leases
  *
- * Adds `doriath_machine_leases` (short-lived access-grant records for the
+ * Adds `keepiq_machine_leases` (short-lived access-grant records for the
  * bearer-authed machine API; machine-secret-leases §1.1) and
- * `doriath_app_lease_policies` (per-application TTL/renewability
+ * `keepiq_app_lease_policies` (per-application TTL/renewability
  * overrides). Leases govern access-grant LIFETIME only — the stored
  * ciphertext envelope is untouched.
  *
@@ -47,8 +47,8 @@ class Version000023Date20260718120000 extends SimpleMigrationStep {
 	public function changeSchema(IOutput $output, Closure $schemaClosure, array $options): ?ISchemaWrapper {
 		$schema = $schemaClosure();
 
-		if ($schema->hasTable('doriath_machine_leases') === false) {
-			$table = $schema->createTable('doriath_machine_leases');
+		if ($schema->hasTable('keepiq_machine_leases') === false) {
+			$table = $schema->createTable('keepiq_machine_leases');
 			$table->addColumn('id', Types::STRING, ['notnull' => true, 'length' => 36]);
 			$table->addColumn('application_id', Types::STRING, ['notnull' => true, 'length' => 36]);
 			$table->addColumn('secret_id', Types::STRING, ['notnull' => true, 'length' => 36]);
@@ -61,13 +61,13 @@ class Version000023Date20260718120000 extends SimpleMigrationStep {
 			$table->addColumn('revoked_at', Types::DATETIME, ['notnull' => false]);
 			$table->addColumn('revoked_by', Types::STRING, ['notnull' => false, 'length' => 64]);
 			$table->setPrimaryKey(['id']);
-			$table->addIndex(['application_id', 'status'], 'doriath_ml_app_status');
-			$table->addIndex(['secret_id'], 'doriath_ml_secret');
-			$table->addIndex(['expires_at'], 'doriath_ml_expires');
+			$table->addIndex(['application_id', 'status'], 'keepiq_ml_app_status');
+			$table->addIndex(['secret_id'], 'keepiq_ml_secret');
+			$table->addIndex(['expires_at'], 'keepiq_ml_expires');
 		}
 
-		if ($schema->hasTable('doriath_app_lease_policies') === false) {
-			$table = $schema->createTable('doriath_app_lease_policies');
+		if ($schema->hasTable('keepiq_app_lease_policies') === false) {
+			$table = $schema->createTable('keepiq_app_lease_policies');
 			$table->addColumn('application_id', Types::STRING, ['notnull' => true, 'length' => 36]);
 			$table->addColumn('default_ttl_seconds', Types::INTEGER, ['notnull' => false]);
 			$table->addColumn('max_ttl_seconds', Types::INTEGER, ['notnull' => false]);

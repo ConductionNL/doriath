@@ -3,7 +3,7 @@
 /**
  * Keepiq Migration Version 5
  *
- * Create the doriath_link_shares table for password-protected link
+ * Create the keepiq_link_shares table for password-protected link
  * sharing of secrets to external parties.
  *
  * @category Migration
@@ -29,7 +29,7 @@ use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
 
 /**
- * Create the doriath_link_shares table.
+ * Create the keepiq_link_shares table.
  */
 class Version000005Date20260603000000 extends SimpleMigrationStep {
 	/**
@@ -47,11 +47,11 @@ class Version000005Date20260603000000 extends SimpleMigrationStep {
 		// @var ISchemaWrapper $schema
 		$schema = $schemaClosure();
 
-		if ($schema->hasTable('doriath_link_shares') === true) {
+		if ($schema->hasTable('keepiq_link_shares') === true) {
 			return null;
 		}
 
-		$table = $schema->createTable('doriath_link_shares');
+		$table = $schema->createTable('keepiq_link_shares');
 
 		$table->addColumn(
 			'id',
@@ -148,9 +148,9 @@ class Version000005Date20260603000000 extends SimpleMigrationStep {
 		);
 
 		$table->setPrimaryKey(['id']);
-		$table->addUniqueIndex(['token'], 'doriath_ls_token_idx');
-		$table->addIndex(['secret_id'], 'doriath_ls_secret_idx');
-		$table->addIndex(['created_by'], 'doriath_ls_creator_idx');
+		$table->addUniqueIndex(['token'], 'keepiq_ls_token_idx');
+		$table->addIndex(['secret_id'], 'keepiq_ls_secret_idx');
+		$table->addIndex(['created_by'], 'keepiq_ls_creator_idx');
 
 		return $schema;
 	}//end changeSchema()

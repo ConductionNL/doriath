@@ -4,7 +4,7 @@
  * Keepiq Migration - Team-folder member grades
  *
  * Adds the `grade` column (`read`|`write`, default `read`) to
- * `doriath_team_folder_members` (folder-permission-grades §1.1). The
+ * `keepiq_team_folder_members` (folder-permission-grades §1.1). The
  * string default backfills every existing membership to `read`, which
  * is exactly the pre-grade behavior.
  *
@@ -46,8 +46,8 @@ class Version000026Date20260718160000 extends SimpleMigrationStep {
 	public function changeSchema(IOutput $output, Closure $schemaClosure, array $options): ?ISchemaWrapper {
 		$schema = $schemaClosure();
 
-		if ($schema->hasTable('doriath_team_folder_members') === true) {
-			$table = $schema->getTable('doriath_team_folder_members');
+		if ($schema->hasTable('keepiq_team_folder_members') === true) {
+			$table = $schema->getTable('keepiq_team_folder_members');
 			if ($table->hasColumn('grade') === false) {
 				$table->addColumn('grade', Types::STRING, ['notnull' => true, 'length' => 8, 'default' => 'read']);
 			}

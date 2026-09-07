@@ -3,7 +3,7 @@
 /**
  * Keepiq Bulk-Grant Share Target Mapper
  *
- * Reads and cascades over `doriath_share_targets` keyed on the BULK GRANT that
+ * Reads and cascades over `keepiq_share_targets` keyed on the BULK GRANT that
  * produced each row, rather than on the row's own identity.
  *
  * @category Db
@@ -30,7 +30,7 @@ use OCP\IDBConnection;
  *
  * WHY A SECOND MAPPER OVER ONE TABLE.
  *
- * A row in `doriath_share_targets` is one recipient's encrypted copy of one
+ * A row in `keepiq_share_targets` is one recipient's encrypted copy of one
  * source secret, and it is reached in two quite different ways. Most callers
  * ask about the row itself — by id, by source secret, by target user, by
  * recipient secret copy. Four callers instead ask about the GRANT that created
@@ -60,7 +60,7 @@ class BulkGrantShareTargetMapper extends QBMapper {
 	 * @return void
 	 */
 	public function __construct(IDBConnection $db) {
-		parent::__construct(db: $db, tableName: 'doriath_share_targets', entityClass: ShareTarget::class);
+		parent::__construct(db: $db, tableName: 'keepiq_share_targets', entityClass: ShareTarget::class);
 	}//end __construct()
 
 	/**

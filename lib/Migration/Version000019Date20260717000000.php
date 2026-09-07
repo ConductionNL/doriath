@@ -4,8 +4,8 @@
  * Keepiq Migration Version 19
  *
  * Team folder sharing (team-folder-sharing §1.1/§1.2). Creates
- * `doriath_team_folders` (membership attachment on an existing owner
- * Folder) and `doriath_team_folder_members` (user/group member rows),
+ * `keepiq_team_folders` (membership attachment on an existing owner
+ * Folder) and `keepiq_team_folder_members` (user/group member rows),
  * and adds a nullable indexed `team_folder_id` provenance column to the
  * existing share-target table, parallel to `group_share_id`. No key
  * material is stored on any of these tables (ADR-003).
@@ -37,7 +37,7 @@ use OCP\Migration\SimpleMigrationStep;
  */
 class Version000019Date20260717000000 extends SimpleMigrationStep {
 	/**
-	 * Create doriath_team_folders + doriath_team_folder_members and add
+	 * Create keepiq_team_folders + keepiq_team_folder_members and add
 	 * team_folder_id to the share-target table.
 	 *
 	 * @param IOutput $output The output interface
@@ -51,8 +51,8 @@ class Version000019Date20260717000000 extends SimpleMigrationStep {
 		$schema = $schemaClosure();
 		$changed = false;
 
-		if ($schema->hasTable('doriath_team_folders') === false) {
-			$table = $schema->createTable('doriath_team_folders');
+		if ($schema->hasTable('keepiq_team_folders') === false) {
+			$table = $schema->createTable('keepiq_team_folders');
 
 			$table->addColumn('id', Types::STRING, ['notnull' => true, 'length' => 36]);
 			$table->addColumn('folder_id', Types::STRING, ['notnull' => true, 'length' => 36]);
@@ -61,13 +61,13 @@ class Version000019Date20260717000000 extends SimpleMigrationStep {
 			$table->addColumn('updated_at', Types::DATETIME, ['notnull' => false]);
 
 			$table->setPrimaryKey(['id']);
-			$table->addIndex(['owner_id'], 'doriath_tf_owner_idx');
-			$table->addUniqueIndex(['folder_id'], 'doriath_tf_folder_uniq');
+			$table->addIndex(['owner_id'], 'keepiq_tf_owner_idx');
+			$table->addUniqueIndex(['folder_id'], 'keepiq_tf_folder_uniq');
 			$changed = true;
 		}
 
-		if ($schema->hasTable('doriath_team_folder_members') === false) {
-			$table = $schema->createTable('doriath_team_folder_members');
+		if ($schema->hasTable('keepiq_team_folder_members') === false) {
+			$table = $schema->createTable('keepiq_team_folder_members');
 
 			$table->addColumn('id', Types::STRING, ['notnull' => true, 'length' => 36]);
 			$table->addColumn('team_folder_id', Types::STRING, ['notnull' => true, 'length' => 36]);
@@ -77,20 +77,20 @@ class Version000019Date20260717000000 extends SimpleMigrationStep {
 			$table->addColumn('created_at', Types::DATETIME, ['notnull' => false]);
 
 			$table->setPrimaryKey(['id']);
-			$table->addIndex(['team_folder_id'], 'doriath_tfm_folder_idx');
-			$table->addIndex(['member_id'], 'doriath_tfm_member_idx');
+			$table->addIndex(['team_folder_id'], 'keepiq_tfm_folder_idx');
+			$table->addIndex(['member_id'], 'keepiq_tfm_member_idx');
 			$table->addUniqueIndex(
 				['team_folder_id', 'member_type', 'member_id'],
-				'doriath_tfm_membership_uniq'
+				'keepiq_tfm_membership_uniq'
 			);
 			$changed = true;
 		}
 
-		if ($schema->hasTable('doriath_share_targets') === true) {
-			$table = $schema->getTable('doriath_share_targets');
+		if ($schema->hasTable('keepiq_share_targets') === true) {
+			$table = $schema->getTable('keepiq_share_targets');
 			if ($table->hasColumn('team_folder_id') === false) {
 				$table->addColumn('team_folder_id', Types::STRING, ['notnull' => false, 'length' => 36]);
-				$table->addIndex(['team_folder_id'], 'doriath_st_teamfolder_idx');
+				$table->addIndex(['team_folder_id'], 'keepiq_st_teamfolder_idx');
 				$changed = true;
 			}
 		}

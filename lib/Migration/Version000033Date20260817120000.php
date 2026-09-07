@@ -15,7 +15,7 @@
  * the row:
  *
  *   SQLSTATE[23502]: Not null violation: null value in column "key"
- *   of relation "oc_doriath_secrets" violates not-null constraint
+ *   of relation "oc_keepiq_secrets" violates not-null constraint
  *
  * Nothing hit this until the machine secret-request surface, which creates a
  * deliberately keyless Secret shell: the human supplies the value later and the
@@ -51,7 +51,7 @@ use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
 
 /**
- * Gives `doriath_secrets.key` an empty-string default.
+ * Gives `keepiq_secrets.key` an empty-string default.
  */
 class Version000033Date20260817120000 extends SimpleMigrationStep {
 	/**
@@ -66,11 +66,11 @@ class Version000033Date20260817120000 extends SimpleMigrationStep {
 	public function changeSchema(IOutput $output, Closure $schemaClosure, array $options): ?ISchemaWrapper {
 		$schema = $schemaClosure();
 
-		if ($schema->hasTable('doriath_secrets') === false) {
+		if ($schema->hasTable('keepiq_secrets') === false) {
 			return null;
 		}
 
-		$table = $schema->getTable('doriath_secrets');
+		$table = $schema->getTable('keepiq_secrets');
 
 		if ($table->hasColumn('key') === false) {
 			return null;

@@ -3,7 +3,7 @@
 /**
  * Keepiq Audit Entry Mapper
  *
- * Database mapper for the append-only doriath_audit_log table
+ * Database mapper for the append-only keepiq_audit_log table
  * (add-secret-audit-trail §1.2). Exposes a single insert path plus scoped
  * read queries (by secret, by actor, admin-filtered with pagination + total
  * count), the retention purge, and account-deletion anonymization. There is
@@ -53,7 +53,7 @@ class AuditEntryMapper extends QBMapper {
 	 * @return void
 	 */
 	public function __construct(IDBConnection $db) {
-		parent::__construct(db: $db, tableName: 'doriath_audit_log', entityClass: AuditEntry::class);
+		parent::__construct(db: $db, tableName: 'keepiq_audit_log', entityClass: AuditEntry::class);
 	}//end __construct()
 
 	/**

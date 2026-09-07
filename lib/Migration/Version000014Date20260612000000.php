@@ -3,7 +3,7 @@
 /**
  * Keepiq Migration Version 14
  *
- * Create the doriath_secret_delegations table — backs the implement-user-sharing
+ * Create the keepiq_secret_delegations table — backs the implement-user-sharing
  * §1.3 + §2.5/2.6 SecretDelegation entity.
  *
  * @category Migration
@@ -29,7 +29,7 @@ use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
 
 /**
- * Create the doriath_secret_delegations table.
+ * Create the keepiq_secret_delegations table.
  *
  * Smallest scaffold for the BLOCKED implement-user-sharing change §1.3.
  * Backs the SecretDelegation entity that records an original_owner
@@ -52,11 +52,11 @@ class Version000014Date20260612000000 extends SimpleMigrationStep {
 		// @var ISchemaWrapper $schema
 		$schema = $schemaClosure();
 
-		if ($schema->hasTable('doriath_secret_delegations') === true) {
+		if ($schema->hasTable('keepiq_secret_delegations') === true) {
 			return null;
 		}
 
-		$table = $schema->createTable('doriath_secret_delegations');
+		$table = $schema->createTable('keepiq_secret_delegations');
 
 		$table->addColumn('id', Types::STRING, ['notnull' => true, 'length' => 36]);
 		$table->addColumn('secret_id', Types::STRING, ['notnull' => true, 'length' => 36]);
@@ -70,9 +70,9 @@ class Version000014Date20260612000000 extends SimpleMigrationStep {
 		$table->addColumn('made_permanent_at', Types::DATETIME, ['notnull' => false]);
 
 		$table->setPrimaryKey(['id']);
-		$table->addIndex(['secret_id'], 'doriath_sd_secret_idx');
-		$table->addIndex(['original_owner_id'], 'doriath_sd_orig_owner_idx');
-		$table->addIndex(['delegated_to'], 'doriath_sd_delegate_idx');
+		$table->addIndex(['secret_id'], 'keepiq_sd_secret_idx');
+		$table->addIndex(['original_owner_id'], 'keepiq_sd_orig_owner_idx');
+		$table->addIndex(['delegated_to'], 'keepiq_sd_delegate_idx');
 
 		return $schema;
 	}//end changeSchema()

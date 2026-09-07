@@ -31,7 +31,7 @@ use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
 
 /**
- * Add custom_icon and custom_color columns to the doriath_folders table
+ * Add custom_icon and custom_color columns to the keepiq_folders table
  * (table names kept their prefix through the app rename).
  */
 class Version000035Date20260901000000 extends SimpleMigrationStep {
@@ -55,11 +55,11 @@ class Version000035Date20260901000000 extends SimpleMigrationStep {
 
 		$schema = $schemaClosure();
 
-		if ($schema->hasTable('doriath_folders') === false) {
+		if ($schema->hasTable('keepiq_folders') === false) {
 			return null;
 		}
 
-		$table = $schema->getTable('doriath_folders');
+		$table = $schema->getTable('keepiq_folders');
 		$changed = false;
 
 		if ($table->hasColumn('custom_icon') === false) {

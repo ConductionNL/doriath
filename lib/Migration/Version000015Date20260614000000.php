@@ -3,7 +3,7 @@
 /**
  * Keepiq Migration Version 15
  *
- * Create the doriath_audit_log table — the append-only audit trail backing
+ * Create the keepiq_audit_log table — the append-only audit trail backing
  * the add-secret-audit-trail change (§1.1). One row per server-observable
  * secret operation: actor, event type, object reference, denormalized
  * non-sensitive object name, and a whitelisted metadata payload. Indexed for
@@ -33,12 +33,12 @@ use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
 
 /**
- * Create the doriath_audit_log table.
+ * Create the keepiq_audit_log table.
  *
  * Append-only at the application surface (add-secret-audit-trail §1.1): the
  * mapper exposes insert + scoped query + purge + anonymize only, never a
  * generic per-entry update or delete. Supersedes the never-built
- * doriath_access_log sketched in the secrets-spec notes (design D4).
+ * keepiq_access_log sketched in the secrets-spec notes (design D4).
  */
 class Version000015Date20260614000000 extends SimpleMigrationStep {
 	/**
@@ -54,11 +54,11 @@ class Version000015Date20260614000000 extends SimpleMigrationStep {
 		// @var ISchemaWrapper $schema
 		$schema = $schemaClosure();
 
-		if ($schema->hasTable('doriath_audit_log') === true) {
+		if ($schema->hasTable('keepiq_audit_log') === true) {
 			return null;
 		}
 
-		$table = $schema->createTable('doriath_audit_log');
+		$table = $schema->createTable('keepiq_audit_log');
 
 		$table->addColumn('id', Types::BIGINT, ['notnull' => true, 'autoincrement' => true, 'unsigned' => true]);
 		$table->addColumn('occurred_at', Types::DATETIME, ['notnull' => true]);
@@ -71,10 +71,10 @@ class Version000015Date20260614000000 extends SimpleMigrationStep {
 		$table->addColumn('metadata', Types::TEXT, ['notnull' => false]);
 
 		$table->setPrimaryKey(['id']);
-		$table->addIndex(['occurred_at'], 'doriath_al_occurred_idx');
-		$table->addIndex(['actor_id'], 'doriath_al_actor_idx');
-		$table->addIndex(['object_type', 'object_id'], 'doriath_al_object_idx');
-		$table->addIndex(['event_type'], 'doriath_al_event_idx');
+		$table->addIndex(['occurred_at'], 'keepiq_al_occurred_idx');
+		$table->addIndex(['actor_id'], 'keepiq_al_actor_idx');
+		$table->addIndex(['object_type', 'object_id'], 'keepiq_al_object_idx');
+		$table->addIndex(['event_type'], 'keepiq_al_event_idx');
 
 		return $schema;
 	}//end changeSchema()

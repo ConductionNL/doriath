@@ -5,7 +5,7 @@
  *
  * Credential rotation policies + expiry reminders
  * (rotation-expiry-policies §1.1): nullable `expires_at` on
- * `doriath_secrets`, per-type/per-folder expiry policies, and idempotent
+ * `keepiq_secrets`, per-type/per-folder expiry policies, and idempotent
  * one-open-flag-per-secret rotation flags. All server-visible metadata —
  * never ciphertext (ADR-003).
  *
@@ -49,17 +49,17 @@ class Version000022Date20260718110000 extends SimpleMigrationStep {
 		$schema = $schemaClosure();
 		$changed = false;
 
-		if ($schema->hasTable('doriath_secrets') === true) {
-			$table = $schema->getTable('doriath_secrets');
+		if ($schema->hasTable('keepiq_secrets') === true) {
+			$table = $schema->getTable('keepiq_secrets');
 			if ($table->hasColumn('expires_at') === false) {
 				$table->addColumn('expires_at', Types::DATETIME, ['notnull' => false]);
-				$table->addIndex(['expires_at'], 'doriath_sec_expires_idx');
+				$table->addIndex(['expires_at'], 'keepiq_sec_expires_idx');
 				$changed = true;
 			}
 		}
 
-		if ($schema->hasTable('doriath_expiry_policies') === false) {
-			$table = $schema->createTable('doriath_expiry_policies');
+		if ($schema->hasTable('keepiq_expiry_policies') === false) {
+			$table = $schema->createTable('keepiq_expiry_policies');
 
 			$table->addColumn('id', Types::STRING, ['notnull' => true, 'length' => 36]);
 			$table->addColumn('owner_id', Types::STRING, ['notnull' => false, 'length' => 64]);
@@ -72,13 +72,13 @@ class Version000022Date20260718110000 extends SimpleMigrationStep {
 			$table->addColumn('updated_at', Types::DATETIME, ['notnull' => false]);
 
 			$table->setPrimaryKey(['id']);
-			$table->addIndex(['owner_id'], 'doriath_ep_owner_idx');
-			$table->addUniqueIndex(['owner_id', 'scope', 'scope_id'], 'doriath_ep_scope_uniq');
+			$table->addIndex(['owner_id'], 'keepiq_ep_owner_idx');
+			$table->addUniqueIndex(['owner_id', 'scope', 'scope_id'], 'keepiq_ep_scope_uniq');
 			$changed = true;
 		}
 
-		if ($schema->hasTable('doriath_rotation_flags') === false) {
-			$table = $schema->createTable('doriath_rotation_flags');
+		if ($schema->hasTable('keepiq_rotation_flags') === false) {
+			$table = $schema->createTable('keepiq_rotation_flags');
 
 			$table->addColumn('id', Types::STRING, ['notnull' => true, 'length' => 36]);
 			$table->addColumn('secret_id', Types::STRING, ['notnull' => true, 'length' => 36]);
@@ -90,8 +90,8 @@ class Version000022Date20260718110000 extends SimpleMigrationStep {
 			$table->addColumn('key_updated_at_at_flag', Types::DATETIME, ['notnull' => false]);
 
 			$table->setPrimaryKey(['id']);
-			$table->addUniqueIndex(['secret_id'], 'doriath_rf_secret_uniq');
-			$table->addIndex(['status'], 'doriath_rf_status_idx');
+			$table->addUniqueIndex(['secret_id'], 'keepiq_rf_secret_uniq');
+			$table->addIndex(['status'], 'keepiq_rf_status_idx');
 			$changed = true;
 		}
 

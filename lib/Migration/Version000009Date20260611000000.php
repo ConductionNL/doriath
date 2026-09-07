@@ -3,7 +3,7 @@
 /**
  * Keepiq Migration Version 9
  *
- * Create the doriath_share_targets table for user-to-user secret sharing.
+ * Create the keepiq_share_targets table for user-to-user secret sharing.
  *
  * @category Migration
  * @package  OCA\Keepiq\Migration
@@ -28,7 +28,7 @@ use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
 
 /**
- * Create the doriath_share_targets table.
+ * Create the keepiq_share_targets table.
  *
  * Smallest scaffold for the BLOCKED implement-user-sharing change. This
  * covers the SecretShare entity from task 1.1 (renamed to share_targets to
@@ -50,11 +50,11 @@ class Version000009Date20260611000000 extends SimpleMigrationStep {
 		// @var ISchemaWrapper $schema
 		$schema = $schemaClosure();
 
-		if ($schema->hasTable('doriath_share_targets') === true) {
+		if ($schema->hasTable('keepiq_share_targets') === true) {
 			return null;
 		}
 
-		$table = $schema->createTable('doriath_share_targets');
+		$table = $schema->createTable('keepiq_share_targets');
 
 		$table->addColumn('id', Types::STRING, ['notnull' => true, 'length' => 36]);
 		$table->addColumn('source_secret_id', Types::STRING, ['notnull' => true, 'length' => 36]);
@@ -65,9 +65,9 @@ class Version000009Date20260611000000 extends SimpleMigrationStep {
 		$table->addColumn('created_at', Types::DATETIME, ['notnull' => true]);
 
 		$table->setPrimaryKey(['id']);
-		$table->addIndex(['source_secret_id'], 'doriath_st_source_idx');
-		$table->addIndex(['target_user_id'], 'doriath_st_target_idx');
-		$table->addIndex(['secret_id'], 'doriath_st_copy_idx');
+		$table->addIndex(['source_secret_id'], 'keepiq_st_source_idx');
+		$table->addIndex(['target_user_id'], 'keepiq_st_target_idx');
+		$table->addIndex(['secret_id'], 'keepiq_st_copy_idx');
 
 		return $schema;
 	}//end changeSchema()

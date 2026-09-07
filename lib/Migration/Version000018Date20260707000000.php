@@ -3,12 +3,12 @@
 /**
  * Keepiq Migration Version 18
  *
- * Create the `doriath_emergency_contacts` table backing the break-glass
+ * Create the `keepiq_emergency_contacts` table backing the break-glass
  * emergency-access capability (add-emergency-access §1.2). One row per
  * (grantor, grantee) relationship: lifecycle state, the grantor-configured wait
  * period, the request timestamp, and the grantee-encrypted recovery envelope
  * (opaque ciphertext — the server never holds a usable key). No change to
- * `doriath_secrets`.
+ * `keepiq_secrets`.
  *
  * @category Migration
  * @package  OCA\Keepiq\Migration
@@ -37,7 +37,7 @@ use OCP\Migration\SimpleMigrationStep;
  */
 class Version000018Date20260707000000 extends SimpleMigrationStep {
 	/**
-	 * Create the doriath_emergency_contacts table if it does not exist.
+	 * Create the keepiq_emergency_contacts table if it does not exist.
 	 *
 	 * @param IOutput $output The output interface
 	 * @param Closure $schemaClosure The schema closure
@@ -49,11 +49,11 @@ class Version000018Date20260707000000 extends SimpleMigrationStep {
 		// @var ISchemaWrapper $schema
 		$schema = $schemaClosure();
 
-		if ($schema->hasTable('doriath_emergency_contacts') === true) {
+		if ($schema->hasTable('keepiq_emergency_contacts') === true) {
 			return null;
 		}
 
-		$table = $schema->createTable('doriath_emergency_contacts');
+		$table = $schema->createTable('keepiq_emergency_contacts');
 
 		$table->addColumn('id', Types::STRING, ['notnull' => true, 'length' => 36]);
 		$table->addColumn('grantor_user_id', Types::STRING, ['notnull' => true, 'length' => 64]);
@@ -70,10 +70,10 @@ class Version000018Date20260707000000 extends SimpleMigrationStep {
 		$table->addColumn('updated_at', Types::DATETIME, ['notnull' => false]);
 
 		$table->setPrimaryKey(['id']);
-		$table->addIndex(['grantor_user_id'], 'doriath_emc_grantor_idx');
-		$table->addIndex(['grantee_user_id'], 'doriath_emc_grantee_idx');
-		$table->addIndex(['state'], 'doriath_emc_state_idx');
-		$table->addUniqueIndex(['grantor_user_id', 'grantee_user_id'], 'doriath_emc_pair_uniq');
+		$table->addIndex(['grantor_user_id'], 'keepiq_emc_grantor_idx');
+		$table->addIndex(['grantee_user_id'], 'keepiq_emc_grantee_idx');
+		$table->addIndex(['state'], 'keepiq_emc_state_idx');
+		$table->addUniqueIndex(['grantor_user_id', 'grantee_user_id'], 'keepiq_emc_pair_uniq');
 
 		return $schema;
 	}//end changeSchema()

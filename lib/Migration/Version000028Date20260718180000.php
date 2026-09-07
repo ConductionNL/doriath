@@ -3,8 +3,8 @@
 /**
  * Keepiq Migration - SIEM audit export
  *
- * Adds `doriath_siem_sinks` (delivery targets with per-sink state) and
- * `doriath_siem_queue` (bounded forwarding queue) — siem-audit-export
+ * Adds `keepiq_siem_sinks` (delivery targets with per-sink state) and
+ * `keepiq_siem_queue` (bounded forwarding queue) — siem-audit-export
  * §1. Forwarded payloads are strict subsets of sanitized audit entries;
  * no secret material ever reaches these tables.
  *
@@ -46,8 +46,8 @@ class Version000028Date20260718180000 extends SimpleMigrationStep {
 	public function changeSchema(IOutput $output, Closure $schemaClosure, array $options): ?ISchemaWrapper {
 		$schema = $schemaClosure();
 
-		if ($schema->hasTable('doriath_siem_sinks') === false) {
-			$table = $schema->createTable('doriath_siem_sinks');
+		if ($schema->hasTable('keepiq_siem_sinks') === false) {
+			$table = $schema->createTable('keepiq_siem_sinks');
 			$table->addColumn('id', Types::STRING, ['notnull' => true, 'length' => 36]);
 			$table->addColumn('name', Types::STRING, ['notnull' => true, 'length' => 128]);
 			$table->addColumn('type', Types::STRING, ['notnull' => true, 'length' => 16]);
@@ -67,11 +67,11 @@ class Version000028Date20260718180000 extends SimpleMigrationStep {
 			$table->addColumn('created_at', Types::DATETIME, ['notnull' => true]);
 			$table->addColumn('updated_at', Types::DATETIME, ['notnull' => false]);
 			$table->setPrimaryKey(['id']);
-			$table->addIndex(['enabled'], 'doriath_ss_enabled');
+			$table->addIndex(['enabled'], 'keepiq_ss_enabled');
 		}//end if
 
-		if ($schema->hasTable('doriath_siem_queue') === false) {
-			$table = $schema->createTable('doriath_siem_queue');
+		if ($schema->hasTable('keepiq_siem_queue') === false) {
+			$table = $schema->createTable('keepiq_siem_queue');
 			$table->addColumn('id', Types::STRING, ['notnull' => true, 'length' => 36]);
 			$table->addColumn('sink_id', Types::STRING, ['notnull' => true, 'length' => 36]);
 			$table->addColumn('payload', Types::TEXT, ['notnull' => true]);
@@ -81,7 +81,7 @@ class Version000028Date20260718180000 extends SimpleMigrationStep {
 			$table->addColumn('next_attempt_at', Types::DATETIME, ['notnull' => false]);
 			$table->addColumn('last_error', Types::STRING, ['notnull' => false, 'length' => 512]);
 			$table->setPrimaryKey(['id']);
-			$table->addIndex(['sink_id', 'status', 'next_attempt_at'], 'doriath_sq_due');
+			$table->addIndex(['sink_id', 'status', 'next_attempt_at'], 'keepiq_sq_due');
 		}
 
 		return $schema;

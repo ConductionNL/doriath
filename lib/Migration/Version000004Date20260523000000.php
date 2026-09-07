@@ -3,7 +3,7 @@
 /**
  * Keepiq Migration Version 4
  *
- * Convert the `is_active` column on `doriath_ca_certs` from SMALLINT
+ * Convert the `is_active` column on `keepiq_ca_certs` from SMALLINT
  * to BOOLEAN. The original column was declared as SMALLINT in
  * Version000002Date20260331000001 as a workaround for a perceived
  * "false maps to NULL on BOOLEAN NOT NULL" issue, but the CACertificate
@@ -57,7 +57,7 @@ use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
 
 /**
- * Convert is_active column on doriath_ca_certs from SMALLINT to BOOLEAN.
+ * Convert is_active column on keepiq_ca_certs from SMALLINT to BOOLEAN.
  */
 class Version000004Date20260523000000 extends SimpleMigrationStep {
 	/**
@@ -88,11 +88,11 @@ class Version000004Date20260523000000 extends SimpleMigrationStep {
 		// @var ISchemaWrapper $schema
 		$schema = $schemaClosure();
 
-		if ($schema->hasTable('doriath_ca_certs') === false) {
+		if ($schema->hasTable('keepiq_ca_certs') === false) {
 			return;
 		}
 
-		$table = $schema->getTable('doriath_ca_certs');
+		$table = $schema->getTable('keepiq_ca_certs');
 		if ($table->hasColumn('is_active') === false) {
 			return;
 		}
@@ -115,13 +115,13 @@ class Version000004Date20260523000000 extends SimpleMigrationStep {
 		// schema diff finds the column already at BOOLEAN and emits a
 		// no-op.
 		$this->connection->executeStatement(
-			'ALTER TABLE "*PREFIX*doriath_ca_certs" '
+			'ALTER TABLE "*PREFIX*keepiq_ca_certs" '
 			. 'ALTER COLUMN "is_active" DROP DEFAULT, '
 			. 'ALTER COLUMN "is_active" TYPE BOOLEAN USING ("is_active" <> 0), '
 			. 'ALTER COLUMN "is_active" SET DEFAULT FALSE'
 		);
 
-		$output->info('Keepiq: converted doriath_ca_certs.is_active from SMALLINT to BOOLEAN');
+		$output->info('Keepiq: converted keepiq_ca_certs.is_active from SMALLINT to BOOLEAN');
 	}//end preSchemaChange()
 
 	/**
@@ -144,11 +144,11 @@ class Version000004Date20260523000000 extends SimpleMigrationStep {
 		// @var ISchemaWrapper $schema
 		$schema = $schemaClosure();
 
-		if ($schema->hasTable('doriath_ca_certs') === false) {
+		if ($schema->hasTable('keepiq_ca_certs') === false) {
 			return null;
 		}
 
-		$table = $schema->getTable('doriath_ca_certs');
+		$table = $schema->getTable('keepiq_ca_certs');
 		if ($table->hasColumn('is_active') === false) {
 			return null;
 		}

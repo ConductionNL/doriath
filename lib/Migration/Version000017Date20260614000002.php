@@ -3,7 +3,7 @@
 /**
  * Keepiq Migration Version 17
  *
- * Add the tombstone columns to doriath_secrets — `tombstoned_at` (nullable
+ * Add the tombstone columns to keepiq_secrets — `tombstoned_at` (nullable
  * datetime) and `tombstone_reason` (nullable string). These mark a recipient's
  * share-copy as detached after the sharer's account was deleted
  * (secret-export-gdpr design D6 / D4 step 2). They are display metadata only:
@@ -33,7 +33,7 @@ use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
 
 /**
- * Add tombstone metadata columns to doriath_secrets.
+ * Add tombstone metadata columns to keepiq_secrets.
  *
  * Additive and inert: two nullable columns. A detached recipient copy is an
  * ordinary secret the recipient owns; these fields only let the UI badge it and
@@ -53,11 +53,11 @@ class Version000017Date20260614000002 extends SimpleMigrationStep {
 		// @var ISchemaWrapper $schema
 		$schema = $schemaClosure();
 
-		if ($schema->hasTable('doriath_secrets') === false) {
+		if ($schema->hasTable('keepiq_secrets') === false) {
 			return null;
 		}
 
-		$table = $schema->getTable('doriath_secrets');
+		$table = $schema->getTable('keepiq_secrets');
 		$changed = false;
 
 		if ($table->hasColumn('tombstoned_at') === false) {

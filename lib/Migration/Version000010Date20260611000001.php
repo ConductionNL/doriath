@@ -3,7 +3,7 @@
 /**
  * Keepiq Migration Version 10
  *
- * Create the doriath_secret_requests table — backs the two-phase public
+ * Create the keepiq_secret_requests table — backs the two-phase public
  * fill-in flow for secret requests.
  *
  * @category Migration
@@ -29,7 +29,7 @@ use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
 
 /**
- * Create the doriath_secret_requests table.
+ * Create the keepiq_secret_requests table.
  *
  * Smallest scaffold for the BLOCKED implement-secret-requests change.
  * Full re-request flow + compromise-locking + public fill-in endpoint
@@ -49,11 +49,11 @@ class Version000010Date20260611000001 extends SimpleMigrationStep {
 		// @var ISchemaWrapper $schema
 		$schema = $schemaClosure();
 
-		if ($schema->hasTable('doriath_secret_requests') === true) {
+		if ($schema->hasTable('keepiq_secret_requests') === true) {
 			return null;
 		}
 
-		$table = $schema->createTable('doriath_secret_requests');
+		$table = $schema->createTable('keepiq_secret_requests');
 
 		$table->addColumn('id', Types::STRING, ['notnull' => true, 'length' => 36]);
 		$table->addColumn('secret_id', Types::STRING, ['notnull' => true, 'length' => 36]);
@@ -70,10 +70,10 @@ class Version000010Date20260611000001 extends SimpleMigrationStep {
 		$table->addColumn('fulfilled_at', Types::DATETIME, ['notnull' => false]);
 
 		$table->setPrimaryKey(['id']);
-		$table->addUniqueIndex(['token'], 'doriath_sr_token_uniq');
-		$table->addIndex(['secret_id'], 'doriath_sr_secret_idx');
-		$table->addIndex(['created_by'], 'doriath_sr_creator_idx');
-		$table->addIndex(['encryption_suite_id'], 'doriath_sr_suite_idx');
+		$table->addUniqueIndex(['token'], 'keepiq_sr_token_uniq');
+		$table->addIndex(['secret_id'], 'keepiq_sr_secret_idx');
+		$table->addIndex(['created_by'], 'keepiq_sr_creator_idx');
+		$table->addIndex(['encryption_suite_id'], 'keepiq_sr_suite_idx');
 
 		return $schema;
 	}//end changeSchema()

@@ -11,7 +11,7 @@
  * rejects the row:
  *
  *   SQLSTATE[23502]: Not null violation: null value in column "key"
- *   of relation "oc_doriath_secret_versions" violates not-null constraint
+ *   of relation "oc_keepiq_secret_versions" violates not-null constraint
  *
  * Nothing could hit it until a Secret could legitimately hold no value. Filling
  * a request placeholder is exactly that: `SecretService::update()` snapshots the
@@ -23,7 +23,7 @@
  * cannot mark a field dirty (`markFieldUpdated` is protected on Entity). The
  * column stays NOT NULL, so a genuine null is still rejected.
  *
- * Version000033 did this for `doriath_secrets.key`. That fix should have prompted
+ * Version000033 did this for `keepiq_secrets.key`. That fix should have prompted
  * a look at every other table with the same shape; it did not, and this is the
  * cost. `login` and the remaining value columns here are already nullable.
  *
@@ -49,7 +49,7 @@ use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
 
 /**
- * Gives `doriath_secret_versions.key` an empty-string default.
+ * Gives `keepiq_secret_versions.key` an empty-string default.
  */
 class Version000034Date20260818130000 extends SimpleMigrationStep {
 	/**
@@ -64,11 +64,11 @@ class Version000034Date20260818130000 extends SimpleMigrationStep {
 	public function changeSchema(IOutput $output, Closure $schemaClosure, array $options): ?ISchemaWrapper {
 		$schema = $schemaClosure();
 
-		if ($schema->hasTable('doriath_secret_versions') === false) {
+		if ($schema->hasTable('keepiq_secret_versions') === false) {
 			return null;
 		}
 
-		$table = $schema->getTable('doriath_secret_versions');
+		$table = $schema->getTable('keepiq_secret_versions');
 
 		if ($table->hasColumn('key') === false) {
 			return null;

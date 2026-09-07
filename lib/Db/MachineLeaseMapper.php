@@ -27,7 +27,7 @@ use OCP\AppFramework\Db\QBMapper;
 use OCP\IDBConnection;
 
 /**
- * Mapper for the doriath_machine_leases table.
+ * Mapper for the keepiq_machine_leases table.
  *
  * @template-extends QBMapper<MachineLease>
  */
@@ -40,7 +40,7 @@ class MachineLeaseMapper extends QBMapper {
 	 * @return void
 	 */
 	public function __construct(IDBConnection $db) {
-		parent::__construct(db: $db, tableName: 'doriath_machine_leases', entityClass: MachineLease::class);
+		parent::__construct(db: $db, tableName: 'keepiq_machine_leases', entityClass: MachineLease::class);
 	}//end __construct()
 
 	/**

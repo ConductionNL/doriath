@@ -78,6 +78,6 @@ The system MUST dispatch a typed event when a grade changes and MUST attribute e
 
 ## Notes
 
-- Depends on `team-folder-sharing` (owns the `doriath_team_folder_members` table this feature adds a `grade` column to).
+- Depends on `team-folder-sharing` (owns the `keepiq_team_folder_members` table this feature adds a `grade` column to).
 - Out of scope for v1: a `manage`/co-owner grade (membership management stays owner-only), per-field grades, and narrowing a subfolder's grade below an ancestor's.
 - Related ADRs: ADR-001 (own tables), ADR-003 (encryption architecture — write-without-read, public certs server-visible, zero server-side plaintext).

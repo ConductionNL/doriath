@@ -3,7 +3,7 @@
 /**
  * Keepiq Migration Version 16
  *
- * Add the key_updated_at column to doriath_secrets — the server-maintained
+ * Add the key_updated_at column to keepiq_secrets — the server-maintained
  * ciphertext-age field backing the password-health change (§1.1). It records
  * when a secret's encrypted `key` blob last changed, so a rename, folder move,
  * or other metadata edit does not silently un-stale an old password. The value
@@ -35,7 +35,7 @@ use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
 
 /**
- * Add key_updated_at (ciphertext age) to doriath_secrets.
+ * Add key_updated_at (ciphertext age) to keepiq_secrets.
  *
  * Additive and inert: a nullable datetime backfilled from updated_at. The
  * password-health feature reads it client-side to flag stale credentials; the
@@ -67,11 +67,11 @@ class Version000016Date20260614000001 extends SimpleMigrationStep {
 		// @var ISchemaWrapper $schema
 		$schema = $schemaClosure();
 
-		if ($schema->hasTable('doriath_secrets') === false) {
+		if ($schema->hasTable('keepiq_secrets') === false) {
 			return null;
 		}
 
-		$table = $schema->getTable('doriath_secrets');
+		$table = $schema->getTable('keepiq_secrets');
 		if ($table->hasColumn('key_updated_at') === true) {
 			return null;
 		}
@@ -92,7 +92,7 @@ class Version000016Date20260614000001 extends SimpleMigrationStep {
 	 */
 	public function postSchemaChange(IOutput $output, Closure $schemaClosure, array $options): void {
 		$qb = $this->connection->getQueryBuilder();
-		$qb->update('doriath_secrets')
+		$qb->update('keepiq_secrets')
 			->set('key_updated_at', 'updated_at')
 			->where($qb->expr()->isNull('key_updated_at'));
 		$qb->executeStatement();

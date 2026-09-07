@@ -3,7 +3,7 @@
 /**
  * Keepiq Migration - Compliance reports
  *
- * Adds `doriath_compliance_reports` (compliance-reporting §1.1):
+ * Adds `keepiq_compliance_reports` (compliance-reporting §1.1):
  * immutable metadata-only posture snapshots. The aggregate is counts
  * only — never a secret value, name, or ciphertext.
  *
@@ -45,8 +45,8 @@ class Version000027Date20260718170000 extends SimpleMigrationStep {
 	public function changeSchema(IOutput $output, Closure $schemaClosure, array $options): ?ISchemaWrapper {
 		$schema = $schemaClosure();
 
-		if ($schema->hasTable('doriath_compliance_reports') === false) {
-			$table = $schema->createTable('doriath_compliance_reports');
+		if ($schema->hasTable('keepiq_compliance_reports') === false) {
+			$table = $schema->createTable('keepiq_compliance_reports');
 			$table->addColumn('id', Types::STRING, ['notnull' => true, 'length' => 36]);
 			$table->addColumn('generated_by', Types::STRING, ['notnull' => true, 'length' => 64]);
 			$table->addColumn('generated_at', Types::DATETIME, ['notnull' => true]);
@@ -54,7 +54,7 @@ class Version000027Date20260718170000 extends SimpleMigrationStep {
 			$table->addColumn('config_snapshot', Types::TEXT, ['notnull' => true]);
 			$table->addColumn('aggregate', Types::TEXT, ['notnull' => true]);
 			$table->setPrimaryKey(['id']);
-			$table->addIndex(['generated_at'], 'doriath_cr_generated');
+			$table->addIndex(['generated_at'], 'keepiq_cr_generated');
 		}
 
 		return $schema;

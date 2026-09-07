@@ -82,7 +82,7 @@ class SecretRequestMapperTest extends TestCase {
 
 		$this->db = \OC::$server->get(IDBConnection::class);
 
-		if ($this->db->tableExists('doriath_secret_requests') === false) {
+		if ($this->db->tableExists('keepiq_secret_requests') === false) {
 			$this->markTestSkipped(message: 'keepiq migrations have not run on this instance');
 		}
 
@@ -97,7 +97,7 @@ class SecretRequestMapperTest extends TestCase {
 	protected function tearDown(): void {
 		foreach ($this->inserted as $id) {
 			$delete = $this->db->getQueryBuilder();
-			$delete->delete('doriath_secret_requests')
+			$delete->delete('keepiq_secret_requests')
 				->where($delete->expr()->eq('id', $delete->createNamedParameter($id)));
 			$delete->executeStatement();
 		}
@@ -120,7 +120,7 @@ class SecretRequestMapperTest extends TestCase {
 		$id = 'test-' . bin2hex(random_bytes(8));
 
 		$insert = $this->db->getQueryBuilder();
-		$insert->insert('doriath_secret_requests')->values([
+		$insert->insert('keepiq_secret_requests')->values([
 			'id' => $insert->createNamedParameter($id),
 			'secret_id' => $insert->createNamedParameter('sec-' . $id),
 			'encryption_suite_id' => $insert->createNamedParameter('suite-' . $id),
@@ -148,7 +148,7 @@ class SecretRequestMapperTest extends TestCase {
 	 */
 	private function statusOf(string $id): ?string {
 		$query = $this->db->getQueryBuilder();
-		$query->select('status')->from('doriath_secret_requests')
+		$query->select('status')->from('keepiq_secret_requests')
 			->where($query->expr()->eq('id', $query->createNamedParameter($id)));
 
 		$result = $query->executeQuery();

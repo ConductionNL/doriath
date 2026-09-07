@@ -3,10 +3,10 @@
 /**
  * Keepiq Migration - Per-record migration failure accounting
  *
- * Adds `doriath_migration_failures`: one row per RECORD that a
+ * Adds `keepiq_migration_failures`: one row per RECORD that a
  * compromise-recovery migration could not carry across.
  *
- * Before this, the single `migration_error` column on `doriath_secrets` was
+ * Before this, the single `migration_error` column on `keepiq_secrets` was
  * the accounting flag for the secret head PLUS every one of its versions and
  * attachment grants — up to `1 + N + M` independent records sharing one slot.
  * Three consequences, all key-loss or denial-of-termination:
@@ -65,8 +65,8 @@ class Version000032Date20260813090000 extends SimpleMigrationStep {
 	public function changeSchema(IOutput $output, Closure $schemaClosure, array $options): ?ISchemaWrapper {
 		$schema = $schemaClosure();
 
-		if ($schema->hasTable('doriath_migration_failures') === false) {
-			$table = $schema->createTable('doriath_migration_failures');
+		if ($schema->hasTable('keepiq_migration_failures') === false) {
+			$table = $schema->createTable('keepiq_migration_failures');
 			$table->addColumn('id', Types::BIGINT, [
 				'notnull' => true,
 				'autoincrement' => true,
@@ -89,12 +89,12 @@ class Version000032Date20260813090000 extends SimpleMigrationStep {
 			// duplicate rows are what made the acknowledgement count drift.
 			$table->addUniqueIndex(
 				['migration_id', 'store', 'record_id'],
-				'doriath_mf_record'
+				'keepiq_mf_record'
 			);
 			// The completion gates count and list by migration.
-			$table->addIndex(['migration_id'], 'doriath_mf_migration');
+			$table->addIndex(['migration_id'], 'keepiq_mf_migration');
 			// Naming the affected secrets for the acknowledgement list.
-			$table->addIndex(['migration_id', 'secret_id'], 'doriath_mf_secret');
+			$table->addIndex(['migration_id', 'secret_id'], 'keepiq_mf_secret');
 		}//end if
 
 		return $schema;

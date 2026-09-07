@@ -3,7 +3,7 @@
 /**
  * Keepiq Migration Version 11
  *
- * Create the doriath_dashboard_settings table — backs the per-user
+ * Create the keepiq_dashboard_settings table — backs the per-user
  * dashboard preference scaffold for the BLOCKED
  * implement-dashboard-settings change.
  *
@@ -30,7 +30,7 @@ use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
 
 /**
- * Create the doriath_dashboard_settings table.
+ * Create the keepiq_dashboard_settings table.
  *
  * Smallest scaffold for the BLOCKED implement-dashboard-settings change.
  * The full DashboardSummary endpoint + admin/user settings split +
@@ -50,11 +50,11 @@ class Version000011Date20260611000002 extends SimpleMigrationStep {
 		// @var ISchemaWrapper $schema
 		$schema = $schemaClosure();
 
-		if ($schema->hasTable('doriath_dashboard_settings') === true) {
+		if ($schema->hasTable('keepiq_dashboard_settings') === true) {
 			return null;
 		}
 
-		$table = $schema->createTable('doriath_dashboard_settings');
+		$table = $schema->createTable('keepiq_dashboard_settings');
 
 		$table->addColumn('id', Types::STRING, ['notnull' => true, 'length' => 36]);
 		$table->addColumn('user_id', Types::STRING, ['notnull' => true, 'length' => 64]);
@@ -64,8 +64,8 @@ class Version000011Date20260611000002 extends SimpleMigrationStep {
 		$table->addColumn('updated_at', Types::DATETIME, ['notnull' => true]);
 
 		$table->setPrimaryKey(['id']);
-		$table->addUniqueIndex(['user_id', 'setting_key'], 'doriath_ds_user_key_uniq');
-		$table->addIndex(['user_id'], 'doriath_ds_user_idx');
+		$table->addUniqueIndex(['user_id', 'setting_key'], 'keepiq_ds_user_key_uniq');
+		$table->addIndex(['user_id'], 'keepiq_ds_user_idx');
 
 		return $schema;
 	}//end changeSchema()

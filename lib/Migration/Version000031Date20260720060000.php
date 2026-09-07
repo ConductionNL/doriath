@@ -3,9 +3,9 @@
 /**
  * Keepiq Migration - Passkey vault login
  *
- * Adds `doriath_passkey_credentials` (WebAuthn PRF unlock envelopes,
+ * Adds `keepiq_passkey_credentials` (WebAuthn PRF unlock envelopes,
  * passkey-vault-login §1.1) and an `unlock_key_epoch` column on
- * `doriath_enc_suites` so a routine master-password change can mark
+ * `keepiq_enc_suites` so a routine master-password change can mark
  * stored passkey envelopes stale (§D4). The wrapped unlock key is only
  * openable with the authenticator-held PRF secret the server never sees.
  *
@@ -47,8 +47,8 @@ class Version000031Date20260720060000 extends SimpleMigrationStep {
 	public function changeSchema(IOutput $output, Closure $schemaClosure, array $options): ?ISchemaWrapper {
 		$schema = $schemaClosure();
 
-		if ($schema->hasTable('doriath_passkey_credentials') === false) {
-			$table = $schema->createTable('doriath_passkey_credentials');
+		if ($schema->hasTable('keepiq_passkey_credentials') === false) {
+			$table = $schema->createTable('keepiq_passkey_credentials');
 			$table->addColumn('id', Types::STRING, ['notnull' => true, 'length' => 36]);
 			$table->addColumn('owner_id', Types::STRING, ['notnull' => true, 'length' => 64]);
 			$table->addColumn('credential_id', Types::TEXT, ['notnull' => true]);
@@ -63,15 +63,15 @@ class Version000031Date20260720060000 extends SimpleMigrationStep {
 			$table->addColumn('last_used_at', Types::DATETIME, ['notnull' => false]);
 			$table->addColumn('created_at', Types::DATETIME, ['notnull' => true]);
 			$table->setPrimaryKey(['id']);
-			$table->addIndex(['owner_id', 'status'], 'doriath_pk_owner_status');
+			$table->addIndex(['owner_id', 'status'], 'keepiq_pk_owner_status');
 			// The credential_id column is TEXT (base64url, variable length) — a plain
 			// index prefix suffices for the per-owner uniqueness check done
 			// in the mapper; a unique index over TEXT is not portable.
-			$table->addIndex(['owner_id'], 'doriath_pk_owner');
+			$table->addIndex(['owner_id'], 'keepiq_pk_owner');
 		}//end if
 
-		if ($schema->hasTable('doriath_enc_suites') === true) {
-			$suites = $schema->getTable('doriath_enc_suites');
+		if ($schema->hasTable('keepiq_enc_suites') === true) {
+			$suites = $schema->getTable('keepiq_enc_suites');
 			if ($suites->hasColumn('unlock_key_epoch') === false) {
 				$suites->addColumn('unlock_key_epoch', Types::INTEGER, ['notnull' => true, 'default' => 1]);
 			}

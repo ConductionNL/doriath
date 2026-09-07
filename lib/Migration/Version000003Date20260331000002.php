@@ -3,7 +3,7 @@
 /**
  * Keepiq Migration Version 3
  *
- * Create the doriath_suite_migr table.
+ * Create the keepiq_suite_migr table.
  *
  * @category Migration
  * @package  OCA\Keepiq\Migration
@@ -28,7 +28,7 @@ use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
 
 /**
- * Create the doriath_suite_migr table.
+ * Create the keepiq_suite_migr table.
  */
 class Version000003Date20260331000002 extends SimpleMigrationStep {
 	/**
@@ -44,11 +44,11 @@ class Version000003Date20260331000002 extends SimpleMigrationStep {
 		// @var ISchemaWrapper $schema
 		$schema = $schemaClosure();
 
-		if ($schema->hasTable('doriath_suite_migr') === true) {
+		if ($schema->hasTable('keepiq_suite_migr') === true) {
 			return null;
 		}
 
-		$table = $schema->createTable('doriath_suite_migr');
+		$table = $schema->createTable('keepiq_suite_migr');
 
 		$table->addColumn(
 			'id',
@@ -99,8 +99,8 @@ class Version000003Date20260331000002 extends SimpleMigrationStep {
 		);
 
 		$table->setPrimaryKey(['id']);
-		$table->addIndex(['old_suite_id'], 'doriath_sm_old_suite_idx');
-		$table->addIndex(['new_suite_id'], 'doriath_sm_new_suite_idx');
+		$table->addIndex(['old_suite_id'], 'keepiq_sm_old_suite_idx');
+		$table->addIndex(['new_suite_id'], 'keepiq_sm_new_suite_idx');
 
 		return $schema;
 	}//end changeSchema()

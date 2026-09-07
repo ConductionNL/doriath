@@ -26,7 +26,7 @@ use OCP\AppFramework\Db\QBMapper;
 use OCP\IDBConnection;
 
 /**
- * Mapper for the doriath_rotation_flags table.
+ * Mapper for the keepiq_rotation_flags table.
  *
  * @template-extends QBMapper<RotationFlag>
  */
@@ -39,7 +39,7 @@ class RotationFlagMapper extends QBMapper {
 	 * @return void
 	 */
 	public function __construct(IDBConnection $db) {
-		parent::__construct(db: $db, tableName: 'doriath_rotation_flags', entityClass: RotationFlag::class);
+		parent::__construct(db: $db, tableName: 'keepiq_rotation_flags', entityClass: RotationFlag::class);
 	}//end __construct()
 
 	/**
@@ -89,7 +89,7 @@ class RotationFlagMapper extends QBMapper {
 		$qb = $this->db->getQueryBuilder();
 		$qb->select('f.*')
 			->from($this->getTableName(), 'f')
-			->innerJoin('f', 'doriath_secrets', 's', $qb->expr()->eq('f.secret_id', 's.id'))
+			->innerJoin('f', 'keepiq_secrets', 's', $qb->expr()->eq('f.secret_id', 's.id'))
 			->where($qb->expr()->eq('f.status', $qb->createNamedParameter('open')))
 			->andWhere($qb->expr()->eq('s.owner_type', $qb->createNamedParameter('user')))
 			->andWhere($qb->expr()->eq('s.owner_id', $qb->createNamedParameter($ownerId)));

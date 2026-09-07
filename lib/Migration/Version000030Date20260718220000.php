@@ -3,10 +3,10 @@
 /**
  * Keepiq Migration - Honey credentials
  *
- * Adds `doriath_honey_flags` (decoy markers — deliberately a SIDE
- * table, never a column on doriath_secrets, so a recipient/attacker
+ * Adds `keepiq_honey_flags` (decoy markers — deliberately a SIDE
+ * table, never a column on keepiq_secrets, so a recipient/attacker
  * cannot distinguish a honey secret from its response shape) and
- * `doriath_honey_alerts` (one row per raised tripwire alert) —
+ * `keepiq_honey_alerts` (one row per raised tripwire alert) —
  * honey-credentials §1. No secret material ever reaches these tables.
  *
  * @category Migration
@@ -47,8 +47,8 @@ class Version000030Date20260718220000 extends SimpleMigrationStep {
 	public function changeSchema(IOutput $output, Closure $schemaClosure, array $options): ?ISchemaWrapper {
 		$schema = $schemaClosure();
 
-		if ($schema->hasTable('doriath_honey_flags') === false) {
-			$table = $schema->createTable('doriath_honey_flags');
+		if ($schema->hasTable('keepiq_honey_flags') === false) {
+			$table = $schema->createTable('keepiq_honey_flags');
 			$table->addColumn('id', Types::STRING, ['notnull' => true, 'length' => 36]);
 			$table->addColumn('secret_id', Types::STRING, ['notnull' => true, 'length' => 36]);
 			$table->addColumn('owner_id', Types::STRING, ['notnull' => true, 'length' => 64]);
@@ -56,12 +56,12 @@ class Version000030Date20260718220000 extends SimpleMigrationStep {
 			$table->addColumn('created_by', Types::STRING, ['notnull' => true, 'length' => 64]);
 			$table->addColumn('created_at', Types::DATETIME, ['notnull' => true]);
 			$table->setPrimaryKey(['id']);
-			$table->addUniqueIndex(['secret_id'], 'doriath_hf_secret');
-			$table->addIndex(['owner_id'], 'doriath_hf_owner');
+			$table->addUniqueIndex(['secret_id'], 'keepiq_hf_secret');
+			$table->addIndex(['owner_id'], 'keepiq_hf_owner');
 		}
 
-		if ($schema->hasTable('doriath_honey_alerts') === false) {
-			$table = $schema->createTable('doriath_honey_alerts');
+		if ($schema->hasTable('keepiq_honey_alerts') === false) {
+			$table = $schema->createTable('keepiq_honey_alerts');
 			$table->addColumn('id', Types::STRING, ['notnull' => true, 'length' => 36]);
 			$table->addColumn('honey_flag_id', Types::STRING, ['notnull' => true, 'length' => 36]);
 			$table->addColumn('secret_id', Types::STRING, ['notnull' => true, 'length' => 36]);
@@ -76,9 +76,9 @@ class Version000030Date20260718220000 extends SimpleMigrationStep {
 			$table->addColumn('acknowledged_by', Types::STRING, ['notnull' => false, 'length' => 64]);
 			$table->addColumn('snoozed_until', Types::DATETIME, ['notnull' => false]);
 			$table->setPrimaryKey(['id']);
-			$table->addIndex(['honey_flag_id'], 'doriath_ha_flag');
-			$table->addIndex(['secret_id'], 'doriath_ha_secret');
-			$table->addIndex(['acknowledged_at'], 'doriath_ha_ack');
+			$table->addIndex(['honey_flag_id'], 'keepiq_ha_flag');
+			$table->addIndex(['secret_id'], 'keepiq_ha_secret');
+			$table->addIndex(['acknowledged_at'], 'keepiq_ha_ack');
 		}
 
 		return $schema;

@@ -55,7 +55,7 @@
  * NO KEY MATERIAL PASSES THROUGH HERE. `oc_preferences` holds this app's
  * user-facing toggles only. Master passwords are never stored at all
  * (ADR-003), and the per-user RSA key pairs live wrapped in the
- * `doriath_enc_suites` table, which the rename does not touch.
+ * `keepiq_enc_suites` table, which the rename does not touch.
  *
  * Registered under BOTH `<install>` and `<post-migration>` in
  * `appinfo/info.xml` alongside MigrateAppConfigKeys — see the ordering comment

@@ -4,9 +4,9 @@
  * Keepiq Migration Version 20
  *
  * Encrypted attachments (encrypted-attachments §1.1). Creates
- * `doriath_attachments` (one row per uploaded ciphertext blob, stored in
+ * `keepiq_attachments` (one row per uploaded ciphertext blob, stored in
  * IAppData — filename/content-type ride ENCRYPTED in encrypted_metadata)
- * and `doriath_attachment_grants` (per-copy RSA-wrapped file key for the
+ * and `keepiq_attachment_grants` (per-copy RSA-wrapped file key for the
  * owner and every recipient). The server never sees plaintext bytes, the
  * plaintext filename, or the file key (ADR-003).
  *
@@ -37,7 +37,7 @@ use OCP\Migration\SimpleMigrationStep;
  */
 class Version000020Date20260718000000 extends SimpleMigrationStep {
 	/**
-	 * Create doriath_attachments and doriath_attachment_grants.
+	 * Create keepiq_attachments and keepiq_attachment_grants.
 	 *
 	 * @param IOutput $output The output interface
 	 * @param Closure $schemaClosure The schema closure
@@ -50,8 +50,8 @@ class Version000020Date20260718000000 extends SimpleMigrationStep {
 		$schema = $schemaClosure();
 		$changed = false;
 
-		if ($schema->hasTable('doriath_attachments') === false) {
-			$table = $schema->createTable('doriath_attachments');
+		if ($schema->hasTable('keepiq_attachments') === false) {
+			$table = $schema->createTable('keepiq_attachments');
 
 			$table->addColumn('id', Types::STRING, ['notnull' => true, 'length' => 36]);
 			$table->addColumn('source_secret_id', Types::STRING, ['notnull' => true, 'length' => 36]);
@@ -62,12 +62,12 @@ class Version000020Date20260718000000 extends SimpleMigrationStep {
 			$table->addColumn('updated_at', Types::DATETIME, ['notnull' => false]);
 
 			$table->setPrimaryKey(['id']);
-			$table->addIndex(['source_secret_id'], 'doriath_att_secret_idx');
+			$table->addIndex(['source_secret_id'], 'keepiq_att_secret_idx');
 			$changed = true;
 		}
 
-		if ($schema->hasTable('doriath_attachment_grants') === false) {
-			$table = $schema->createTable('doriath_attachment_grants');
+		if ($schema->hasTable('keepiq_attachment_grants') === false) {
+			$table = $schema->createTable('keepiq_attachment_grants');
 
 			$table->addColumn('id', Types::STRING, ['notnull' => true, 'length' => 36]);
 			$table->addColumn('attachment_id', Types::STRING, ['notnull' => true, 'length' => 36]);
@@ -79,10 +79,10 @@ class Version000020Date20260718000000 extends SimpleMigrationStep {
 			$table->addColumn('created_at', Types::DATETIME, ['notnull' => false]);
 
 			$table->setPrimaryKey(['id']);
-			$table->addIndex(['attachment_id'], 'doriath_attg_att_idx');
-			$table->addIndex(['secret_id'], 'doriath_attg_secret_idx');
-			$table->addIndex(['recipient_id'], 'doriath_attg_recipient_idx');
-			$table->addUniqueIndex(['attachment_id', 'secret_id'], 'doriath_attg_copy_uniq');
+			$table->addIndex(['attachment_id'], 'keepiq_attg_att_idx');
+			$table->addIndex(['secret_id'], 'keepiq_attg_secret_idx');
+			$table->addIndex(['recipient_id'], 'keepiq_attg_recipient_idx');
+			$table->addUniqueIndex(['attachment_id', 'secret_id'], 'keepiq_attg_copy_uniq');
 			$changed = true;
 		}
 

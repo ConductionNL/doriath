@@ -3,7 +3,7 @@
 /**
  * Keepiq Migration Version 1
  *
- * Create the doriath_enc_suites table.
+ * Create the keepiq_enc_suites table.
  *
  * @category Migration
  * @package  OCA\Keepiq\Migration
@@ -28,7 +28,7 @@ use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
 
 /**
- * Create the doriath_enc_suites table.
+ * Create the keepiq_enc_suites table.
  */
 class Version000001Date20260331000000 extends SimpleMigrationStep {
 	/**
@@ -50,11 +50,11 @@ class Version000001Date20260331000000 extends SimpleMigrationStep {
 		// @var ISchemaWrapper $schema
 		$schema = $schemaClosure();
 
-		if ($schema->hasTable('doriath_enc_suites') === true) {
+		if ($schema->hasTable('keepiq_enc_suites') === true) {
 			return null;
 		}
 
-		$table = $schema->createTable('doriath_enc_suites');
+		$table = $schema->createTable('keepiq_enc_suites');
 
 		$table->addColumn(
 			'id',
@@ -150,7 +150,7 @@ class Version000001Date20260331000000 extends SimpleMigrationStep {
 		);
 
 		$table->setPrimaryKey(['id']);
-		$table->addIndex(['owner_type', 'owner_id'], 'doriath_es_owner_idx');
+		$table->addIndex(['owner_type', 'owner_id'], 'keepiq_es_owner_idx');
 
 		return $schema;
 	}//end changeSchema()

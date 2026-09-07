@@ -3,7 +3,7 @@
 /**
  * Keepiq Migration Version 2
  *
- * Create the doriath_ca_certs table.
+ * Create the keepiq_ca_certs table.
  *
  * @category Migration
  * @package  OCA\Keepiq\Migration
@@ -28,7 +28,7 @@ use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
 
 /**
- * Create the doriath_ca_certs table.
+ * Create the keepiq_ca_certs table.
  *
  * `notnull` MUST stay false on the `is_active` BOOLEAN column.
  *
@@ -38,7 +38,7 @@ use OCP\Migration\SimpleMigrationStep;
  * `MigrationService::ensureOracleConstraints()` enforces it for EVERY platform
  * with a hard throw:
  *
- * Column "oc_doriath_ca_certs"."is_active" is type Bool and also NotNull, so
+ * Column "oc_keepiq_ca_certs"."is_active" is type Bool and also NotNull, so
  * it can not store "false".
  *
  * With `notnull => true` that exception aborted `occ app:enable keepiq` on a
@@ -69,7 +69,7 @@ class Version000002Date20260331000001 extends SimpleMigrationStep {
 		// @var ISchemaWrapper $schema
 		$schema = $schemaClosure();
 
-		if ($schema->hasTable('doriath_ca_certs') === true) {
+		if ($schema->hasTable('keepiq_ca_certs') === true) {
 			return null;
 		}
 
@@ -79,7 +79,7 @@ class Version000002Date20260331000001 extends SimpleMigrationStep {
 	}//end changeSchema()
 
 	/**
-	 * Define the doriath_ca_certs table on a schema that does not have it yet.
+	 * Define the keepiq_ca_certs table on a schema that does not have it yet.
 	 *
 	 * See the class docblock for why `is_active` is a NULLABLE boolean.
 	 *
@@ -88,7 +88,7 @@ class Version000002Date20260331000001 extends SimpleMigrationStep {
 	 * @return void
 	 */
 	private function createCaCertsTable(ISchemaWrapper $schema): void {
-		$table = $schema->createTable('doriath_ca_certs');
+		$table = $schema->createTable('keepiq_ca_certs');
 
 		$table->addColumn(
 			'id',

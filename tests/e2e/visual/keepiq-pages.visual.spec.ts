@@ -42,7 +42,7 @@ import type { Page } from '@playwright/test'
  * ------------------------------------------------
  * `SeedDevelopmentLinkShares` does seed link shares, but the workflow suite
  * REVOKES them (`linkShare#destroy` is a hard delete) — observed on this rig:
- * `oc_doriath_link_shares` went from 3 rows to 0 across one full run of
+ * `oc_keepiq_link_shares` went from 3 rows to 0 across one full run of
  * `tests/e2e/workflows/`. A baseline that depends on another spec's leftovers
  * passes or fails according to test ORDER, so the link-share and ephemeral-send
  * tests below mint their own row first. The server stores those payloads as

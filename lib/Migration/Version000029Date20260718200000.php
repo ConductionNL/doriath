@@ -3,7 +3,7 @@
 /**
  * Keepiq Migration - Certificate lifecycle
  *
- * Adds `doriath_certificate_metadata` — client-parsed, NON-SECRET X.509
+ * Adds `keepiq_certificate_metadata` — client-parsed, NON-SECRET X.509
  * display metadata for encrypted certificate-type secrets
  * (certificate-lifecycle §1). Populated only by the owner's browser
  * after it decrypts and parses the PEM; the server never derives these
@@ -48,8 +48,8 @@ class Version000029Date20260718200000 extends SimpleMigrationStep {
 	public function changeSchema(IOutput $output, Closure $schemaClosure, array $options): ?ISchemaWrapper {
 		$schema = $schemaClosure();
 
-		if ($schema->hasTable('doriath_certificate_metadata') === false) {
-			$table = $schema->createTable('doriath_certificate_metadata');
+		if ($schema->hasTable('keepiq_certificate_metadata') === false) {
+			$table = $schema->createTable('keepiq_certificate_metadata');
 			$table->addColumn('id', Types::STRING, ['notnull' => true, 'length' => 36]);
 			$table->addColumn('secret_id', Types::STRING, ['notnull' => true, 'length' => 36]);
 			$table->addColumn('owner_id', Types::STRING, ['notnull' => true, 'length' => 64]);
@@ -61,8 +61,8 @@ class Version000029Date20260718200000 extends SimpleMigrationStep {
 			$table->addColumn('not_after', Types::DATETIME, ['notnull' => false]);
 			$table->addColumn('parsed_at', Types::DATETIME, ['notnull' => true]);
 			$table->setPrimaryKey(['id']);
-			$table->addUniqueIndex(['secret_id'], 'doriath_cm_secret');
-			$table->addIndex(['owner_id'], 'doriath_cm_owner');
+			$table->addUniqueIndex(['secret_id'], 'keepiq_cm_secret');
+			$table->addIndex(['owner_id'], 'keepiq_cm_owner');
 		}
 
 		return $schema;

@@ -3,7 +3,7 @@
 /**
  * Keepiq Migration Version 7
  *
- * Create the doriath_folders table for the per-owner folder tree.
+ * Create the keepiq_folders table for the per-owner folder tree.
  *
  * @category Migration
  * @package  OCA\Keepiq\Migration
@@ -28,7 +28,7 @@ use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
 
 /**
- * Create the doriath_folders table.
+ * Create the keepiq_folders table.
  */
 class Version000007Date20260604000001 extends SimpleMigrationStep {
 	/**
@@ -44,11 +44,11 @@ class Version000007Date20260604000001 extends SimpleMigrationStep {
 		// @var ISchemaWrapper $schema
 		$schema = $schemaClosure();
 
-		if ($schema->hasTable('doriath_folders') === true) {
+		if ($schema->hasTable('keepiq_folders') === true) {
 			return null;
 		}
 
-		$table = $schema->createTable('doriath_folders');
+		$table = $schema->createTable('keepiq_folders');
 
 		$table->addColumn('id', Types::STRING, ['notnull' => true, 'length' => 36]);
 		$table->addColumn('name', Types::STRING, ['notnull' => true, 'length' => 255]);
@@ -59,8 +59,8 @@ class Version000007Date20260604000001 extends SimpleMigrationStep {
 		$table->addColumn('updated_at', Types::DATETIME, ['notnull' => true]);
 
 		$table->setPrimaryKey(['id']);
-		$table->addIndex(['owner_type', 'owner_id', 'parent_id'], 'doriath_fld_owner_idx');
-		$table->addIndex(['parent_id'], 'doriath_fld_parent_idx');
+		$table->addIndex(['owner_type', 'owner_id', 'parent_id'], 'keepiq_fld_owner_idx');
+		$table->addIndex(['parent_id'], 'keepiq_fld_parent_idx');
 
 		return $schema;
 	}//end changeSchema()

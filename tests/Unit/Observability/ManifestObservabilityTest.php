@@ -162,7 +162,7 @@ class ManifestObservabilityTest extends TestCase {
 			($source['kind'] ?? null),
 			'suites_total must be a SQL COUNT(*), not a PHP count() over a fetch-all'
 		);
-		$this->assertSame('doriath_enc_suites', ($source['table'] ?? null));
+		$this->assertSame('keepiq_enc_suites', ($source['table'] ?? null));
 
 		$this->assertSame(
 			['status' => ['eq' => 'active']],

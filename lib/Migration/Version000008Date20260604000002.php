@@ -3,7 +3,7 @@
 /**
  * Keepiq Migration Version 8
  *
- * Create the doriath_secrets table holding RSA-encrypted secret blobs and
+ * Create the keepiq_secrets table holding RSA-encrypted secret blobs and
  * plaintext searchable metadata.
  *
  * @category Migration
@@ -29,7 +29,7 @@ use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
 
 /**
- * Create the doriath_secrets table.
+ * Create the keepiq_secrets table.
  */
 class Version000008Date20260604000002 extends SimpleMigrationStep {
 	/**
@@ -45,11 +45,11 @@ class Version000008Date20260604000002 extends SimpleMigrationStep {
 		// @var ISchemaWrapper $schema
 		$schema = $schemaClosure();
 
-		if ($schema->hasTable('doriath_secrets') === true) {
+		if ($schema->hasTable('keepiq_secrets') === true) {
 			return null;
 		}
 
-		$table = $schema->createTable('doriath_secrets');
+		$table = $schema->createTable('keepiq_secrets');
 
 		$table->addColumn('id', Types::STRING, ['notnull' => true, 'length' => 36]);
 		$table->addColumn('name', Types::STRING, ['notnull' => true, 'length' => 255]);
@@ -68,10 +68,10 @@ class Version000008Date20260604000002 extends SimpleMigrationStep {
 		$table->addColumn('updated_at', Types::DATETIME, ['notnull' => true]);
 
 		$table->setPrimaryKey(['id']);
-		$table->addIndex(['owner_type', 'owner_id'], 'doriath_sec_owner_idx');
-		$table->addIndex(['folder_id'], 'doriath_sec_folder_idx');
-		$table->addIndex(['encryption_suite_id'], 'doriath_sec_suite_idx');
-		$table->addIndex(['type_id'], 'doriath_sec_type_idx');
+		$table->addIndex(['owner_type', 'owner_id'], 'keepiq_sec_owner_idx');
+		$table->addIndex(['folder_id'], 'keepiq_sec_folder_idx');
+		$table->addIndex(['encryption_suite_id'], 'keepiq_sec_suite_idx');
+		$table->addIndex(['type_id'], 'keepiq_sec_type_idx');
 
 		return $schema;
 	}//end changeSchema()

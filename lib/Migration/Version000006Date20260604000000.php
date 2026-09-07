@@ -3,7 +3,7 @@
 /**
  * Keepiq Migration Version 6
  *
- * Create the doriath_secret_types table for categorising secrets.
+ * Create the keepiq_secret_types table for categorising secrets.
  *
  * @category Migration
  * @package  OCA\Keepiq\Migration
@@ -28,7 +28,7 @@ use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
 
 /**
- * Create the doriath_secret_types table.
+ * Create the keepiq_secret_types table.
  */
 class Version000006Date20260604000000 extends SimpleMigrationStep {
 	/**
@@ -44,11 +44,11 @@ class Version000006Date20260604000000 extends SimpleMigrationStep {
 		// @var ISchemaWrapper $schema
 		$schema = $schemaClosure();
 
-		if ($schema->hasTable('doriath_secret_types') === true) {
+		if ($schema->hasTable('keepiq_secret_types') === true) {
 			return null;
 		}
 
-		$table = $schema->createTable('doriath_secret_types');
+		$table = $schema->createTable('keepiq_secret_types');
 
 		$table->addColumn('id', Types::STRING, ['notnull' => true, 'length' => 36]);
 		$table->addColumn('name', Types::STRING, ['notnull' => true, 'length' => 64]);
@@ -58,8 +58,8 @@ class Version000006Date20260604000000 extends SimpleMigrationStep {
 		$table->addColumn('created_at', Types::DATETIME, ['notnull' => true]);
 
 		$table->setPrimaryKey(['id']);
-		$table->addUniqueIndex(['name'], 'doriath_st_name_idx');
-		$table->addIndex(['scope', 'owner_id'], 'doriath_st_scope_idx');
+		$table->addUniqueIndex(['name'], 'keepiq_st_name_idx');
+		$table->addIndex(['scope', 'owner_id'], 'keepiq_st_scope_idx');
 
 		return $schema;
 	}//end changeSchema()

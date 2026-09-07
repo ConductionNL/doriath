@@ -389,7 +389,7 @@ Tracks compromise recovery migrations.
 |---------|--------------|---------------|-----|
 | **Users** | `OCP\IUserManager` | Authentication identity, vault ownership | Reference by Nextcloud user UID |
 | **Groups** | `OCP\IGroupManager` | Group sharing, vault_admin role | Query group membership for group shares |
-| **Session** | `OCP\ISession` | Store AES-derived key during vault session | `ISession::set('doriath_aes_key', $derivedKey)` |
+| **Session** | `OCP\ISession` | Store AES-derived key during vault session | `ISession::set('keepiq_aes_key', $derivedKey)` |
 | **Notifications** | `OCP\Notification\IManager` | Share received, request fulfilled, CA expiry, app approval | Implement `INotifier` for rendering |
 | **Search** | `OCP\Search\IProvider` | Unified search (Ctrl+F) for secrets by name/URL | Query name + url without AES key; deep-link to secret |
 | **Settings** | `OCP\Settings\ISettings` | Admin settings panel (CA health, password policy) | Register admin section |
@@ -415,8 +415,8 @@ Tracks compromise recovery migrations.
 ```php
 // Session — store AES-derived key
 $session = \OCP\Server::get(\OCP\ISession::class);
-$session->set('doriath_aes_key', $aesKey);
-$session->get('doriath_aes_key'); // retrieve for decryption
+$session->set('keepiq_aes_key', $aesKey);
+$session->get('keepiq_aes_key'); // retrieve for decryption
 
 // Notifications — secret shared
 $manager = \OCP\Server::get(\OCP\Notification\IManager::class);
@@ -540,18 +540,18 @@ All entities use Nextcloud's `ISchemaWrapper` migration pattern. Migrations are 
 
 | Entity | Table Name | Notes |
 |--------|-----------|-------|
-| EncryptionSuite | `doriath_encryption_suites` | Composite index on `(owner_type, owner_id)` |
-| CACertificate | `doriath_ca_certificates` | — |
-| Secret | `doriath_secrets` | Index on `(owner_type, owner_id)`, `folder_id`, `encryption_suite_id` |
-| SecretType | `doriath_secret_types` | Unique index on `name` |
-| Folder | `doriath_folders` | Index on `(owner_type, owner_id, parent_id)` |
-| Application | `doriath_applications` | — |
-| SecretShare | `doriath_secret_shares` | Index on `source_secret_id`, `target_user_id` |
-| GroupShare | `doriath_group_shares` | Index on `(secret_id, group_id)` |
-| SecretDelegation | `doriath_secret_delegations` | Index on `secret_id` |
-| LinkShare | `doriath_link_shares` | Unique index on `token` |
-| SecretRequest | `doriath_secret_requests` | Unique index on `token` |
-| SuiteMigration | `doriath_suite_migrations` | — |
+| EncryptionSuite | `keepiq_enc_suites` | Composite index on `(owner_type, owner_id)` |
+| CACertificate | `keepiq_ca_certs` | — |
+| Secret | `keepiq_secrets` | Index on `(owner_type, owner_id)`, `folder_id`, `encryption_suite_id` |
+| SecretType | `keepiq_secret_types` | Unique index on `name` |
+| Folder | `keepiq_folders` | Index on `(owner_type, owner_id, parent_id)` |
+| Application | `keepiq_applications` | — |
+| ShareTarget | `keepiq_share_targets` | Index on `source_secret_id`, `target_user_id` |
+| GroupShare | `keepiq_group_shares` | Index on `(secret_id, group_id)` |
+| SecretDelegation | `keepiq_secret_delegations` | Index on `secret_id` |
+| LinkShare | `keepiq_link_shares` | Unique index on `token` |
+| SecretRequest | `keepiq_secret_requests` | Unique index on `token` |
+| SuiteMigration | `keepiq_suite_migr` | — |
 
 ### 4.1 Public endpoint rate limits
 
