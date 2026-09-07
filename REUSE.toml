@@ -2,7 +2,7 @@
 #
 # `quality / REUSE compliance` (fsfe/reuse-action@v5, shared quality.yml) has
 # been red on every run: the repo carried SPDX headers on its hand-written
-# source — 329 of 1470 tracked files — but no LICENSES/ directory, so every
+# source — 329 files — but no LICENSES/ directory, so every
 # `SPDX-License-Identifier: EUPL-1.2` in the tree pointed at a licence text
 # that was not there, and the ~1140 files that carry no header at all (l10n
 # JSON, openspec specs, docs, fixtures, images, lockfiles) had no licensing
@@ -22,9 +22,8 @@ SPDX-PackageDownloadLocation = "https://github.com/ConductionNL/keepiq"
 # `precedence = "closest"` means a file's OWN header always wins over this
 # entry — including `.editorconfig`, which comes from Nextcloud and stays
 # AGPL-3.0-or-later. It also fills in half a header: a file that declares a
-# licence but no copyright (tests/e2e/visual/_visual-helpers.ts) or a
-# copyright but no licence (LICENSE itself, "EUPL © the European Union")
-# takes the missing half from here rather than counting as non-compliant.
+# licence but no copyright (tests/e2e/visual/_visual-helpers.ts) takes the
+# missing half from here rather than counting as non-compliant.
 [[annotations]]
 path = "**"
 precedence = "closest"
