@@ -1125,7 +1125,8 @@ OC.L10N.register(
         "Pick a report to open it.": "Επιλέξτε μια αναφορά για να την ανοίξετε.",
         "Weak, reused and ageing passwords in your unlocked vault.": "Αδύναμοι, επαναχρησιμοποιημένοι και παλιοί κωδικοί στο ξεκλείδωτο θησαυροφυλάκιο.",
         "Everything you did, from the audit trail.": "Όλα όσα κάνατε, από το ίχνος ελέγχου.",
-        "Reports": "Εκθέσεις"
+        "Reports": "Εκθέσεις",
+        "Vault unlocked. Opening your vault…": "Το θησαυροφυλάκιο ξεκλειδώθηκε. Άνοιγμα του θησαυροφυλακίου σας…"
     },
     "nplurals=2; plural=(n != 1);"
 )

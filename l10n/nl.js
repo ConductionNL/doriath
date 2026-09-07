@@ -1130,7 +1130,8 @@ OC.L10N.register(
         "Your emergency contacts": "Je noodcontacten",
         "Your master password": "Je masterwachtwoord",
         "Your master password changed — re-enroll your passkeys to unlock with them again.": "Je masterwachtwoord is gewijzigd — registreer je passkeys opnieuw om er weer mee te ontgrendelen.",
-        "Zero-knowledge boundary: this report aggregates server-visible metadata only. No secret value, name, login, or ciphertext was read; no password strength, reuse, or breach figure exists anywhere in Keepiq server-side. Ciphertext-age figures describe encryption-blob age, not password strength.": "Zero-knowledge-grens: dit rapport bundelt uitsluitend metadata die de server kan zien. Er is geen geheime waarde, naam, inlognaam of versleutelde inhoud gelezen; nergens aan de serverkant van Keepiq bestaat een cijfer over wachtwoordsterkte, hergebruik of datalekken. Cijfers over de leeftijd van versleutelde inhoud beschrijven de leeftijd van het versleutelde blok, niet de sterkte van het wachtwoord."
+        "Zero-knowledge boundary: this report aggregates server-visible metadata only. No secret value, name, login, or ciphertext was read; no password strength, reuse, or breach figure exists anywhere in Keepiq server-side. Ciphertext-age figures describe encryption-blob age, not password strength.": "Zero-knowledge-grens: dit rapport bundelt uitsluitend metadata die de server kan zien. Er is geen geheime waarde, naam, inlognaam of versleutelde inhoud gelezen; nergens aan de serverkant van Keepiq bestaat een cijfer over wachtwoordsterkte, hergebruik of datalekken. Cijfers over de leeftijd van versleutelde inhoud beschrijven de leeftijd van het versleutelde blok, niet de sterkte van het wachtwoord.",
+        "Vault unlocked. Opening your vault…": "Kluis ontgrendeld. Uw kluis wordt geopend…"
     },
     "nplurals=2; plural=(n != 1);"
 )

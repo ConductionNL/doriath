@@ -43,6 +43,7 @@ import { expect, test } from '@playwright/test'
 import {
 	APP_BASE,
 	gotoLockSettled,
+	gotoVaultRoute,
 	lockHeading,
 	openVault,
 	unlockVault,
@@ -97,6 +98,32 @@ async function nativeClickByLabel(page, label: string): Promise<void> {
 			b.click()
 		}
 	}, label)
+}
+
+/**
+ * Read the id of a vault folder through the list API.
+ *
+ * A secret cannot live at the vault root — `SecretCreateDialog.canSubmit()`
+ * refuses without a folder, and DestinationSelect deliberately offers no root
+ * option — so the create dialog needs a folder before it will submit. Opening
+ * it from a FOLDER route is how a user gets one: the route seeds the dialog's
+ * `folderId` prop, exactly as picking one by hand would.
+ *
+ * @param page The Playwright page, already on the instance.
+ * @return The first folder's id.
+ */
+async function apiFirstFolderId(page): Promise<string> {
+	return page.evaluate(async (tokExpr) => {
+		// eslint-disable-next-line no-eval
+		const token = eval(tokExpr)
+		const res = await fetch('/index.php/apps/keepiq/api/v1/folders', {
+			credentials: 'include',
+			headers: { requesttoken: token },
+		})
+		const body = await res.json()
+		const items = body.items || body || []
+		return items.length > 0 ? String(items[0].id) : ''
+	}, REQ_TOKEN)
 }
 
 /** Find a secret by exact name through the list API; returns it or null. */
@@ -354,6 +381,19 @@ test.describe('Workflow: secret CRUD + encryption — secrets/spec.md', () => {
 
 		await unlockVault(page)
 		await openVault(page)
+
+		// FROM A FOLDER, NOT FROM "All secrets". This used to open the dialog
+		// on /secrets, which carries no folder, so `Create secret` rendered
+		// DISABLED and the click did nothing: the failure read as "the dialog
+		// did not close", two steps from the cause. A secret cannot live at
+		// the vault root, so the route has to supply the folder the same way
+		// it does for a user.
+		const folderId = await apiFirstFolderId(page)
+		expect(folderId, 'the vault must carry at least one folder').toBeTruthy()
+		await gotoVaultRoute(page, `folders/${folderId}`)
+		await expect(page.locator('.secret-list-view')).toBeVisible({
+			timeout: 20_000,
+		})
 
 		// --- CREATE via the dialog (browser-side RSA encryption) ---
 		await nativeClickByText(

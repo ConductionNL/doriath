@@ -38,9 +38,30 @@
 import type { Page } from '@playwright/test'
 
 import { expect, test } from '@playwright/test'
+import { DEV_MASTER_PASSWORD } from './workflows/_workflow-helpers.ts'
 
 const APP_ID = 'keepiq'
-const VAULT_PASSWORD = 'correct horse battery staple'
+
+/*
+ * THE SEEDED PASSWORD, NOT AN INVENTED ONE.
+ *
+ * This spec used to declare `'correct horse battery staple'` of its own. The
+ * vault is instance-wide and `lib/Repair/SeedDevelopmentData.php` has already
+ * created it with `DEV_MASTER_PASSWORD` ('Oj') before any spec runs, so the
+ * form these tests meet is the one-field UNLOCK form, not the two-field
+ * first-run form. A password the vault was never given cannot open it, and all
+ * five tests here stayed on /lock.
+ *
+ * It read as something else for as long as it did because the support dialog
+ * masked the Unlock click: the failure said "timed out clicking a visible,
+ * enabled, stable button", which points at the button. With the mask settled in
+ * globalSetup the click lands, and the honest failure appears — still on /lock,
+ * because the password is wrong.
+ *
+ * Imported rather than copied. Two constants for one instance-wide secret is
+ * what produced this, and a copy would let them drift apart again.
+ */
+const VAULT_PASSWORD = DEV_MASTER_PASSWORD
 
 /**
  * Dismiss the first-run setup wizard if it is open.

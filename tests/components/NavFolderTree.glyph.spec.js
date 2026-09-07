@@ -2,9 +2,16 @@
  * SPDX-FileCopyrightText: 2026 Conduction / Keepiq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
- * Diagnostic + regression spec for the vault glyph's highlight behavior
- * (restyle Stage 9): the HIGHLIGHTED vault renders a plain currentColor
- * glyph with no tint circle; at rest the picked color + same-hex tint show.
+ * Regression spec for the vault glyph in the left rail: which circle each
+ * vault gets, in which state.
+ *
+ *   at rest, colored    the picked color + a same-hex translucent tint
+ *   highlighted, colored the SAME color on an opaque main-background disc
+ *   colorless (default) NO inline style — the neutral disc is CSS-only
+ *
+ * Every depth-0 row carries a circle, the default one included: mixing
+ * discs and bare glyphs put the rows on different optical baselines and
+ * started their labels at different distances from their icons.
  */
 
 import { mount } from '@vue/test-utils'
@@ -84,10 +91,44 @@ describe('NavFolderTree vault glyph highlight', () => {
 		)
 	})
 
-	it('renders a COLORLESS vault with no circle in every state', () => {
+	it('gives a COLORLESS vault no inline tint — its circle is CSS-only', () => {
+		// "No color" has no hex to derive a tint (or an active-row variant)
+		// from, so the default vault's circle is painted by the --plain
+		// class instead of an inline style. Asserting the ABSENCE of the
+		// inline style is what stops a future change from tinting it with
+		// some arbitrary fallback color.
 		const w = factory('v-plain')
 		const plain = { id: 'v-plain', name: 'Plain', parentId: null, children: [] }
+		expect(w.vm.isColorless(plain)).toBe(true)
 		expect(w.vm.vaultGlyphStyle(plain)).toBeUndefined()
 		expect(w.vm.vaultColor(plain)).toBe('currentColor')
+	})
+
+	it('marks ONLY the colorless vault as plain', () => {
+		const w = factory(null)
+		expect(w.vm.isColorless(VAULTS[0])).toBe(false)
+		expect(w.vm.isColorless(VAULTS[1])).toBe(false)
+	})
+
+	it('renders the circle on EVERY vault, default included', () => {
+		// The rail's original defect: a disc on colored vaults and a bare
+		// glyph on the default one, so the two sat on different optical
+		// baselines and the labels started at different distances from
+		// their icons. Every depth-0 row now carries the glyph span, and
+		// the default one additionally carries the neutral --plain class.
+		const w = mount(NavFolderTree, {
+			propsData: {
+				folders: [
+					...VAULTS,
+					{ id: 'v-plain', name: 'Plain', parentId: null, children: [] },
+				],
+			},
+			global: { stubs },
+		})
+		const discs = w.findAll('.keepiq-nav-tree__vault-glyph')
+		expect(discs).toHaveLength(3)
+		expect(
+			discs.filter((d) => d.classes('keepiq-nav-tree__vault-glyph--plain')),
+		).toHaveLength(1)
 	})
 })
