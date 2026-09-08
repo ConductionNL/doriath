@@ -74,7 +74,7 @@ class SecretRequestMapper extends QBMapper {
 	 * @return void
 	 */
 	public function __construct(IDBConnection $db) {
-		parent::__construct(db: $db, tableName: 'doriath_secret_requests', entityClass: SecretRequest::class);
+		parent::__construct(db: $db, tableName: 'keepiq_secret_requests', entityClass: SecretRequest::class);
 	}//end __construct()
 
 	/**

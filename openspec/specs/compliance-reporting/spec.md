@@ -68,7 +68,7 @@ The system MUST restrict all compliance-report endpoints to administrators.
 
 ## Notes
 
-- Own tables per ADR-001 (`doriath_compliance_reports`); no OpenRegister.
+- Own tables per ADR-001 (`keepiq_compliance_reports`); no OpenRegister.
 - Depends on `rotation-expiry-policies` (wave-1) for the rotation-posture section, class-existence-guarded.
 - Honesty boundary enforces password-health's "No Server-Side Health Knowledge" invariant (`openspec/specs/password-health/spec.md`).
 - Related specs: secret-audit-trail (integrity section, append-only CSV pattern), emergency-access (coverage section), admin-settings (panel conventions).

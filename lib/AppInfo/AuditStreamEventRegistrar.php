@@ -67,7 +67,7 @@ final class AuditStreamEventRegistrar {
 	 */
 	public function register(IRegistrationContext $context): void {
 		// Add-secret-audit-trail §2.6 — the single AuditListener turns every
-		// dispatched AuditEvent into an append-only doriath_audit_log row. The
+		// dispatched AuditEvent into an append-only keepiq_audit_log row. The
 		// listener is fail-soft: a record failure is logged at error level and
 		// never propagates into the audited business operation.
 		$context->registerEventListener(

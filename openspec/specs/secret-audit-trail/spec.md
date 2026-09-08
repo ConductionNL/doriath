@@ -65,7 +65,7 @@ Audit entries MUST NEVER contain secret values, login fields, additional fields,
 
 #### Scenario: Database dump reveals no secret material
 @e2e exclude Direct-database assertion over recorded rows — not a DOM flow; covered by PHPUnit (AuditService whitelist tests assert only whitelisted keys persist and forbidden keys are rejected).
-- **WHEN** the full `doriath_audit_log` table is inspected directly
+- **WHEN** the full `keepiq_audit_log` table is inspected directly
 - **THEN** no row contains a secret value, login field, additional field, or ciphertext in any column
 
 ### Requirement: Append-Only Log

@@ -108,7 +108,7 @@ Because export runs client-side, the server only learns about it when told: the 
 
 ### D6: Tombstone Columns, Not a Tombstone Table
 
-`tombstoned_at` (datetime, nullable) + `tombstone_reason` (string enum-ish, nullable) on `doriath_secrets` via ISchemaWrapper migration. A detached copy is an ordinary secret the recipient fully owns; two nullable columns let the UI badge it and let future cleanup policies find it, without a join table that would outlive its purpose. Tombstone fields are display metadata only — they impose no access restrictions.
+`tombstoned_at` (datetime, nullable) + `tombstone_reason` (string enum-ish, nullable) on `keepiq_secrets` via ISchemaWrapper migration. A detached copy is an ordinary secret the recipient fully owns; two nullable columns let the UI badge it and let future cleanup policies find it, without a join table that would outlive its purpose. Tombstone fields are display metadata only — they impose no access restrictions.
 
 ## Risks / Trade-offs
 
@@ -121,7 +121,7 @@ Because export runs client-side, the server only learns about it when told: the 
 
 ## Migration Plan
 
-1. **Database migration**: ISchemaWrapper migration adding `tombstoned_at` + `tombstone_reason` to `doriath_secrets` (next free version number at implementation time); `occ upgrade`
+1. **Database migration**: ISchemaWrapper migration adding `tombstoned_at` + `tombstone_reason` to `keepiq_secrets` (next free version number at implementation time); `occ upgrade`
 2. **Event listener registration**: `UserDeletedEvent` listener registered in `Application::register()`
 3. **Frontend build**: no new dependencies (Argon2id WASM already present from link sharing); `npm run build`
 4. **Rollback**: disable endpoints/listener; tombstone columns are inert nullable metadata

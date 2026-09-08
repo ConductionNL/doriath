@@ -40,7 +40,7 @@ class LinkShareMapper extends QBMapper {
 	 * @return void
 	 */
 	public function __construct(IDBConnection $db) {
-		parent::__construct(db: $db, tableName: 'doriath_link_shares', entityClass: LinkShare::class);
+		parent::__construct(db: $db, tableName: 'keepiq_link_shares', entityClass: LinkShare::class);
 	}//end __construct()
 
 	/**

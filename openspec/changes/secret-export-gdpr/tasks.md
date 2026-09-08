@@ -13,7 +13,7 @@ that change first or land the registry stub here.
 
 ## 1. Database Migration
 
-- [ ] 1.1 Create ISchemaWrapper migration (next free version number) adding `tombstoned_at` (datetime, nullable) and `tombstone_reason` (string 64, nullable) to `doriath_secrets`; no index needed (display metadata only)
+- [ ] 1.1 Create ISchemaWrapper migration (next free version number) adding `tombstoned_at` (datetime, nullable) and `tombstone_reason` (string 64, nullable) to `keepiq_secrets`; no index needed (display metadata only)
 - [ ] 1.2 Extend the Secret entity + mapper with the two fields; include them in `jsonSerialize()` so the UI can badge detached copies
 
 ## 2. Backend — GDPR Metadata Export

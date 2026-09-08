@@ -103,10 +103,10 @@ class BreachProxyController extends Controller {
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
-		// Namespace deliberately still `doriath_` after the doriath -> keepiq
+		// Namespace deliberately still `keepiq_` after the doriath -> keepiq
 		// rename: an ICache key prefix, not an app id. Renaming it would only
 		// throw away a warm HIBP range cache. See appinfo/info.xml.
-		$this->cache = $cacheFactory->createDistributed('doriath_breach_range');
+		$this->cache = $cacheFactory->createDistributed('keepiq_breach_range');
 	}//end __construct()
 
 	/**

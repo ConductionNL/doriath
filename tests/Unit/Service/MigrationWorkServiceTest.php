@@ -364,7 +364,7 @@ class MigrationWorkServiceTest extends TestCase {
 	/**
 	 * Test a version failure is recorded on the owning secret, store-prefixed.
 	 *
-	 * `migration_error` exists only on doriath_secrets, so this is where a
+	 * `migration_error` exists only on keepiq_secrets, so this is where a
 	 * version or grant failure has to land.
 	 *
 	 * @return void

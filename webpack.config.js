@@ -1,3 +1,31 @@
+// SPDX-FileCopyrightText: 2020 Nextcloud GmbH and Nextcloud contributors
+// SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+// SPDX-License-Identifier: AGPL-3.0-or-later
+//
+// ⚠️ THIS FILE IS AGPL-3.0-or-later. The rest of keepiq is EUPL-1.2, apart
+// from `.editorconfig` — the only other file here that carries Nextcloud code.
+//
+// The config object below was inlined from `@nextcloud/webpack-vue-config`
+// (AGPL-3.0-or-later, Nextcloud GmbH) when that package was dropped from the
+// dependency tree — see WHY THE BASE CONFIG IS INLINED below. Roughly half of
+// the inlined literal is byte-identical to upstream, including two of its own
+// comments, so the file carries Nextcloud's licence rather than the repo-wide
+// EUPL-1.2 blanket in REUSE.toml. `precedence = "closest"` there means this
+// header wins; the same arrangement `.editorconfig` already uses.
+//
+// Keep copyright markers out of this file's prose — the circled-c glyph, the
+// capitalised English word, and the parenthesised letter all count. REUSE
+// matches them anywhere in a file, not only inside an SPDX tag, so one in a
+// sentence gets reported as a third copyright holder with the rest of the
+// sentence as its holder name. (This paragraph deliberately names none of the
+// three literally, for that exact reason.)
+//
+// Consequence for anyone editing this file: treat all of it as
+// AGPL-3.0-or-later unless you have checked a specific line's provenance.
+// Conduction owns the other half of the literal and everything below it and
+// may relicense that at will — but nothing marks which lines are which, so
+// code copied OUT of here cannot simply be pasted into an EUPL-1.2 file.
+
 const fs = require('fs')
 const MinimizerPlugin = require('minimizer-webpack-plugin')
 const path = require('path')
@@ -9,6 +37,8 @@ const appId = 'keepiq'
 const buildMode = process.env.NODE_ENV
 const isDev = buildMode === 'development'
 
+// WHY THE BASE CONFIG IS INLINED
+//
 // This config used to start from `@nextcloud/webpack-vue-config` and mutate the
 // object it exported. That package is gone: it peer-pins
 // `node-polyfill-webpack-plugin@4.0.0`, whose `crypto-browserify` →
@@ -300,7 +330,8 @@ webpackConfig.resolve.alias['@nextcloud/dialogs$'] = path.resolve(
 
 // Node-core fallbacks. Webpack 5 no longer auto-polyfills node builtins, and
 // NodePolyfillPlugin — which used to inject a full map of them on demand — went
-// out with @nextcloud/webpack-vue-config (see the header). These are the only
+// out with @nextcloud/webpack-vue-config (see WHY THE BASE CONFIG IS INLINED
+// at the top of this file). These are the only
 // builtins the graph actually reaches, measured against a real build: `stream`
 // carries the bulk (readable-stream, ~190 modules), `path` comes from the
 // dialogs FilePicker chunk, and the rest are pulled in behind them.

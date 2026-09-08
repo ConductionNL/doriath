@@ -20,10 +20,15 @@ SPDX-PackageDownloadLocation = "https://github.com/ConductionNL/keepiq"
 # Repo-wide default.
 #
 # `precedence = "closest"` means a file's OWN header always wins over this
-# entry — including `.editorconfig`, which comes from Nextcloud and stays
-# AGPL-3.0-or-later. It also fills in half a header: a file that declares a
-# licence but no copyright (tests/e2e/visual/_visual-helpers.ts) takes the
-# missing half from here rather than counting as non-compliant.
+# entry — including the two files that carry Nextcloud code and are
+# AGPL-3.0-or-later: `.editorconfig`, and `webpack.config.js`, roughly half of
+# whose config literal was inlined verbatim from
+# `@nextcloud/webpack-vue-config` when that package was dropped to clear an
+# unfixable `elliptic` advisory.
+#
+# It also fills in half a header: a file that declares a licence but no
+# copyright (tests/e2e/visual/_visual-helpers.ts) takes the missing half from
+# here rather than counting as non-compliant.
 [[annotations]]
 path = "**"
 precedence = "closest"

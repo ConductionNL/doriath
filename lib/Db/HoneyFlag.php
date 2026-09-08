@@ -4,7 +4,7 @@
  * Keepiq Honey Flag Entity
  *
  * Marks one secret as a decoy tripwire (honey-credentials §1). Lives in
- * a SIDE table — never a column on doriath_secrets and never part of
+ * a SIDE table — never a column on keepiq_secrets and never part of
  * the secret's serialization — so recipients/attackers cannot
  * distinguish a honey secret.
  *

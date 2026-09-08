@@ -28,7 +28,7 @@ use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IDBConnection;
 
 /**
- * Mapper for the doriath_honey_alerts table.
+ * Mapper for the keepiq_honey_alerts table.
  *
  * @template-extends QBMapper<HoneyAlert>
  */
@@ -41,7 +41,7 @@ class HoneyAlertMapper extends QBMapper {
 	 * @return void
 	 */
 	public function __construct(IDBConnection $db) {
-		parent::__construct(db: $db, tableName: 'doriath_honey_alerts', entityClass: HoneyAlert::class);
+		parent::__construct(db: $db, tableName: 'keepiq_honey_alerts', entityClass: HoneyAlert::class);
 	}//end __construct()
 
 	/**

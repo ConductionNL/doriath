@@ -28,7 +28,7 @@ use OCP\AppFramework\Db\QBMapper;
 use OCP\IDBConnection;
 
 /**
- * Mapper for the doriath_secret_versions table.
+ * Mapper for the keepiq_secret_versions table.
  *
  * @template-extends QBMapper<SecretVersion>
  *
@@ -46,7 +46,7 @@ class SecretVersionMapper extends QBMapper {
 	 * @return void
 	 */
 	public function __construct(IDBConnection $db) {
-		parent::__construct(db: $db, tableName: 'doriath_secret_versions', entityClass: SecretVersion::class);
+		parent::__construct(db: $db, tableName: 'keepiq_secret_versions', entityClass: SecretVersion::class);
 	}//end __construct()
 
 	/**
@@ -112,7 +112,7 @@ class SecretVersionMapper extends QBMapper {
 
 	/**
 	 * Prune a secret's oldest versions beyond a retention count. The live
-	 * head is a `doriath_secrets` row and is structurally untouchable here.
+	 * head is a `keepiq_secrets` row and is structurally untouchable here.
 	 *
 	 * @param string $secretId The secret UUID
 	 * @param int $keep Versions to keep (newest)
@@ -196,7 +196,7 @@ class SecretVersionMapper extends QBMapper {
 	/**
 	 * A secret's versions still bound to a suite, newest first.
 	 *
-	 * The head lives in `doriath_secrets` and is migrated separately; this
+	 * The head lives in `keepiq_secrets` and is migrated separately; this
 	 * returns only the snapshot rows, which carry their own
 	 * `encryption_suite_id` and so migrate independently of their head.
 	 *
@@ -243,7 +243,7 @@ class SecretVersionMapper extends QBMapper {
 		$qb = $this->db->getQueryBuilder();
 		$qb->select($qb->func()->count('*', 'cnt'))
 			->from($this->getTableName(), 'v')
-			->innerJoin('v', 'doriath_secrets', 's', $qb->expr()->eq('v.secret_id', 's.id'))
+			->innerJoin('v', 'keepiq_secrets', 's', $qb->expr()->eq('v.secret_id', 's.id'))
 			->where($qb->expr()->eq('v.encryption_suite_id', $qb->createNamedParameter($encryptionSuiteId)))
 			->andWhere($qb->expr()->eq('s.owner_type', $qb->createNamedParameter($ownerType)))
 			->andWhere($qb->expr()->eq('s.owner_id', $qb->createNamedParameter($ownerId)));
@@ -260,7 +260,7 @@ class SecretVersionMapper extends QBMapper {
 	 * recorded migration failure.
 	 *
 	 * A version has no `migration_error` column of its own — the column exists
-	 * only on `doriath_secrets` — so a failed version is recorded against the
+	 * only on `keepiq_secrets` — so a failed version is recorded against the
 	 * secret that owns it. That makes the owning secret's error the only
 	 * available "accounted for" signal here.
 	 *
@@ -280,7 +280,7 @@ class SecretVersionMapper extends QBMapper {
 		$qb = $this->db->getQueryBuilder();
 		$qb->select($qb->func()->count('*', 'cnt'))
 			->from($this->getTableName(), 'v')
-			->innerJoin('v', 'doriath_secrets', 's', $qb->expr()->eq('v.secret_id', 's.id'))
+			->innerJoin('v', 'keepiq_secrets', 's', $qb->expr()->eq('v.secret_id', 's.id'))
 			->where($qb->expr()->eq('v.encryption_suite_id', $qb->createNamedParameter($encryptionSuiteId)))
 			->andWhere($qb->expr()->eq('s.owner_type', $qb->createNamedParameter($ownerType)))
 			->andWhere($qb->expr()->eq('s.owner_id', $qb->createNamedParameter($ownerId)))
@@ -322,7 +322,7 @@ class SecretVersionMapper extends QBMapper {
 		$qb = $this->db->getQueryBuilder();
 		$qb->selectDistinct('v.secret_id')
 			->from($this->getTableName(), 'v')
-			->innerJoin('v', 'doriath_secrets', 's', $qb->expr()->eq('v.secret_id', 's.id'))
+			->innerJoin('v', 'keepiq_secrets', 's', $qb->expr()->eq('v.secret_id', 's.id'))
 			->where($qb->expr()->eq('v.encryption_suite_id', $qb->createNamedParameter($encryptionSuiteId)))
 			->andWhere($qb->expr()->eq('s.owner_type', $qb->createNamedParameter($ownerType)))
 			->andWhere($qb->expr()->eq('s.owner_id', $qb->createNamedParameter($ownerId)))

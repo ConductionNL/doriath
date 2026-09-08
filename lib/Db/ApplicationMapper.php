@@ -40,7 +40,7 @@ class ApplicationMapper extends QBMapper {
 	 * @return void
 	 */
 	public function __construct(IDBConnection $db) {
-		parent::__construct(db: $db, tableName: 'doriath_applications', entityClass: Application::class);
+		parent::__construct(db: $db, tableName: 'keepiq_applications', entityClass: Application::class);
 	}//end __construct()
 
 	/**
