@@ -116,7 +116,13 @@ emitted. The envelope bytes MUST NOT change with the identifier.
 The token endpoint MUST accept an assertion whose `aud` claim names this
 instance, honouring RFC 7519 §4.1.3: `aud` MAY be a single string or an array
 of strings, and the assertion is acceptable when ANY presented value is one the
-instance accepts. The instance MUST accept both `keepiq` (canonical) and
+instance accepts.
+
+The claim MUST be read strictly and MUST NOT be coerced. A value that is not a
+string, and an array containing any member that is not a non-empty string, are
+malformed and MUST be rejected — an array MUST NOT be filtered down to its
+well-formed members, because authenticating on the remainder is exactly what a
+malformed claim must not achieve. The instance MUST accept both `keepiq` (canonical) and
 `doriath` (deprecated, the pre-rename name), and MUST reject any other value.
 
 The discovery document MUST publish the canonical value as `audience`, the full
@@ -150,6 +156,12 @@ assumed.
 @e2e exclude Machine-to-machine API contract with no UI surface; covered by JwtAuthServiceTest.
 - **WHEN** an assertion presents `aud: ["something-else", "keepiq"]`
 - **THEN** the audience check MUST pass
+
+#### Scenario: A malformed audience is rejected, not coerced
+@e2e exclude Machine-to-machine API contract with no UI surface; covered by JwtAuthServiceTest.
+- **WHEN** an assertion presents `aud: 123`, `aud: true` or `aud: ["keepiq", 123]`
+- **THEN** the exchange MUST be rejected
+- **AND** the well-formed members of a mixed array MUST NOT be matched against the accepted set
 
 #### Scenario: Foreign audience rejected
 @e2e exclude Machine-to-machine API contract with no UI surface; covered by JwtAuthServiceTest.

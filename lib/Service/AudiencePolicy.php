@@ -141,14 +141,29 @@ class AudiencePolicy {
 	}//end assertNamesThisInstance()
 
 	/**
-	 * Normalise an `aud` claim to the list of strings it presents.
+	 * Read the `aud` claim as the list of strings it presents.
 	 *
-	 * Anything that is neither a string nor an array of scalars presents no
-	 * audience at all, which the caller treats as a rejection.
+	 * RFC 7519 section 4.1.3 defines `aud` as a StringOrURI or an array of
+	 * them, so anything else is a malformed assertion and presents no audience
+	 * at all — which the caller turns into a rejection.
+	 *
+	 * NOTHING IS COERCED. `aud: 123` and `aud: true` are not audiences that
+	 * happen to be written oddly; they are malformed, and casting them to
+	 * "123" and "1" would launder a type error into a value that then gets
+	 * compared against the accepted set. Nothing in that set is numeric today,
+	 * so the coercion changed no verdict — but "no accepted audience is
+	 * currently a number" is a fact about configuration, not a property of the
+	 * check, and it is not one an auth path should lean on.
+	 *
+	 * A MIXED ARRAY IS REJECTED WHOLE, rather than filtered down to its string
+	 * members. `["keepiq", {...}]` is not a well-formed claim, and quietly
+	 * discarding the part that does not parse would authenticate on the
+	 * remainder — the lenient reading is the one that lets a malformed
+	 * assertion through.
 	 *
 	 * @param mixed $claim The raw `aud` claim.
 	 *
-	 * @return string[] The presented audience values.
+	 * @return string[] The presented audience values, empty when malformed.
 	 *
 	 * @spec openspec/specs/secret-store-api/spec.md#requirement-assertion-audience
 	 */
@@ -156,16 +171,19 @@ class AudiencePolicy {
 		if (is_array($claim) === true) {
 			$values = [];
 			foreach ($claim as $value) {
-				if (is_scalar($value) === true && (string)$value !== '') {
-					$values[] = (string)$value;
+				if (is_string($value) === false || $value === '') {
+					// One malformed member makes the whole claim malformed.
+					return [];
 				}
+
+				$values[] = $value;
 			}
 
 			return $values;
 		}
 
-		if (is_scalar($claim) === true && (string)$claim !== '') {
-			return [(string)$claim];
+		if (is_string($claim) === true && $claim !== '') {
+			return [$claim];
 		}
 
 		return [];

@@ -463,6 +463,58 @@ class JwtAuthServiceTest extends TestCase {
 	}//end testArrayValuedForeignAudienceRejected()
 
 	/**
+	 * A non-string audience is malformed, not an audience written oddly.
+	 *
+	 * Casting would turn `123` into "123" and `true` into "1" before the
+	 * comparison. No accepted audience is numeric today, so nothing would have
+	 * slipped through — but that is a fact about configuration, not a property
+	 * of the check.
+	 *
+	 * @param mixed $aud The malformed claim value.
+	 *
+	 * @dataProvider malformedAudiences
+	 *
+	 * @return void
+	 */
+	public function testNonStringAudienceIsRejected(mixed $aud): void {
+		$this->stubActiveApp('app-1');
+
+		$now = time();
+		$assertion = $this->buildAssertion(
+			[
+				'iss' => 'app-1',
+				'aud' => $aud,
+				'iat' => $now,
+				'exp' => ($now + 60),
+				'jti' => 'jti-aud-' . md5(serialize($aud)),
+			]
+		);
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('Wrong audience');
+		$this->service->exchangeAssertion($assertion);
+	}//end testNonStringAudienceIsRejected()
+
+	/**
+	 * Claim shapes RFC 7519 section 4.1.3 does not permit.
+	 *
+	 * The mixed array is the one that matters: filtering it down to its string
+	 * members would authenticate on the part that happens to parse.
+	 *
+	 * @return array<string,array<int,mixed>>
+	 */
+	public static function malformedAudiences(): array {
+		return [
+			'integer' => [123],
+			'boolean' => [true],
+			'float' => [1.5],
+			'array with an integer member' => [['keepiq', 123]],
+			'array with a nested array' => [['keepiq', ['keepiq']]],
+			'array with an empty string' => [['keepiq', '']],
+		];
+	}//end malformedAudiences()
+
+	/**
 	 * Replayed jti is rejected on second use.
 	 *
 	 * @return void
