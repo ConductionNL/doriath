@@ -37,7 +37,7 @@
     "libxmljs2": "^0.37.0"
   },
   "dependencies": {
-    "@conduction/nextcloud-vue": "^2.36.3",
+    "@conduction/nextcloud-vue": "^2.41.1",
     "@nextcloud/auth": "^2.6.0",
     "@nextcloud/axios": "~2.5.2",
     "@nextcloud/capabilities": "^1.2.1",
