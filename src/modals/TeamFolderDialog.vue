@@ -101,20 +101,21 @@
 						:inputLabel="t('keepiq', 'Member type')"
 						:clearable="false" />
 					<!--
-					  Pick from a list when there IS one, ask for an id by hand
-					  when there is not (an instance with sharing restricted to
-					  group members can legitimately return nobody).
+					  Always a picker, empty included: an id typed by hand is
+					  either already in this list or cannot be a member at all
+					  (a user with no active suite has no public key to encrypt
+					  their copies to), so there is nothing for a text field to
+					  add — and swapping the control out from under the user
+					  when the last candidate is taken is worse than showing an
+					  empty list. NcSelect says "No results" for that itself.
 
 					  Both lists come from the SERVER's own directory, one
 					  request per keystroke-burst, because neither is small
 					  enough to hold locally: groups from the provisioning API,
-					  users from Nextcloud's sharee search narrowed to those who
-					  can actually receive a secret — a user without an active
-					  suite has no public key to encrypt a copy to, so they are
-					  not offered at all.
+					  users from Nextcloud's sharee search narrowed by keepiq's
+					  shareability probe.
 					-->
 					<NcSelect
-						v-if="memberCandidates.length > 0"
 						class="team-folder-dialog__member-input"
 						:modelValue="newMemberId === '' ? null : newMemberId"
 						:options="memberCandidates"
@@ -124,14 +125,6 @@
 						data-testid="team-folder-member-select"
 						@update:modelValue="newMemberId = $event ?? ''"
 						@search="onCandidateSearch" />
-					<label v-else class="team-folder-dialog__id-field">
-						<span>{{ memberIdLabel }}</span>
-						<input
-							v-model.trim="newMemberId"
-							type="text"
-							autocomplete="off"
-							data-testid="team-folder-member-id" />
-					</label>
 					<NcButton
 						class="team-folder-dialog__add-button"
 						variant="secondary"
@@ -597,37 +590,19 @@ export default {
 	flex: 0 0 10rem;
 }
 
-.team-folder-dialog__member-input,
-.team-folder-dialog__id-field {
+.team-folder-dialog__member-input {
 	flex: 1 1 10rem;
 	min-width: 0;
-}
-
-.team-folder-dialog__id-field {
-	display: flex;
-	flex-direction: column;
-	gap: 4px;
 }
 
 /*
  * NcSelect carries its own bottom margin, so a bottom-aligned row puts the
  * pickers' control boxes one grid baseline above the row's edge. The button
- * and the plain-input fallback take the same offset, which is what actually
- * lines the three bottoms up.
+ * takes the same offset, which is what actually lines the three bottoms up.
  */
-.team-folder-dialog__add-button,
-.team-folder-dialog__id-field {
-	margin-block-end: var(--default-grid-baseline, 4px);
-}
-
 .team-folder-dialog__add-button {
 	flex: 0 0 auto;
-}
-
-.team-folder-dialog__id-field input {
-	padding: 8px;
-	border: 1px solid var(--color-border-dark, #999);
-	border-radius: var(--border-radius, 4px);
+	margin-block-end: var(--default-grid-baseline, 4px);
 }
 
 .team-folder-dialog__fanout {

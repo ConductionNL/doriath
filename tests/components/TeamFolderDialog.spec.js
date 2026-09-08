@@ -135,11 +135,21 @@ describe('TeamFolderDialog', () => {
 		)
 	})
 
-	it('asks for an id by hand when the search returns nobody', async () => {
-		// A legitimate answer: an instance restricting shares to group members
-		// can leave a user with no candidates at all, and the field has to stay
-		// usable rather than becoming a dropdown that cannot be opened.
-		mockApi({ owned: [{ id: 'tf-1', folderId: 'folder-1', members: [] }] })
+	it('stays a picker when there is nobody left to add', async () => {
+		// The last candidate being taken must not swap the control out from
+		// under the user: an empty list is a state of the picker, not a reason
+		// to become a different field. NcSelect says "No results" for it.
+		mockApi({
+			owned: [
+				{
+					id: 'tf-1',
+					folderId: 'folder-1',
+					members: [{ id: 'm1', memberType: 'user', memberId: 'carol' }],
+				},
+			],
+			sharees: ['carol'],
+			shareable: ['carol'],
+		})
 		const wrapper = mount(TeamFolderDialog, {
 			propsData: { open: true, folderId: 'folder-1', folderName: 'DevOps' },
 		})
@@ -147,12 +157,14 @@ describe('TeamFolderDialog', () => {
 		await flush()
 
 		expect(wrapper.vm.memberCandidates).toEqual([])
-		expect(wrapper.find('[data-testid="team-folder-member-id"]').exists()).toBe(
-			true,
-		)
 		expect(
 			wrapper.find('[data-testid="team-folder-member-select"]').exists(),
-		).toBe(false)
+		).toBe(true)
+		// There is no free-text form of this field any more: an id typed by
+		// hand is either already listed or cannot be a member at all.
+		expect(wrapper.find('[data-testid="team-folder-member-id"]').exists()).toBe(
+			false,
+		)
 	})
 
 	it('offers only the sharees who can receive a secret', async () => {
