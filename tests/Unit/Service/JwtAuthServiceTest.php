@@ -30,6 +30,7 @@ use OCA\Keepiq\Db\ApplicationMapper;
 use OCA\Keepiq\Db\EncryptionSuite;
 use OCA\Keepiq\Db\EncryptionSuiteMapper;
 use OCA\Keepiq\Service\ApplicationJwkResolver;
+use OCA\Keepiq\Service\AudiencePolicy;
 use OCA\Keepiq\Service\JwtAssertionVerifier;
 use OCA\Keepiq\Service\JwtAuthService;
 use OCP\AppFramework\Db\DoesNotExistException;
@@ -114,6 +115,7 @@ class JwtAuthServiceTest extends TestCase {
 			cacheFactory: $this->cacheFactory,
 			verifier: new JwtAssertionVerifier(logger: $this->logger),
 			keyResolver: new ApplicationJwkResolver(suiteMapper: $this->suiteMapper),
+			audiencePolicy: new AudiencePolicy(logger: $this->logger),
 		);
 	}//end setUp()
 

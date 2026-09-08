@@ -37,6 +37,7 @@ declare(strict_types=1);
 namespace OCA\Keepiq\Controller;
 
 use OCA\Keepiq\AppInfo\Application as KeepiqApp;
+use OCA\Keepiq\Service\AudiencePolicy;
 use OCA\Keepiq\Service\JwtAuthService;
 use OCA\Keepiq\Service\MachineSecretEnvelopeService;
 use OCP\AppFramework\Controller;
@@ -152,12 +153,12 @@ class DiscoveryController extends Controller {
 					// converges on the canonical name, and one still sending a
 					// deprecated value keeps working until the version named in
 					// `deprecatedAudiences[].removedInAppVersion`.
-					'audience' => JwtAuthService::CANONICAL_AUDIENCE,
-					'acceptedAudiences' => JwtAuthService::ACCEPTED_AUDIENCES,
+					'audience' => AudiencePolicy::CANONICAL_AUDIENCE,
+					'acceptedAudiences' => AudiencePolicy::ACCEPTED_AUDIENCES,
 					'deprecatedAudiences' => [
 						[
-							'value' => JwtAuthService::DEPRECATED_AUDIENCE,
-							'removedInAppVersion' => JwtAuthService::DEPRECATED_AUDIENCE_REMOVED_IN,
+							'value' => AudiencePolicy::DEPRECATED_AUDIENCE,
+							'removedInAppVersion' => AudiencePolicy::DEPRECATED_AUDIENCE_REMOVED_IN,
 						],
 					],
 					'audienceUrl' => $tokenAbsolute,

@@ -34,6 +34,7 @@ use OCA\Keepiq\Event\Audit\AuditEventTypes;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\ICacheFactory;
+use Psr\Log\NullLogger;
 use RuntimeException;
 
 /**
@@ -88,66 +89,6 @@ class JwtAuthService {
 	 */
 	public const CLOCK_SKEW_SECONDS = 60;
 
-	/**
-	 * The audience claim ("aud") this instance advertises and prefers.
-	 *
-	 * Assertions are ACCEPTED on any value in ACCEPTED_AUDIENCES; this is
-	 * the one published in the `.well-known` discovery document, so a
-	 * self-configuring consumer converges on it without being told.
-	 *
-	 * @var string
-	 */
-	public const CANONICAL_AUDIENCE = 'keepiq';
-
-	/**
-	 * The pre-rename audience, still accepted and now deprecated.
-	 *
-	 * This value is not an app id, it is a published authentication
-	 * parameter: every application registered before the rename signs
-	 * `aud=doriath` into its RS256 assertion with a private key this server
-	 * does not hold and cannot re-sign. Rejecting it outright would be a
-	 * fleet-wide credential outage that no repair step can heal, because the
-	 * fix lives in each consumer's configuration.
-	 *
-	 * Accepting both instead is ADDITIVE, so it costs nothing and no consumer
-	 * needs a change window: existing ones keep working untouched, new ones
-	 * read CANONICAL_AUDIENCE from discovery. The shim is removed before the
-	 * first stable release — see
-	 * Application::PRE_STABLE_COMPAT_REMOVED_IN — together with the
-	 * `.well-known/doriath` path and the `doriath-machine-secret-v1` envelope
-	 * name. It is not deferred to a future apiVersion: nothing stable has
-	 * shipped, so there is no released contract that a version bump would
-	 * protect.
-	 *
-	 * Every assertion arriving on this value is logged with its `iss`, so the
-	 * set of consumers still to migrate is observable rather than guessed at
-	 * before the removal lands.
-	 *
-	 * @var string
-	 */
-	public const DEPRECATED_AUDIENCE = 'doriath';
-
-	/**
-	 * The app version in which DEPRECATED_AUDIENCE stops being accepted.
-	 *
-	 * @var string
-	 */
-	public const DEPRECATED_AUDIENCE_REMOVED_IN = KeepiqApp::PRE_STABLE_COMPAT_REMOVED_IN;
-
-	/**
-	 * Every audience value an assertion may carry to reach this instance.
-	 *
-	 * Order is meaningful only for readability; membership is what the
-	 * verifier tests. RFC 7519 §4.1.3 requires the recipient to identify
-	 * itself with a value in the claim — both of these name this app, so
-	 * accepting the pair does not widen the confused-deputy guard.
-	 *
-	 * @var string[]
-	 */
-	public const ACCEPTED_AUDIENCES = [
-		self::CANONICAL_AUDIENCE,
-		self::DEPRECATED_AUDIENCE,
-	];
 
 	/**
 	 * Constructor for JwtAuthService.
@@ -156,6 +97,7 @@ class JwtAuthService {
 	 * @param ICacheFactory $cacheFactory The cache factory
 	 * @param JwtAssertionVerifier $verifier The JOSE assertion verifier
 	 * @param ApplicationJwkResolver $keyResolver The issuer key resolver
+	 * @param AudiencePolicy $audiencePolicy Which `aud` values name this instance
 	 * @param IEventDispatcher|null $eventDispatcher The event dispatcher
 	 * @param AuditEventFactory $auditEvents The audit-event factory
 	 *
@@ -166,6 +108,7 @@ class JwtAuthService {
 		private ICacheFactory $cacheFactory,
 		private JwtAssertionVerifier $verifier,
 		private ApplicationJwkResolver $keyResolver,
+		private AudiencePolicy $audiencePolicy = new AudiencePolicy(new NullLogger()),
 		private ?IEventDispatcher $eventDispatcher = null,
 		private AuditEventFactory $auditEvents = new AuditEventFactory(),
 	) {
@@ -247,6 +190,11 @@ class JwtAuthService {
 		}
 
 		$claims = $this->verifier->readAcceptableClaims(assertion: $assertion);
+
+		// Audience is asserted here rather than inside the verifier: which
+		// values this deployment answers to, and for how much longer, is a
+		// published contract decision, not a property of a well-formed JWS.
+		$this->audiencePolicy->assertNamesThisInstance(claims: $claims);
 
 		$jtiCache = $this->cacheFactory->createDistributed(self::JTI_CACHE_NS);
 		$jti = (string)$claims['jti'];
