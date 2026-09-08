@@ -131,9 +131,7 @@
 						<template #option="option">
 							<span class="team-folder-dialog__candidate">
 								{{ option.label }}
-								<span
-									v-if="!option.shareable"
-									class="team-folder-dialog__candidate-reason">
+								<span v-if="!option.shareable">
 									{{ t('keepiq', 'No encryption suite') }}
 								</span>
 							</span>
@@ -651,16 +649,20 @@ export default {
 	flex: 0 0 auto;
 }
 
+/*
+ * Layout only — an unselectable candidate takes its grey from the library's
+ * disabled-option colour (themed in assets/app.css), not from here.
+ *
+ * The cursor is the exception: the row carries `not-allowed`, but over the
+ * text the topmost box is this span, so without inheriting it the cursor only
+ * changed on the row's padding.
+ */
 .team-folder-dialog__candidate {
 	display: flex;
 	align-items: baseline;
 	gap: 8px;
 	min-width: 0;
-}
-
-.team-folder-dialog__candidate-reason {
-	color: var(--color-text-maxcontrast);
-	font-size: 0.85em;
+	cursor: inherit;
 }
 
 .team-folder-dialog__id-field input {
