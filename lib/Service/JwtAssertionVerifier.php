@@ -226,11 +226,11 @@ class JwtAssertionVerifier {
 		// set of consumers still to migrate is observable before the removal.
 		$this->logger->warning(
 			'Assertion accepted on the deprecated audience "{deprecated}", which is '
-			. 'retired in apiVersion {version}. Update issuer "{iss}" to send "{canonical}".',
+			. 'removed in app version {version}. Update issuer "{iss}" to send "{canonical}".',
 			[
 				'deprecated' => JwtAuthService::DEPRECATED_AUDIENCE,
 				'canonical' => JwtAuthService::CANONICAL_AUDIENCE,
-				'version' => JwtAuthService::DEPRECATED_AUDIENCE_REMOVED_IN_API_VERSION,
+				'version' => JwtAuthService::DEPRECATED_AUDIENCE_REMOVED_IN,
 				'iss' => (string)($claims['iss'] ?? 'unknown'),
 			]
 		);
