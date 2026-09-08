@@ -125,6 +125,19 @@ class ShareService {
 	}//end recipientCertificate()
 
 	/**
+	 * The active certificates of several prospective recipients.
+	 *
+	 * @param string[] $targetUserIds The prospective recipients
+	 *
+	 * @return array<string,string> PEM certificate, keyed by user ID
+	 *
+	 * @spec openspec/specs/user-sharing/spec.md#requirement-recipient-shareability-lookup
+	 */
+	public function recipientCertificates(array $targetUserIds): array {
+		return $this->directRegistrar->recipientCertificates(targetUserIds: $targetUserIds);
+	}//end recipientCertificates()
+
+	/**
 	 * Create a single share target record.
 	 *
 	 * Authorization: $userId must be the Secret owner OR an active

@@ -38,6 +38,18 @@ use OCP\IUserSession;
  */
 class ShareController extends OCSController {
 	/**
+	 * The most recipients recipientCertificates() will probe in one request.
+	 *
+	 * A cap rather than an unbounded loop: the endpoint fans out to a single
+	 * IN query, but an unbounded id list still lets one request cost an
+	 * arbitrary amount of work. 100 comfortably covers a sharee-search page,
+	 * which is where the ids come from.
+	 *
+	 * @var int
+	 */
+	private const MAX_RECIPIENT_PROBE = 100;
+
+	/**
 	 * Constructor for ShareController.
 	 *
 	 * @param IRequest $request The request object
@@ -307,6 +319,107 @@ class ShareController extends OCSController {
 
 		return new JSONResponse(data: ['userId' => $userId, 'certificate' => $certificate]);
 	}//end recipientCertificate()
+
+	/**
+	 * The active-suite certificates of several prospective recipients.
+	 *
+	 * Batch form of recipientCertificate(), so a share dialog offering a list
+	 * of candidates does not need one request per candidate.
+	 *
+	 * IT PROBES, IT DOES NOT ENUMERATE. The caller supplies the candidate
+	 * ids — in practice from Nextcloud's own sharee search, which is already
+	 * permission-filtered — and learns nothing about any user it did not
+	 * already name. There is deliberately no endpoint that LISTS the users
+	 * holding a suite: certificates are public keys and safe to hand out, but
+	 * "who has a keepiq vault" is a membership disclosure gated by no sharing
+	 * permission, and a list endpoint would leak it to every authenticated
+	 * account.
+	 *
+	 * A NON-SHAREABLE RECIPIENT AND AN UNKNOWN ONE ARE REPORTED IDENTICALLY,
+	 * on purpose. Distinguishing them would turn this into a user-existence
+	 * oracle for any authenticated caller, and the single-recipient endpoint
+	 * already collapses both into one 404, so nothing is gained by splitting
+	 * them here.
+	 *
+	 * @param string[] $userIds The prospective recipients
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @return JSONResponse
+	 *
+	 * @no-admin-idor-exempt public-key distribution, same as
+	 * recipientCertificate(). The only per-recipient value returned is
+	 * EncryptionSuite::getCertificate() — the PUBLIC half of the suite, never
+	 * any private material — and that certificate is precisely what the
+	 * browser needs in order to encrypt a secret TO that recipient.
+	 * Withholding it would not protect anything and would break sharing.
+	 *
+	 * @spec openspec/specs/user-sharing/spec.md#requirement-recipient-shareability-lookup
+	 */
+	#[NoAdminRequired]
+	public function recipientCertificates(array $userIds): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(data: ['message' => 'Unauthorized'], statusCode: Http::STATUS_UNAUTHORIZED);
+		}
+
+		$requested = [];
+		foreach ($userIds as $candidate) {
+			if (is_string($candidate) === false || $candidate === '') {
+				continue;
+			}
+
+			// Deduplicated, and input order preserved so the caller can zip the
+			// response against the list it sent.
+			if (in_array($candidate, $requested, true) === false) {
+				$requested[] = $candidate;
+			}
+		}
+
+		if ($requested === []) {
+			return new JSONResponse(
+				data: ['message' => 'userIds must contain at least one user id'],
+				statusCode: Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		if (count($requested) > self::MAX_RECIPIENT_PROBE) {
+			return new JSONResponse(
+				data: [
+					'message' => sprintf(
+						'At most %d user ids may be probed at once, %d given',
+						self::MAX_RECIPIENT_PROBE,
+						count($requested)
+					),
+				],
+				statusCode: Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		$certificates = $this->shareService->recipientCertificates(targetUserIds: $requested);
+
+		$recipients = [];
+		foreach ($requested as $userId) {
+			$certificate = ($certificates[$userId] ?? null);
+
+			if ($certificate === null) {
+				$recipients[] = [
+					'userId' => $userId,
+					'shareable' => false,
+					'reason' => 'no_active_suite',
+				];
+				continue;
+			}
+
+			$recipients[] = [
+				'userId' => $userId,
+				'shareable' => true,
+				'certificate' => $certificate,
+			];
+		}
+
+		return new JSONResponse(data: ['recipients' => $recipients]);
+	}//end recipientCertificates()
 
 	/**
 	 * The write context of a secret for the current user
