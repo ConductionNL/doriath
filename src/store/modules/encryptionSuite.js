@@ -1,3 +1,4 @@
+import { getCurrentUser } from '@nextcloud/auth'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { defineStore } from 'pinia'
@@ -60,9 +61,69 @@ export const useEncryptionSuiteStore = defineStore('encryptionSuite', {
 		migrationBlockedMessage: null,
 		/** @type {object|null} The active runner, so vault lock can dispose it */
 		migrationRunner: null,
+		/**
+		 * User ids that hold an ACTIVE suite, other than the current user —
+		 * i.e. the people a team folder can actually be shared with, since a
+		 * recipient without a suite has no public key to encrypt a copy for.
+		 *
+		 * EMPTY until the suites endpoint lists suites beyond the caller's
+		 * own; see `fetchSuiteOwners()` for what that means for callers.
+		 *
+		 * @type {Array<string>}
+		 */
+		suiteOwners: [],
 	}),
 
 	actions: {
+		/**
+		 * The users who hold an active suite, excluding the current user.
+		 *
+		 * WHY IT IS EMPTY TODAY, and what makes it fill itself in later:
+		 * `GET /suites` currently answers with the CALLER's suites only
+		 * (EncryptionSuiteController::index passes the session user to
+		 * `getSuitesByOwner`). Every row therefore belongs to the current
+		 * user, who is dropped here as a candidate — they already own the
+		 * folder they would be sharing — so the result is `[]` and callers
+		 * fall back to asking for an id by hand.
+		 *
+		 * The moment that endpoint can return other owners' suites, this
+		 * returns them and every caller lights up with no further change.
+		 * That is deliberately expressed as "who is in the response" rather
+		 * than a capability flag or a query parameter: there is nothing to
+		 * agree with the backend up front, and nothing to remove afterwards.
+		 *
+		 * Only ACTIVE suites count. A revoked one cannot be encrypted to, so
+		 * offering its owner would produce a member whose copies can never be
+		 * created — exactly the state the fan-out's reconcile pass reports as
+		 * permanently missing.
+		 *
+		 * @return {Promise<Array<string>>} Sorted, distinct user ids.
+		 *
+		 * @spec openspec/specs/team-folder-sharing/spec.md#requirement-share-a-folder-as-a-team-folder
+		 */
+		async fetchSuiteOwners() {
+			const response = await axios.get(
+				generateUrl('/apps/keepiq/api/v1/suites'),
+			)
+			const rows = Array.isArray(response.data) ? response.data : []
+			const self = getCurrentUser()?.uid ?? null
+			const owners = new Set()
+
+			for (const row of rows) {
+				if (row?.ownerType !== 'user' || row?.status !== 'active') {
+					continue
+				}
+				const ownerId = String(row.ownerId ?? '')
+				if (ownerId === '' || ownerId === self) {
+					continue
+				}
+				owners.add(ownerId)
+			}
+
+			this.suiteOwners = [...owners].sort()
+			return this.suiteOwners
+		},
+
 		/**
 		 * Fetch the current user's active suite.
 		 *

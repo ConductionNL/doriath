@@ -99,12 +99,27 @@
 						:reduce="(opt) => opt.value"
 						:inputLabel="t('keepiq', 'Member type')"
 						:clearable="false" />
-					<label class="team-folder-dialog__id-field">
-						<span>{{
-							newMemberType === 'group'
-								? t('keepiq', 'Group ID')
-								: t('keepiq', 'User ID')
-						}}</span>
+					<!--
+					  Pick from a list when there IS one, ask for an id by hand
+					  when there is not. The candidate list is the users holding
+					  an active suite (a recipient without one has no public key
+					  to encrypt a copy for), which the suites endpoint cannot
+					  report for anyone but the caller yet — see
+					  encryptionSuite.fetchSuiteOwners(). It resolves to empty
+					  until then, so the text field stays and nobody is left with
+					  a dropdown that cannot be opened; when the endpoint learns
+					  to list all suites the picker appears on its own.
+					-->
+					<NcSelect
+						v-if="memberCandidates.length > 0"
+						:modelValue="newMemberId === '' ? null : newMemberId"
+						:options="memberCandidates"
+						:inputLabel="memberIdLabel"
+						:disabled="busy"
+						data-testid="team-folder-member-select"
+						@update:modelValue="newMemberId = $event ?? ''" />
+					<label v-else class="team-folder-dialog__id-field">
+						<span>{{ memberIdLabel }}</span>
 						<input
 							v-model.trim="newMemberId"
 							type="text"
@@ -186,6 +201,7 @@ import {
 import Account from 'vue-material-design-icons/Account.vue'
 import AccountGroup from 'vue-material-design-icons/AccountGroup.vue'
 import Close from 'vue-material-design-icons/Close.vue'
+import { useEncryptionSuiteStore } from '../store/modules/encryptionSuite.js'
 import { useTeamFolderStore } from '../store/modules/teamFolder.js'
 
 export default {
@@ -267,6 +283,53 @@ export default {
 				{ label: this.t('keepiq', 'Group'), value: 'group' },
 			]
 		},
+
+		/**
+		 * The label for the member-id control, which names whichever kind of
+		 * member the type selector is on.
+		 *
+		 * @return {string}
+		 */
+		memberIdLabel() {
+			return this.newMemberType === 'group'
+				? this.t('keepiq', 'Group ID')
+				: this.t('keepiq', 'User ID')
+		},
+
+		/**
+		 * The ids the member control can offer, or `[]` when none can be
+		 * listed — which is what decides between the picker and the free-text
+		 * field in the template.
+		 *
+		 * Users come from the suites table: holding an active suite is what
+		 * makes someone shareable at all, so it is also the only membership
+		 * list worth offering. Groups have NO source yet — the suites table
+		 * knows users, and a group directory would have to come from
+		 * elsewhere (the sharee API, or the provisioning API for an admin),
+		 * which is a decision of its own rather than a detail of this one.
+		 *
+		 * Existing members are removed: re-adding one is at best a no-op, and
+		 * a list that offers it invites the attempt.
+		 *
+		 * @return {Array<string>} Selectable member ids.
+		 *
+		 * @spec openspec/specs/team-folder-sharing/spec.md#requirement-share-a-folder-as-a-team-folder
+		 */
+		memberCandidates() {
+			if (this.newMemberType === 'group') {
+				return []
+			}
+
+			const taken = new Set(
+				this.members
+					.filter((member) => member.memberType !== 'group')
+					.map((member) => member.memberId),
+			)
+
+			return useEncryptionSuiteStore().suiteOwners.filter(
+				(userId) => !taken.has(userId),
+			)
+		},
 	},
 
 	watch: {
@@ -275,6 +338,15 @@ export default {
 				this.error = null
 				this.refresh()
 			}
+		},
+
+		/**
+		 * A user id is not a group id. Keeping the old value across a type
+		 * switch offered to add "bob" as a group — accepted by the field,
+		 * refused by the server, and confusing in between.
+		 */
+		newMemberType() {
+			this.newMemberId = ''
 		},
 	},
 
@@ -289,6 +361,14 @@ export default {
 		 * @spec openspec/specs/team-folder-sharing/spec.md#requirement-share-a-folder-as-a-team-folder
 		 */
 		async refresh() {
+			// Best-effort and deliberately not awaited into the error path: who
+			// can be offered as a member is a convenience, while the team
+			// folder itself is the dialog's subject. A failure here must not
+			// replace the membership list with an error.
+			useEncryptionSuiteStore()
+				.fetchSuiteOwners()
+				.catch(() => {})
+
 			try {
 				await this.store.fetchTeamFolders()
 				if (this.teamFolder) {
