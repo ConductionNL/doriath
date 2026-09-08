@@ -24,6 +24,7 @@ namespace OCA\Keepiq\Db;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
 use OCP\AppFramework\Db\QBMapper;
+use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IDBConnection;
 
 /**
@@ -132,6 +133,57 @@ class EncryptionSuiteMapper extends QBMapper {
 
 		return $this->findEntity(query: $qb);
 	}//end findActiveByOwner()
+
+	/**
+	 * The newest active suite for each of several owners, in one query.
+	 *
+	 * The batch equivalent of findActiveByOwner(), and it has to reproduce
+	 * that method's ORDERING, not just its filter. Compromise recovery leaves
+	 * the old suite `active` until the migration terminates, so an owner can
+	 * legitimately have TWO active rows; findActiveByOwner() sorts newest
+	 * first and takes one. A plain `owner_id IN (...) AND status = 'active'`
+	 * returns both and lets the database decide which the caller sees — in
+	 * practice the oldest, which is the certificate the owner is migrating
+	 * AWAY from. Encrypting to it would produce a copy the recipient cannot
+	 * open. Hence the same sort here, with the first row per owner winning.
+	 *
+	 * Owners with no active suite are simply absent from the result; the
+	 * caller decides what that means.
+	 *
+	 * @param string   $ownerType The owner type
+	 * @param string[] $ownerIds  The owner IDs to look up
+	 *
+	 * @return array<string,EncryptionSuite> Newest active suite, keyed by owner ID
+	 *
+	 * @spec openspec/specs/user-sharing/spec.md#requirement-recipient-shareability-lookup
+	 */
+	public function findActiveByOwners(string $ownerType, array $ownerIds): array {
+		if ($ownerIds === []) {
+			return [];
+		}
+
+		$qb = $this->db->getQueryBuilder();
+		$qb->select('*')
+			->from($this->getTableName())
+			->where($qb->expr()->eq('owner_type', $qb->createNamedParameter($ownerType)))
+			->andWhere(
+				$qb->expr()->in(
+					'owner_id',
+					$qb->createNamedParameter($ownerIds, IQueryBuilder::PARAM_STR_ARRAY)
+				)
+			)
+			->andWhere($qb->expr()->eq('status', $qb->createNamedParameter('active')))
+			->orderBy('created_at', 'DESC')
+			->addOrderBy('id', 'DESC');
+
+		$found = [];
+		foreach ($this->findEntities(query: $qb) as $suite) {
+			// First row per owner wins: the sort above puts the newest first.
+			$found[$suite->getOwnerId()] ??= $suite;
+		}
+
+		return $found;
+	}//end findActiveByOwners()
 
 	/**
 	 * Count an owner's active encryption suites.

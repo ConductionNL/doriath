@@ -79,6 +79,28 @@ class RecipientSecretCopyFactory {
 	}//end certificateFor()
 
 	/**
+	 * The active certificates of several prospective recipients, in one query.
+	 *
+	 * Batch form of certificateFor(). A user with no active suite is absent
+	 * from the result rather than present with a null, so the caller cannot
+	 * mistake "not shareable" for "shareable with nothing".
+	 *
+	 * @param string[] $targetUserIds The prospective recipients
+	 *
+	 * @return array<string,string> PEM certificate, keyed by user ID
+	 *
+	 * @spec openspec/specs/user-sharing/spec.md#requirement-recipient-shareability-lookup
+	 */
+	public function certificatesFor(array $targetUserIds): array {
+		$certificates = [];
+		foreach ($this->suiteMapper->findActiveByOwners(ownerType: 'user', ownerIds: $targetUserIds) as $userId => $suite) {
+			$certificates[$userId] = $suite->getCertificate();
+		}
+
+		return $certificates;
+	}//end certificatesFor()
+
+	/**
 	 * Create a recipient's Secret copy from client-encrypted blobs, or
 	 * null when the recipient has no active suite (skip, not fail).
 	 *

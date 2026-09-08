@@ -358,9 +358,9 @@ class ShareControllerTest extends TestCase {
 	 */
 	public function testRecipientCertificateReturnsTheRequestedUsersPublicMaterial(): void {
 		$this->shareService->expects($this->once())
-			->method('recipientCertificate')
-			->with('bob')
-			->willReturn('-----BEGIN CERTIFICATE-----BOB-----END CERTIFICATE-----');
+			->method('recipientCertificates')
+			->with(['bob'])
+			->willReturn(['bob' => '-----BEGIN CERTIFICATE-----BOB-----END CERTIFICATE-----']);
 
 		$response = $this->controller('alice')->recipientCertificate(userId: 'bob');
 
@@ -383,9 +383,9 @@ class ShareControllerTest extends TestCase {
 	 */
 	public function testRecipientCertificateAnswers404WhenTheRecipientHasNoActiveSuite(): void {
 		$this->shareService->expects($this->once())
-			->method('recipientCertificate')
-			->with('mallory')
-			->willReturn(null);
+			->method('recipientCertificates')
+			->with(['mallory'])
+			->willReturn([]);
 
 		$response = $this->controller('alice')->recipientCertificate(userId: 'mallory');
 
@@ -402,7 +402,7 @@ class ShareControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testRecipientCertificateRejectsAnAnonymousCallerBeforeTheService(): void {
-		$this->shareService->expects($this->never())->method('recipientCertificate');
+		$this->shareService->expects($this->never())->method('recipientCertificates');
 
 		$response = $this->controller(null)->recipientCertificate(userId: 'bob');
 
@@ -472,4 +472,142 @@ class ShareControllerTest extends TestCase {
 		$this->assertSame(['message' => 'Unauthorized'], $response->getData());
 	}//end testWriteContextRejectsAnAnonymousCallerBeforeTheService()
 
+	/**
+	 * Shareable and non-shareable recipients come back in one response.
+	 *
+	 * @return void
+	 */
+	public function testRecipientCertificatesReportsBothShareableAndNot(): void {
+		$this->shareService->expects($this->once())
+			->method('recipientCertificates')
+			->with(['alice', 'bob'])
+			->willReturn(['alice' => 'PEM-ALICE']);
+
+		$response = $this->controller()->recipientCertificates(['alice', 'bob']);
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(
+			[
+				['userId' => 'alice', 'shareable' => true, 'certificate' => 'PEM-ALICE'],
+				['userId' => 'bob', 'shareable' => false, 'reason' => 'no_active_suite'],
+			],
+			$response->getData()['recipients']
+		);
+	}//end testRecipientCertificatesReportsBothShareableAndNot()
+
+	/**
+	 * Input order is preserved and duplicates collapse.
+	 *
+	 * The caller zips the response against the list it sent, so order is part
+	 * of the contract, not an accident of the query.
+	 *
+	 * @return void
+	 */
+	public function testRecipientCertificatesPreservesOrderAndDeduplicates(): void {
+		$this->shareService->expects($this->once())
+			->method('recipientCertificates')
+			->with(['carol', 'alice'])
+			->willReturn(['alice' => 'PEM-ALICE', 'carol' => 'PEM-CAROL']);
+
+		$response = $this->controller()->recipientCertificates(['carol', 'alice', 'carol', '', 'carol']);
+
+		$this->assertSame(
+			['carol', 'alice'],
+			array_column($response->getData()['recipients'], 'userId')
+		);
+	}//end testRecipientCertificatesPreservesOrderAndDeduplicates()
+
+	/**
+	 * An empty list is refused before the service is touched.
+	 *
+	 * @return void
+	 */
+	public function testRecipientCertificatesRejectsAnEmptyList(): void {
+		$this->shareService->expects($this->never())->method('recipientCertificates');
+
+		$response = $this->controller()->recipientCertificates(['', 42, null]);
+
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
+	}//end testRecipientCertificatesRejectsAnEmptyList()
+
+	/**
+	 * An oversized list is refused before the service is touched.
+	 *
+	 * Without the cap one request could ask for arbitrary work.
+	 *
+	 * @return void
+	 */
+	public function testRecipientCertificatesRejectsAnOversizedList(): void {
+		$this->shareService->expects($this->never())->method('recipientCertificates');
+
+		$ids = [];
+		for ($i = 0; $i <= 100; $i++) {
+			$ids[] = 'user-' . $i;
+		}
+
+		$response = $this->controller()->recipientCertificates($ids);
+
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
+		$this->assertStringContainsString('101 given', $response->getData()['message']);
+	}//end testRecipientCertificatesRejectsAnOversizedList()
+
+	/**
+	 * The bound counts distinct recipients, not submitted entries.
+	 *
+	 * A long list naming the same two people is asking about two people, and
+	 * is answered rather than refused. The limit exists to cap how many
+	 * recipients one lookup covers, not to police payload size.
+	 *
+	 * @return void
+	 */
+	public function testRecipientCertificatesBoundsDistinctRecipientsNotSubmittedEntries(): void {
+		$this->shareService->expects($this->once())
+			->method('recipientCertificates')
+			->with(['alice', 'bob'])
+			->willReturn(['alice' => 'PEM-ALICE', 'bob' => 'PEM-BOB']);
+
+		$ids = [];
+		for ($i = 0; $i < 101; $i++) {
+			$ids[] = (($i % 2) === 0) ? 'alice' : 'bob';
+		}
+
+		$response = $this->controller()->recipientCertificates($ids);
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(['alice', 'bob'], array_column($response->getData()['recipients'], 'userId'));
+	}//end testRecipientCertificatesBoundsDistinctRecipientsNotSubmittedEntries()
+
+	/**
+	 * Every result names the user it describes.
+	 *
+	 * Callers correlate by id: duplicates and malformed entries are dropped, so
+	 * the result can be shorter than the request and positions do not line up.
+	 *
+	 * @return void
+	 */
+	public function testRecipientCertificatesResultsAreCorrelatedById(): void {
+		$this->shareService->method('recipientCertificates')->willReturn(['alice' => 'PEM-ALICE']);
+
+		$response = $this->controller()->recipientCertificates(['alice', 'alice', '', 'bob']);
+		$recipients = $response->getData()['recipients'];
+
+		$this->assertCount(2, $recipients, 'the result is shorter than the request');
+		foreach ($recipients as $entry) {
+			$this->assertArrayHasKey('userId', $entry);
+		}
+		$this->assertSame(['alice', 'bob'], array_column($recipients, 'userId'));
+	}//end testRecipientCertificatesResultsAreCorrelatedById()
+
+	/**
+	 * An anonymous caller is refused before the service is touched.
+	 *
+	 * @return void
+	 */
+	public function testRecipientCertificatesRejectsAnAnonymousCaller(): void {
+		$this->shareService->expects($this->never())->method('recipientCertificates');
+
+		$response = $this->controller(null)->recipientCertificates(['alice']);
+
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
+	}//end testRecipientCertificatesRejectsAnAnonymousCaller()
 }//end class

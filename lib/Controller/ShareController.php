@@ -38,6 +38,19 @@ use OCP\IUserSession;
  */
 class ShareController extends OCSController {
 	/**
+	 * The most recipients recipientCertificates() will probe in one request.
+	 *
+	 * A limit on how many distinct people one lookup may ask about, not a
+	 * defensive bound on input size: the endpoint fans out to a single IN
+	 * query and deduplication is linear, so the work is proportional to what
+	 * was actually asked. 100 comfortably covers a sharee-search page, which
+	 * is where the ids come from.
+	 *
+	 * @var int
+	 */
+	private const MAX_RECIPIENT_PROBE = 100;
+
+	/**
 	 * Constructor for ShareController.
 	 *
 	 * @param IRequest $request The request object
@@ -289,6 +302,8 @@ class ShareController extends OCSController {
 	 * able to fetch any recipient's certificate, because that certificate is
 	 * precisely what the browser needs in order to encrypt a secret TO them;
 	 * withholding it would not protect anything and would break sharing.
+	 *
+	 * @spec openspec/specs/user-sharing/spec.md#requirement-recipient-shareability-lookup
 	 */
 	#[NoAdminRequired]
 	public function recipientCertificate(string $userId): JSONResponse {
@@ -297,7 +312,10 @@ class ShareController extends OCSController {
 			return new JSONResponse(data: ['message' => 'Unauthorized'], statusCode: Http::STATUS_UNAUTHORIZED);
 		}
 
-		$certificate = $this->shareService->recipientCertificate(targetUserId: $userId);
+		// Goes through the batch lookup so both endpoints resolve a recipient
+		// by exactly one code path and cannot drift apart.
+		$certificates = $this->shareService->recipientCertificates(targetUserIds: [$userId]);
+		$certificate = ($certificates[$userId] ?? null);
 		if ($certificate === null) {
 			return new JSONResponse(
 				data: ['message' => 'Recipient has no active encryption suite'],
@@ -307,6 +325,101 @@ class ShareController extends OCSController {
 
 		return new JSONResponse(data: ['userId' => $userId, 'certificate' => $certificate]);
 	}//end recipientCertificate()
+
+	/**
+	 * The active-suite certificates of several prospective recipients.
+	 *
+	 * Batch form of recipientCertificate(), so a share dialog offering a list
+	 * of candidates does not need one request per candidate.
+	 *
+	 * IT PROBES, IT DOES NOT ENUMERATE. The caller supplies the candidate
+	 * ids — in practice from Nextcloud's own sharee search, which is already
+	 * permission-filtered — and learns nothing about any user it did not
+	 * already name. There is deliberately no endpoint that LISTS the users
+	 * holding a suite: certificates are public keys and safe to hand out, but
+	 * "who has a keepiq vault" is a membership disclosure gated by no sharing
+	 * permission, and a list endpoint would leak it to every authenticated
+	 * account.
+	 *
+	 * A NON-SHAREABLE RECIPIENT AND AN UNKNOWN ONE ARE REPORTED IDENTICALLY,
+	 * on purpose. Distinguishing them would turn this into a user-existence
+	 * oracle for any authenticated caller, and the single-recipient endpoint
+	 * already collapses both into one 404, so nothing is gained by splitting
+	 * them here.
+	 *
+	 * @param string[] $userIds The prospective recipients
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @return JSONResponse
+	 *
+	 * @no-admin-idor-exempt public-key distribution, same as
+	 * recipientCertificate(). The only per-recipient value returned is
+	 * EncryptionSuite::getCertificate() — the PUBLIC half of the suite, never
+	 * any private material — and that certificate is precisely what the
+	 * browser needs in order to encrypt a secret TO that recipient.
+	 * Withholding it would not protect anything and would break sharing.
+	 *
+	 * @spec openspec/specs/user-sharing/spec.md#requirement-recipient-shareability-lookup
+	 */
+	#[NoAdminRequired]
+	public function recipientCertificates(array $userIds): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(data: ['message' => 'Unauthorized'], statusCode: Http::STATUS_UNAUTHORIZED);
+		}
+
+		$requested = $this->normaliseUserIds(userIds: $userIds);
+
+		if ($requested === []) {
+			return new JSONResponse(
+				data: ['message' => 'userIds must contain at least one user id'],
+				statusCode: Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		// The bound is on DISTINCT recipients, which is the thing a caller can
+		// reason about: "this secret may not go to more than N people". It is
+		// checked after deduplication because a list naming the same person
+		// twice is asking about one person, and normaliseUserIds() is now cheap
+		// enough that reaching this point costs nothing worth guarding.
+		if (count($requested) > self::MAX_RECIPIENT_PROBE) {
+			return new JSONResponse(
+				data: [
+					'message' => sprintf(
+						'At most %d distinct recipients may be looked up at once, %d given',
+						self::MAX_RECIPIENT_PROBE,
+						count($requested)
+					),
+				],
+				statusCode: Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		$certificates = $this->shareService->recipientCertificates(targetUserIds: $requested);
+
+		$recipients = [];
+		foreach ($requested as $userId) {
+			$certificate = ($certificates[$userId] ?? null);
+
+			if ($certificate === null) {
+				$recipients[] = [
+					'userId' => $userId,
+					'shareable' => false,
+					'reason' => 'no_active_suite',
+				];
+				continue;
+			}
+
+			$recipients[] = [
+				'userId' => $userId,
+				'shareable' => true,
+				'certificate' => $certificate,
+			];
+		}
+
+		return new JSONResponse(data: ['recipients' => $recipients]);
+	}//end recipientCertificates()
 
 	/**
 	 * The write context of a secret for the current user
@@ -336,4 +449,33 @@ class ShareController extends OCSController {
 			return new JSONResponse(data: ['message' => 'Not found'], statusCode: Http::STATUS_NOT_FOUND);
 		}
 	}//end writeContext()
+	/**
+	 * Reduce a raw id list to the distinct non-empty strings it contains.
+	 *
+	 * First-seen order is preserved as a convenience, but it is NOT a
+	 * positional contract: duplicates and non-string entries are dropped, so
+	 * the result can be shorter than the input. Callers correlate by `userId`.
+	 *
+	 * @param array<mixed> $userIds The raw ids as submitted.
+	 *
+	 * @return string[] The distinct ids, in the order first seen.
+	 */
+	private function normaliseUserIds(array $userIds): array {
+		// Deduplication is array_unique's job: it keeps the FIRST occurrence and
+		// the original order, which is exactly the semantics wanted here. The hand-rolled loop this
+		// replaces called in_array() against a growing array, making the walk
+		// quadratic in the number of distinct ids.
+		//
+		// Not a keyed set: PHP coerces a numeric-string array key to int, and
+		// Nextcloud user ids may be numeric strings, so "0123" would come back
+		// as 123.
+		return array_values(
+			array_unique(
+				array_filter(
+					$userIds,
+					static fn (mixed $candidate): bool => (is_string($candidate) === true && $candidate !== '')
+				)
+			)
+		);
+	}//end normaliseUserIds()
 }//end class
