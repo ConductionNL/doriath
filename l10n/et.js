@@ -1130,7 +1130,9 @@ OC.L10N.register(
         "Deleted {ok} of {total} secrets": "Kustutatud {ok} / {total} saladust",
         "Moved {ok} of {total} secrets": "Teisaldatud {ok} / {total} saladust",
         "Shared {ok} of {total} secrets": "Jagatud {ok} / {total} saladust",
-        "Added {ok} of {total} secrets to the team folder": "Meeskonnakausta lisatud {ok} / {total} saladust"
+        "Added {ok} of {total} secrets to the team folder": "Meeskonnakausta lisatud {ok} / {total} saladust",
+        "The Keepiq browser extension autofills your logins, provides passkeys, and shows TOTP codes — without your secrets ever leaving your device.": "Keepiqi brauserilaiendus täidab sinu sisselogimisandmed automaatselt, pakub pääsuvõtmeid ja näitab TOTP-koode — ilma et sinu saladused kunagi sinu seadmest lahkuksid.",
+        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Luuakse kohahoidja, mis jääb tühjaks kuni saaja selle täidab — sul ei ole kunagi vaja väärtust välja mõelda."
     },
     "nplurals=2; plural=(n != 1);"
 )

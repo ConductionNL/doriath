@@ -1130,7 +1130,9 @@ OC.L10N.register(
         "Deleted {ok} of {total} secrets": "Ištrinta {ok} iš {total} paslapčių",
         "Moved {ok} of {total} secrets": "Perkelta {ok} iš {total} paslapčių",
         "Shared {ok} of {total} secrets": "Bendrinta {ok} iš {total} paslapčių",
-        "Added {ok} of {total} secrets to the team folder": "Į komandos aplanką įtraukta {ok} iš {total} paslapčių"
+        "Added {ok} of {total} secrets to the team folder": "Į komandos aplanką įtraukta {ok} iš {total} paslapčių",
+        "The Keepiq browser extension autofills your logins, provides passkeys, and shows TOTP codes — without your secrets ever leaving your device.": "Keepiq naršyklės priedas automatiškai užpildo jūsų prisijungimo duomenis, teikia prieigos raktus ir rodo TOTP kodus — o jūsų paslaptys niekada neišeina iš jūsų įrenginio.",
+        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Sukuriamas rezervuotas įrašas, kuris lieka tuščias, kol gavėjas jo neužpildys — jums niekada nereikia išsigalvoti reikšmės."
     },
     "nplurals=2; plural=(n != 1);"
 )

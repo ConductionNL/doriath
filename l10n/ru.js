@@ -1130,7 +1130,9 @@ OC.L10N.register(
         "Deleted {ok} of {total} secrets": "Удалено {ok} из {total} секретов",
         "Moved {ok} of {total} secrets": "Перемещено {ok} из {total} секретов",
         "Shared {ok} of {total} secrets": "Предоставлен доступ к {ok} из {total} секретов",
-        "Added {ok} of {total} secrets to the team folder": "Добавлено {ok} из {total} секретов в командную папку"
+        "Added {ok} of {total} secrets to the team folder": "Добавлено {ok} из {total} секретов в командную папку",
+        "The Keepiq browser extension autofills your logins, provides passkeys, and shows TOTP codes — without your secrets ever leaving your device.": "Расширение Keepiq для браузера автоматически заполняет ваши логины, предоставляет ключи доступа и показывает коды TOTP — при этом ваши секреты никогда не покидают ваше устройство.",
+        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Создаётся заготовка, которая остаётся пустой, пока получатель её не заполнит — вам никогда не нужно придумывать значение."
     },
     "nplurals=2; plural=(n != 1);"
 )

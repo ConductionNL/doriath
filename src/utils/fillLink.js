@@ -32,6 +32,19 @@ import { generateUrl } from '@nextcloud/router'
  * (`publicShell#pageCatchAll`) carrying the route as a PATH — never the
  * authenticated path, never the JSON endpoint, and never the retired hash form.
  *
+ * ABSOLUTE, scheme and host included. A link a requester pastes into a mail or
+ * a chat has to work from outside the browser that produced it, and the machine
+ * API already hands out the full URL for the same token
+ * (ApplicationSecretRequestsController wraps it in `getAbsoluteURL`), so a bare
+ * path here made the same request look like two different links.
+ *
+ * It used to pass `{ absolute: true }` to `generateUrl`, which reads like it
+ * says so — but @nextcloud/router's `generateUrl` has no such option and
+ * silently ignored it, leaving a root-relative path. The origin is prepended
+ * here instead; `generateUrl` has already applied the instance's root path, so
+ * resolving against the origin (not `getBaseUrl()`) keeps a subfolder install
+ * from getting that prefix twice.
+ *
  * @param {string} token The request's fill token.
  *
  * @return {string} The absolute URL, or '' when there is no token.
@@ -43,8 +56,9 @@ export function fillLinkFor(token) {
 		return ''
 	}
 
-	return (
-		generateUrl('/apps/keepiq/public', {}, { absolute: true })
+	const path =
+		generateUrl('/apps/keepiq/public')
 		+ `/share/request/${encodeURIComponent(token)}`
-	)
+
+	return new URL(path, window.location.origin).href
 }

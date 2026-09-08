@@ -1130,7 +1130,9 @@ OC.L10N.register(
         "Deleted {ok} of {total} secrets": "Usunięto {ok} z {total} sekretów",
         "Moved {ok} of {total} secrets": "Przeniesiono {ok} z {total} sekretów",
         "Shared {ok} of {total} secrets": "Udostępniono {ok} z {total} sekretów",
-        "Added {ok} of {total} secrets to the team folder": "Dodano {ok} z {total} sekretów do folderu zespołu"
+        "Added {ok} of {total} secrets to the team folder": "Dodano {ok} z {total} sekretów do folderu zespołu",
+        "The Keepiq browser extension autofills your logins, provides passkeys, and shows TOTP codes — without your secrets ever leaving your device.": "Rozszerzenie przeglądarki Keepiq automatycznie wypełnia Twoje loginy, dostarcza klucze dostępu i pokazuje kody TOTP — a Twoje sekrety nigdy nie opuszczają urządzenia.",
+        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Tworzony jest element zastępczy, który pozostaje pusty, dopóki odbiorca go nie wypełni — nigdy nie musisz wymyślać wartości."
     },
     "nplurals=2; plural=(n != 1);"
 )

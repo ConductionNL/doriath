@@ -1129,7 +1129,9 @@
         "Deleted {ok} of {total} secrets": "{ok} von {total} Geheimnissen gelöscht",
         "Moved {ok} of {total} secrets": "{ok} von {total} Geheimnissen verschoben",
         "Shared {ok} of {total} secrets": "{ok} von {total} Geheimnissen geteilt",
-        "Added {ok} of {total} secrets to the team folder": "{ok} von {total} Geheimnissen dem Teamordner hinzugefügt"
+        "Added {ok} of {total} secrets to the team folder": "{ok} von {total} Geheimnissen dem Teamordner hinzugefügt",
+        "The Keepiq browser extension autofills your logins, provides passkeys, and shows TOTP codes — without your secrets ever leaving your device.": "Die Keepiq-Browser-Erweiterung füllt Ihre Logins automatisch aus, stellt Passkeys bereit und zeigt TOTP-Codes an — ohne dass Ihre Geheimnisse Ihr Gerät je verlassen.",
+        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Es wird ein Platzhalter erstellt, der leer bleibt, bis der Empfänger ihn ausfüllt – Sie müssen sich niemals einen Wert ausdenken."
     },
     "plurals": null
 }

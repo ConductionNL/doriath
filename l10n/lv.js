@@ -1130,7 +1130,9 @@ OC.L10N.register(
         "Deleted {ok} of {total} secrets": "Izdzēsti {ok} no {total} noslēpumiem",
         "Moved {ok} of {total} secrets": "Pārvietoti {ok} no {total} noslēpumiem",
         "Shared {ok} of {total} secrets": "Kopīgoti {ok} no {total} noslēpumiem",
-        "Added {ok} of {total} secrets to the team folder": "Komandas mapei pievienoti {ok} no {total} noslēpumiem"
+        "Added {ok} of {total} secrets to the team folder": "Komandas mapei pievienoti {ok} no {total} noslēpumiem",
+        "The Keepiq browser extension autofills your logins, provides passkeys, and shows TOTP codes — without your secrets ever leaving your device.": "Keepiq pārlūka paplašinājums automātiski aizpilda jūsu pieteikšanās datus, nodrošina piekļuves atslēgas un rāda TOTP kodus, un jūsu noslēpumi nekad neatstāj jūsu ierīci.",
+        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Tiek izveidots vietturis, kas paliek tukšs, līdz saņēmējs to aizpilda — jums nekad nav jāizdomā vērtība."
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -1130,7 +1130,9 @@ OC.L10N.register(
         "Deleted {ok} of {total} secrets": "Eliminados {ok} de {total} segredos",
         "Moved {ok} of {total} secrets": "Movidos {ok} de {total} segredos",
         "Shared {ok} of {total} secrets": "Partilhados {ok} de {total} segredos",
-        "Added {ok} of {total} secrets to the team folder": "Adicionados {ok} de {total} segredos à pasta de equipa"
+        "Added {ok} of {total} secrets to the team folder": "Adicionados {ok} de {total} segredos à pasta de equipa",
+        "The Keepiq browser extension autofills your logins, provides passkeys, and shows TOTP codes — without your secrets ever leaving your device.": "A extensão de navegador do Keepiq preenche automaticamente as suas credenciais, fornece chaves de acesso e mostra códigos TOTP, sem que os seus segredos saiam nunca do seu dispositivo.",
+        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "É criado um marcador que fica vazio até o destinatário o preencher — nunca precisa de inventar um valor."
     },
     "nplurals=2; plural=(n != 1);"
 )
