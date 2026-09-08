@@ -195,6 +195,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
         -->
         <pre-migration>
             <step>OCA\Keepiq\Repair\RenameDoriathTables</step>
+            <step>OCA\Keepiq\Repair\MoveAttachmentBlobs</step>
         </pre-migration>
         <post-migration>
             <step>OCA\Keepiq\Repair\MigrateAppConfigKeys</step>
