@@ -112,7 +112,20 @@ class DiscoveryController extends Controller {
 				'assertion' => [
 					'alg' => 'RS256',
 					'maxLifetime' => JwtAuthService::ACCESS_TOKEN_TTL,
-					'audience' => JwtAuthService::EXPECTED_AUDIENCE,
+					// `audience` is the value to SEND; `acceptedAudiences` is
+					// what this instance will honour. Both are additive within
+					// the current apiVersion: a consumer reading `audience`
+					// converges on the canonical name, and one still sending a
+					// deprecated value keeps working until the version named in
+					// `deprecatedAudiences[].removedInApiVersion`.
+					'audience' => JwtAuthService::CANONICAL_AUDIENCE,
+					'acceptedAudiences' => JwtAuthService::ACCEPTED_AUDIENCES,
+					'deprecatedAudiences' => [
+						[
+							'value' => JwtAuthService::DEPRECATED_AUDIENCE,
+							'removedInApiVersion' => JwtAuthService::DEPRECATED_AUDIENCE_REMOVED_IN_API_VERSION,
+						],
+					],
 					'audienceUrl' => $tokenAbsolute,
 				],
 				'secrets' => [
