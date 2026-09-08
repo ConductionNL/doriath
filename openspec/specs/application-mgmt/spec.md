@@ -155,7 +155,7 @@ The listing MUST NOT render a request's full token, and MUST NOT expose any subm
 - **THEN** only requests they created MUST be returned, exactly as before
 
 #### Scenario: An administrator revokes a circulating fill link
-@e2e exclude Driven by SecretRequestServiceTest::testAdminRevokeDeletesTheUnfilledApplicationPlaceholder, ::testAdminRevokeNeverDeletesAFilledApplicationSecret, ::testAdminRevokeWillNotDeleteAnotherApplicationsSecret and ::testRevokeForApplicationRefusesARequestOfAnotherActor (which fails when the created_by check is removed), plus the vitest "asks before revoking, and revokes through the application endpoint". NOT verified live: doing so would hard-delete a seeded placeholder Secret on the development instance, and the request row cannot be restored.
+@e2e exclude Driven by ApplicationRequestAdminServiceTest::testAdminRevokeDeletesTheUnfilledApplicationPlaceholder, ::testAdminRevokeNeverDeletesAFilledApplicationSecret, ::testAdminRevokeWillNotDeleteAnotherApplicationsSecret and ::testRevokeForApplicationRefusesARequestOfAnotherActor (which fails when the created_by check is removed), plus the vitest "asks before revoking, and revokes through the application endpoint". NOT verified live: doing so would hard-delete a seeded placeholder Secret on the development instance, and the request row cannot be restored.
 - **GIVEN** an application has a pending request whose link is in circulation
 - **WHEN** an administrator revokes it
 - **THEN** the token MUST stop being fillable
