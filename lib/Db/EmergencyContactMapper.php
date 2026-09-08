@@ -44,7 +44,7 @@ class EmergencyContactMapper extends QBMapper {
 	 * @return void
 	 */
 	public function __construct(IDBConnection $db) {
-		parent::__construct(db: $db, tableName: 'doriath_emergency_contacts', entityClass: EmergencyContact::class);
+		parent::__construct(db: $db, tableName: 'keepiq_emergency_contacts', entityClass: EmergencyContact::class);
 	}//end __construct()
 
 	/**

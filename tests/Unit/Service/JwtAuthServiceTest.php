@@ -60,7 +60,7 @@ class JwtAuthServiceTest extends TestCase {
 	 *
 	 * @var array<string,array<string,mixed>>
 	 */
-	private array $cacheStore = ['doriath_jwt_jti' => [], 'doriath_jwt_token' => []];
+	private array $cacheStore = ['keepiq_jwt_jti' => [], 'keepiq_jwt_token' => []];
 
 	/**
 	 * A self-signed certificate (PEM) the test app "owns".
@@ -225,7 +225,7 @@ class JwtAuthServiceTest extends TestCase {
 		$this->assertSame(300, $result['expires_in']);
 		$this->assertMatchesRegularExpression('/^[a-f0-9]{64}$/', $result['access_token']);
 		// jti recorded for replay protection.
-		$this->assertArrayHasKey('jti-1', $this->cacheStore['doriath_jwt_jti']);
+		$this->assertArrayHasKey('jti-1', $this->cacheStore['keepiq_jwt_jti']);
 	}//end testValidAssertionExchanges()
 
 	/**

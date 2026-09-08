@@ -237,8 +237,8 @@ docker exec nextcloud php occ app:enable keepiq
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | Vue 2.7, Pinia, @nextcloud/vue |
-| Build | Webpack 5, @nextcloud/webpack-vue-config |
+| Frontend | Vue 3, Pinia, @nextcloud/vue |
+| Build | Webpack 5 (standalone config) |
 | Backend | PHP 8.1+, Nextcloud App Framework, OpenSSL |
 | Data | PostgreSQL (own encrypted tables) |
 | UX | @conduction/nextcloud-vue |

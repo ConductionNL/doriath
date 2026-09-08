@@ -600,7 +600,7 @@
 				"help": "Total number of active encryption suites",
 				"source": {
 					"kind": "tableCount",
-					"table": "doriath_enc_suites",
+					"table": "keepiq_enc_suites",
 					"filter": { "status": { "eq": "active" } }
 				}
 			}

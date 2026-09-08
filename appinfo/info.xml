@@ -36,7 +36,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
 
 **Ondersteuning:** Voor ondersteuning, neem contact op via support@conduction.nl.
     ]]></description>
-    <version>0.2.8-unstable.20260831212628</version>
+    <version>0.3.0</version>
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Keepiq</namespace>
@@ -57,43 +57,34 @@ Vrij en open source onder de EUPL-1.2-licentie.
 
         Nextcloud's OC\DB\MigrationService sets `checkOracle = true` for any app
         whose <dependencies> block declares NO <database> at all. With that flag
-        on, every migration is validated against ensureOracleConstraints(), whose
-        Oracle-derived identifier limits Keepiq's schema does not satisfy:
+        on, every migration is validated against ensureOracleConstraints(), and
+        that rule rejects a default-named primary key on any table whose
+        unprefixed name is 23 characters or longer. Ten Keepiq tables are, among
+        them keepiq_certificate_metadata (27), keepiq_passkey_credentials (26)
+        and keepiq_team_folder_members (26).
 
-          - "Table name \"oc_doriath_certificate_metadata\" is too long."
-            (28 chars unprefixed; the limit is 27)
-          - the same rule's companion check rejects a default-named primary key
-            on any table whose unprefixed name is >= 23 chars — which covers a
-            dozen Keepiq tables (doriath_team_folder_members,
-            doriath_passkey_credentials, doriath_secret_delegations, …).
-
-        The result was that `occ app:enable keepiq` ABORTED on a fresh install:
-        the app was not installable from scratch on a stock Nextcloud at all.
-        (It survived on long-lived dev instances only because the checks apply
-        exclusively to tables that do not exist yet.)
+        Without these entries `occ app:enable keepiq` ABORTS on a fresh install:
+        the app is not installable from scratch on a stock Nextcloud at all. It
+        survives on long-lived dev instances only because the checks apply
+        exclusively to tables that do not exist yet.
 
         Declaring the databases the app actually supports is Nextcloud's own
         mechanism for this, and it is simply true: Keepiq has never supported
         Oracle, and its docker-compose, CI and every deployment run PostgreSQL,
-        MySQL/MariaDB or SQLite. It also brings this app in line with the rest of
-        the fleet — openregister and opencatalogi already ship exactly these
-        three entries.
+        MySQL/MariaDB or SQLite. It also matches the rest of the fleet, where
+        openregister and opencatalogi ship exactly these three entries.
 
-        Renaming a dozen shipped tables to satisfy Oracle limits an Oracle-less
-        app will never hit would be a far larger and riskier change for no
-        behavioural gain.
+        The table prefix moved from `doriath_` to `keepiq_` on 2026-09-08,
+        together with the 78 index names, in the single consolidated migration
+        lib/Migration/Version001000Date20260908000000.php. That migration renames
+        the tables in place before the schema comparison runs, so existing
+        installs keep their rows; on PostgreSQL it also renames the sequences and
+        primary-key constraints, which a table rename leaves behind.
 
-        THE `doriath_` TABLE PREFIX IS DELIBERATE AND STAYS. This app was
-        renamed doriath -> keepiq (2026-08); the app id, namespace, routes and
-        display name all moved, but the physical table names did NOT. These
-        tables hold the vault itself — `doriath_secrets`, `doriath_enc_suites`
-        (RSA-4096 private keys, AES-wrapped), `doriath_ca_certs`,
-        `doriath_passkey_credentials`, `doriath_attachments`. Renaming a table
-        is a data migration on the most sensitive rows in the fleet, with no
-        behavioural gain whatsoever: Doctrine/QBMapper addresses tables by the
-        string in the mapper, not by the app id. Any occurrence of `doriath_`
-        anywhere in this repository is a persisted storage identifier — a
-        table, an index, or an ICache namespace — and must be left alone.
+        An earlier revision of this comment argued the prefix should stay frozen.
+        That reasoning was sound while the tables were merely inconsistent with
+        the app id. It was overtaken by the decision to ship the fleet with one
+        name per app, taken ahead of the App Store launch.
     -->
     <dependencies>
         <php min-version="8.3"/>
@@ -143,7 +134,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
 
           - BootstrapCertificateAuthority reads the `ca_status` app-config
             value; without the copy it sees a blank status on an instance that
-            already has a live CA in `doriath_ca_certs`.
+            already has a live CA in `keepiq_ca_certs`.
           - InitializeSettings seeds DEFAULT_CONFIG into any key that reads
             back empty — i.e. it would overwrite the admin's real settings with
             defaults if the copy had not happened yet.

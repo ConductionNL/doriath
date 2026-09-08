@@ -132,12 +132,29 @@ test.describe('Lock screen — spec: encryption-suites/spec.md', () => {
 			.first()
 			.click({ force: true })
 
-		// Error note card appears and we remain on the lock screen.
+		// THE MESSAGE IS ON TWO SURFACES ON PURPOSE, and each is asserted on
+		// its own. The helper text under the field is what a sighted reader
+		// sees; the visually-hidden role="alert" is what a screen reader
+		// announces, and it was added deliberately so a rejected credential
+		// interrupts rather than going unspoken.
+		//
+		// A single `.lock-screen`-wide text match resolved to BOTH and failed
+		// under strict mode on a correct page. Narrowing it to either one
+		// alone would let the other be removed without a test noticing, which
+		// for the live region means losing the announcement silently.
+		//
+		// The identical locator in `../workflows/vault-unlock.spec.ts` was
+		// fixed in #642 and this copy was missed, so development stayed red on
+		// the same defect one file over. Two files, one pattern: grep for the
+		// locator, not for the spec that happened to fail.
+		const wrongPassword = /Wrong master password|decryption failed/i
+		await expect(page.locator(`${LockScreen} [role="alert"]`)).toHaveText(
+			wrongPassword,
+			{ timeout: 15_000 },
+		)
 		await expect(
-			page
-				.locator(LockScreen)
-				.getByText(/Wrong master password|decryption failed/i),
-		).toBeVisible({ timeout: 15_000 })
+			page.locator(`${LockScreen} .input-field__helper-text-message`),
+		).toHaveText(wrongPassword, { timeout: 15_000 })
 		await expect(lockHeading(page)).toHaveText(/Unlock Keepiq/i)
 		await expect(page).toHaveURL(/\/lock/)
 	})

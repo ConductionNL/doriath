@@ -40,7 +40,7 @@ class SecretTypeMapper extends QBMapper {
 	 * @return void
 	 */
 	public function __construct(IDBConnection $db) {
-		parent::__construct(db: $db, tableName: 'doriath_secret_types', entityClass: SecretType::class);
+		parent::__construct(db: $db, tableName: 'keepiq_secret_types', entityClass: SecretType::class);
 	}//end __construct()
 
 	/**

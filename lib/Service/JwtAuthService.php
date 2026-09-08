@@ -50,7 +50,7 @@ class JwtAuthService {
 	/**
 	 * Distributed cache namespace for jti replay protection.
 	 *
-	 * KEPT ON THE OLD `doriath_` PREFIX ACROSS THE RENAME, deliberately.
+	 * KEPT ON THE OLD `keepiq_` PREFIX ACROSS THE RENAME, deliberately.
 	 * The jti cache IS the replay-protection window: renaming the namespace
 	 * empties it, and every assertion already spent during the preceding
 	 * CLOCK_SKEW+exp window becomes replayable exactly once more. Keeping
@@ -59,7 +59,7 @@ class JwtAuthService {
 	 *
 	 * @var string
 	 */
-	public const JTI_CACHE_NS = 'doriath_jwt_jti';
+	public const JTI_CACHE_NS = 'keepiq_jwt_jti';
 
 	/**
 	 * Distributed cache namespace for opaque access tokens.
@@ -70,7 +70,7 @@ class JwtAuthService {
 	 *
 	 * @var string
 	 */
-	public const TOKEN_CACHE_NS = 'doriath_jwt_token';
+	public const TOKEN_CACHE_NS = 'keepiq_jwt_token';
 
 	/**
 	 * Lifetime of issued access tokens in seconds (5 minutes per spec

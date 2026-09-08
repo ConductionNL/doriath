@@ -123,6 +123,19 @@ class DirectShareRegistrar {
 	}//end recipientCertificate()
 
 	/**
+	 * The active certificates of several prospective recipients.
+	 *
+	 * @param string[] $targetUserIds The prospective recipients
+	 *
+	 * @return array<string,string> PEM certificate, keyed by user ID
+	 *
+	 * @spec openspec/specs/user-sharing/spec.md#requirement-recipient-shareability-lookup
+	 */
+	public function recipientCertificates(array $targetUserIds): array {
+		return $this->copyFactory->certificatesFor(targetUserIds: $targetUserIds);
+	}//end recipientCertificates()
+
+	/**
 	 * Validate one bulk-share row and, when it is well-formed, register it.
 	 *
 	 * Skip-not-fail: every rejection is reported as a status so a mixed

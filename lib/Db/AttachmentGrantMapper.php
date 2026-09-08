@@ -27,7 +27,7 @@ use OCP\AppFramework\Db\QBMapper;
 use OCP\IDBConnection;
 
 /**
- * Mapper for the doriath_attachment_grants table.
+ * Mapper for the keepiq_attachment_grants table.
  *
  * @template-extends QBMapper<AttachmentGrant>
  */
@@ -42,7 +42,7 @@ class AttachmentGrantMapper extends QBMapper {
 	public function __construct(IDBConnection $db) {
 		parent::__construct(
 			db: $db,
-			tableName: 'doriath_attachment_grants',
+			tableName: 'keepiq_attachment_grants',
 			entityClass: AttachmentGrant::class
 		);
 	}//end __construct()
@@ -180,7 +180,7 @@ class AttachmentGrantMapper extends QBMapper {
 		$qb = $this->db->getQueryBuilder();
 		$qb->select($qb->func()->count('*', 'cnt'))
 			->from($this->getTableName(), 'g')
-			->innerJoin('g', 'doriath_secrets', 's', $qb->expr()->eq('g.secret_id', 's.id'))
+			->innerJoin('g', 'keepiq_secrets', 's', $qb->expr()->eq('g.secret_id', 's.id'))
 			->where($qb->expr()->eq('g.encryption_suite_id', $qb->createNamedParameter($encryptionSuiteId)))
 			->andWhere($qb->expr()->eq('g.recipient_type', $qb->createNamedParameter($recipientType)))
 			->andWhere($qb->expr()->eq('g.recipient_id', $qb->createNamedParameter($recipientId)))
