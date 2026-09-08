@@ -95,6 +95,7 @@
 				<div class="team-folder-dialog__add">
 					<NcSelect
 						v-model="newMemberType"
+						class="team-folder-dialog__member-type"
 						:options="memberTypeOptions"
 						:reduce="(opt) => opt.value"
 						:inputLabel="t('keepiq', 'Member type')"
@@ -116,6 +117,7 @@
 					-->
 					<NcSelect
 						v-if="memberCandidates.length > 0"
+						class="team-folder-dialog__member-input"
 						:modelValue="newMemberId === '' ? null : newMemberId"
 						:options="memberCandidates"
 						:inputLabel="memberIdLabel"
@@ -133,6 +135,7 @@
 							data-testid="team-folder-member-id" />
 					</label>
 					<NcButton
+						class="team-folder-dialog__add-button"
 						variant="secondary"
 						:disabled="busy || newMemberId === ''"
 						data-testid="team-folder-add-member"
@@ -562,6 +565,12 @@ export default {
 	flex: 1;
 }
 
+/*
+ * One row: type, member, Add. It still WRAPS — below ~512px the dialog goes
+ * full-width and there is no room for three — but it no longer wraps on a
+ * desktop dialog, where it used to leave the button stranded on its own line
+ * under two half-width pickers.
+ */
 .team-folder-dialog__add {
 	display: flex;
 	align-items: flex-end;
@@ -569,10 +578,48 @@ export default {
 	flex-wrap: wrap;
 }
 
+/*
+ * NcSelect ships `min-width: 260px`, so two of them could not share a 600px
+ * dialog with a button. Neither holds anything long — "User"/"Group" and an
+ * id — so the row's own flex sizing decides instead. The selector carries the
+ * library's three classes because that is what its rule has, and a single
+ * scoped class would lose the cascade to it.
+ */
+.team-folder-dialog__add :deep(.nc-select.v-select.select) {
+	min-width: 0;
+}
+
+/* Wide enough for the floating label, which sits INSIDE the control (NcSelect
+   passes inputLabel to the search field, not to an external label). */
+.team-folder-dialog__member-type {
+	flex: 0 0 10rem;
+}
+
+.team-folder-dialog__member-input,
+.team-folder-dialog__id-field {
+	flex: 1 1 10rem;
+	min-width: 0;
+}
+
 .team-folder-dialog__id-field {
 	display: flex;
 	flex-direction: column;
 	gap: 4px;
+}
+
+/*
+ * NcSelect carries its own bottom margin, so a bottom-aligned row puts the
+ * pickers' control boxes one grid baseline above the row's edge. The button
+ * and the plain-input fallback take the same offset, which is what actually
+ * lines the three bottoms up.
+ */
+.team-folder-dialog__add-button,
+.team-folder-dialog__id-field {
+	margin-block-end: var(--default-grid-baseline, 4px);
+}
+
+.team-folder-dialog__add-button {
+	flex: 0 0 auto;
 }
 
 .team-folder-dialog__id-field input {
