@@ -301,6 +301,8 @@ class ShareController extends OCSController {
 	 * able to fetch any recipient's certificate, because that certificate is
 	 * precisely what the browser needs in order to encrypt a secret TO them;
 	 * withholding it would not protect anything and would break sharing.
+	 *
+	 * @spec openspec/specs/user-sharing/spec.md#requirement-recipient-shareability-lookup
 	 */
 	#[NoAdminRequired]
 	public function recipientCertificate(string $userId): JSONResponse {
