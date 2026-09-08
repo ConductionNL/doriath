@@ -46,6 +46,7 @@ use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
 use OCP\IRequest;
+use Psr\Log\LoggerInterface;
 use OCP\IURLGenerator;
 
 /**
@@ -63,11 +64,33 @@ class DiscoveryController extends Controller {
 	public const API_VERSION = 1;
 
 	/**
+	 * The discovery path this document advertises as canonical.
+	 *
+	 * @var string
+	 */
+	public const CANONICAL_DISCOVERY_PATH = '/api/v1/app/.well-known/keepiq';
+
+	/**
+	 * The pre-rename discovery path, still served and now deprecated.
+	 *
+	 * @var string
+	 */
+	public const DEPRECATED_DISCOVERY_PATH = '/api/v1/app/.well-known/doriath';
+
+	/**
+	 * The app version in which DEPRECATED_DISCOVERY_PATH stops being served.
+	 *
+	 * @var string
+	 */
+	public const DEPRECATED_PATH_REMOVED_IN = KeepiqApp::PRE_STABLE_COMPAT_REMOVED_IN;
+
+	/**
 	 * Constructor for DiscoveryController.
 	 *
 	 * @param IRequest $request The HTTP request
 	 * @param IURLGenerator $urlGenerator The URL generator
 	 * @param IAppConfig|null $appConfig The app config (lease policy advert)
+	 * @param LoggerInterface|null $logger Logger for the deprecated-path warning
 	 *
 	 * @return void
 	 */
@@ -75,6 +98,7 @@ class DiscoveryController extends Controller {
 		IRequest $request,
 		private IURLGenerator $urlGenerator,
 		private ?IAppConfig $appConfig = null,
+		private ?LoggerInterface $logger = null,
 	) {
 		parent::__construct(appName: KeepiqApp::APP_ID, request: $request);
 	}//end __construct()
@@ -107,6 +131,16 @@ class DiscoveryController extends Controller {
 		return new JSONResponse(
 			data: [
 				'apiVersion' => self::API_VERSION,
+				// The path to fetch this document from. A consumer configured
+				// with the pre-rename path can re-point itself from here
+				// before that path is retired.
+				'discoveryPath' => self::CANONICAL_DISCOVERY_PATH,
+				'deprecatedDiscoveryPaths' => [
+					[
+						'value' => self::DEPRECATED_DISCOVERY_PATH,
+						'removedInAppVersion' => self::DEPRECATED_PATH_REMOVED_IN,
+					],
+				],
 				'tokenEndpoint' => $tokenEndpoint,
 				'grantType' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
 				'assertion' => [
@@ -117,13 +151,13 @@ class DiscoveryController extends Controller {
 					// the current apiVersion: a consumer reading `audience`
 					// converges on the canonical name, and one still sending a
 					// deprecated value keeps working until the version named in
-					// `deprecatedAudiences[].removedInApiVersion`.
+					// `deprecatedAudiences[].removedInAppVersion`.
 					'audience' => JwtAuthService::CANONICAL_AUDIENCE,
 					'acceptedAudiences' => JwtAuthService::ACCEPTED_AUDIENCES,
 					'deprecatedAudiences' => [
 						[
 							'value' => JwtAuthService::DEPRECATED_AUDIENCE,
-							'removedInApiVersion' => JwtAuthService::DEPRECATED_AUDIENCE_REMOVED_IN_API_VERSION,
+							'removedInAppVersion' => JwtAuthService::DEPRECATED_AUDIENCE_REMOVED_IN,
 						],
 					],
 					'audienceUrl' => $tokenAbsolute,
@@ -135,7 +169,18 @@ class DiscoveryController extends Controller {
 					'create' => $this->urlGenerator->linkToRoute('keepiq.applicationSecrets.index'),
 					'update' => $this->urlGenerator->linkToRoute('keepiq.applicationSecrets.index') . '/{id}',
 				],
+				// What this instance actually emits today. The successor is
+				// announced separately rather than listed here, because
+				// listing a format nothing writes would be a lie a consumer
+				// could reasonably act on.
 				'envelopeFormats' => [MachineSecretEnvelopeService::FORMAT],
+				'upcomingEnvelopeFormats' => [
+					[
+						'value' => MachineSecretEnvelopeService::UPCOMING_FORMAT,
+						'replaces' => MachineSecretEnvelopeService::FORMAT,
+						'emittedFromAppVersion' => MachineSecretEnvelopeService::UPCOMING_FORMAT_APP_VERSION,
+					],
+				],
 				// Machine leases (machine-secret-leases §3.3): additive
 				// advert of the instance lease policy — no envelope or
 				// addressing change.
@@ -148,4 +193,37 @@ class DiscoveryController extends Controller {
 			]
 		);
 	}//end document()
+	/**
+	 * Serve the same document on the pre-rename discovery path.
+	 *
+	 * This is THE one URL a machine consumer is configured with by hand, so
+	 * moving it is the single most disruptive rename available: everything
+	 * else a consumer uses is derived from the document this returns. Serving
+	 * both paths is additive and costs nothing, and it hands the consumer the
+	 * canonical path in `discoveryPath` so it can re-point itself without
+	 * anyone coordinating a change window.
+	 *
+	 * Each hit is logged so the set of consumers still on the old path is
+	 * observable before the shim is removed.
+	 *
+	 * @return JSONResponse The discovery document.
+	 *
+	 * @spec openspec/specs/secret-store-api/spec.md
+	 */
+	#[PublicPage]
+	#[NoCSRFRequired]
+	#[AnonRateLimit(limit: 120, period: 60)]
+	public function legacyDocument(): JSONResponse {
+		$this->logger?->warning(
+			'Discovery fetched on the deprecated path "{deprecated}", which is removed in '
+			. 'app version {version}. Re-point the consumer at "{canonical}".',
+			[
+				'deprecated' => self::DEPRECATED_DISCOVERY_PATH,
+				'canonical' => self::CANONICAL_DISCOVERY_PATH,
+				'version' => self::DEPRECATED_PATH_REMOVED_IN,
+			]
+		);
+
+		return $this->document();
+	}//end legacyDocument()
 }//end class

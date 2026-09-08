@@ -4,7 +4,7 @@
 TBD - created by archiving change openconnector-secret-store-api. Update Purpose after archive.
 ## Requirements
 ### Requirement: Machine API Discovery Document
-The system MUST serve an unauthenticated, machine-readable discovery document at `GET /api/v1/app/.well-known/doriath` declaring the API version, token endpoint, supported grant type (`urn:ietf:params:oauth:grant-type:jwt-bearer`), assertion requirements (algorithm, maximum lifetime, audience), the secret endpoint paths (list, by-id, by-name), and the supported envelope formats. The document MUST contain no instance-private data. Breaking changes to addressing or envelope shape MUST be published as a new API version in this document, never as an in-place mutation of an existing version.
+The system MUST serve an unauthenticated, machine-readable discovery document at `GET /api/v1/app/.well-known/keepiq`, and MUST continue serving the identical document at the pre-rename path `GET /api/v1/app/.well-known/doriath` until it is removed before the first stable release declaring the API version, token endpoint, supported grant type (`urn:ietf:params:oauth:grant-type:jwt-bearer`), assertion requirements (algorithm, maximum lifetime, audience), the secret endpoint paths (list, by-id, by-name), and the supported envelope formats. The document MUST contain no instance-private data. Breaking changes to addressing or envelope shape MUST be published as a new API version in this document, never as an in-place mutation of an existing version.
 
 #### Scenario: Consumer bootstraps from the base URL alone
 @e2e exclude Machine-to-machine API contract with no UI surface; covered by DiscoveryControllerTest (document shape, no instance-private data) and the machine-secret-api Newman collection's discovery group.
@@ -76,6 +76,42 @@ The system MUST allow an authenticated application to create and update secrets 
 ### Requirement: Token Endpoint Hardening
 The token endpoint MUST verify the JWT assertion's signature against the application's registered certificate, reject assertions with a lifetime over 300 seconds or an expired/future validity window, and reject any reuse of a `jti` within the assertion's lifetime (replay protection). Failed exchanges MUST be subject to Nextcloud brute-force throttling. Applications that are pending, rejected, deleted, or whose EncryptionSuite is revoked or compromised MUST be refused a token. Issued bearer tokens MUST be opaque, expire within 5 minutes, and grant access to exactly one application's vault.
 
+### Requirement: Discovery Path
+The discovery document MUST be served at both the canonical path
+`/api/v1/app/.well-known/keepiq` and the pre-rename path
+`/api/v1/app/.well-known/doriath`, returning identical content from each. The
+document MUST publish the canonical path as `discoveryPath` and each deprecated
+path with the apiVersion retiring it as
+`deprecatedDiscoveryPaths[].removedInAppVersion`, so a consumer configured with
+the old path can re-point itself without coordination. This is the one URL a
+consumer holds by hand; everything else it uses is derived from the document.
+
+Serving the deprecated path MUST be removed before the first stable release (app version 1.0.0). Until then, every
+fetch on it MUST be logged, so the set of consumers still to migrate is
+observable rather than assumed.
+
+#### Scenario: Both discovery paths serve the same document
+@e2e exclude Machine-to-machine API contract with no UI surface; covered by DiscoveryControllerTest.
+- **WHEN** the document is fetched from the canonical and the deprecated path
+- **THEN** both MUST return 200 with identical content
+
+### Requirement: Envelope Format Succession
+The envelope `format` identifier is written by the server and asserted on by the
+consumer, so unlike an inbound value it cannot be dual-valued: exactly one string
+is emitted and any consumer pinned to a different one rejects the secret. The
+system MUST therefore keep emitting `doriath-machine-secret-v1` until the first stable
+release, and MUST publish its successor in the discovery document as
+`upcomingEnvelopeFormats[]` with `value`, `replaces` and `emittedFromAppVersion`,
+so consumers can be taught to accept both names before the switch. The successor
+MUST NOT be listed in `envelopeFormats`, which declares only what is actually
+emitted. The envelope bytes MUST NOT change with the identifier.
+
+#### Scenario: Successor announced but not emitted
+@e2e exclude Machine-to-machine API contract with no UI surface; covered by DiscoveryControllerTest and MachineSecretEnvelopeServiceTest.
+- **WHEN** the discovery document is fetched before the first stable release
+- **THEN** `envelopeFormats` MUST contain only `doriath-machine-secret-v1`
+- **AND** `upcomingEnvelopeFormats` MUST announce `keepiq-machine-secret-v1` for app version 1.0.0
+
 ### Requirement: Assertion Audience
 The token endpoint MUST accept an assertion whose `aud` claim names this
 instance, honouring RFC 7519 §4.1.3: `aud` MAY be a single string or an array
@@ -85,13 +121,16 @@ instance accepts. The instance MUST accept both `keepiq` (canonical) and
 
 The discovery document MUST publish the canonical value as `audience`, the full
 accepted set as `acceptedAudiences`, and each deprecated value together with the
-apiVersion that retires it as `deprecatedAudiences[].removedInApiVersion`. This
+apiVersion that retires it as `deprecatedAudiences[].removedInAppVersion`. This
 is additive and therefore valid within the current apiVersion: an existing
 consumer is unaffected, and a self-configuring consumer converges on the
 canonical value without coordination.
 
-Accepting `doriath` MUST be removed in apiVersion 2, alongside the
-`doriath-machine-secret-v1` envelope name and the `.well-known/doriath` path.
+Accepting `doriath` MUST be removed before the first stable release (app version
+1.0.0), alongside the `doriath-machine-secret-v1` envelope name and the
+`.well-known/doriath` path. These are pre-stable shims, not a released contract:
+the rule below that breaking changes ship as a new apiVersion binds from the
+first stable release onward, and `apiVersion` stays at 1 through their removal.
 Until then, every assertion accepted on a deprecated value MUST be logged with
 its `iss`, so the set of consumers still to migrate is observable rather than
 assumed.
@@ -105,7 +144,7 @@ assumed.
 @e2e exclude Machine-to-machine API contract with no UI surface; covered by JwtAuthServiceTest.
 - **WHEN** an assertion presents `aud: "doriath"`
 - **THEN** the audience check MUST pass
-- **AND** a warning naming the assertion's `iss` and the retiring apiVersion MUST be logged
+- **AND** a warning naming the assertion's `iss` and the removing app version MUST be logged
 
 #### Scenario: Array-valued audience accepted
 @e2e exclude Machine-to-machine API contract with no UI surface; covered by JwtAuthServiceTest.

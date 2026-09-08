@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Keepiq\Service;
 
+use OCA\Keepiq\AppInfo\Application as KeepiqApp;
 use OCA\Keepiq\Db\Application;
 use OCA\Keepiq\Db\ApplicationMapper;
 use OCA\Keepiq\Event\Audit\AuditEvent;
@@ -108,13 +109,15 @@ class JwtAuthService {
 	 * fleet-wide credential outage that no repair step can heal, because the
 	 * fix lives in each consumer's configuration.
 	 *
-	 * Accepting both instead is ADDITIVE, so it ships inside the current
-	 * apiVersion: every existing consumer keeps working untouched, and new
-	 * ones read CANONICAL_AUDIENCE from discovery. Only the REMOVAL is
-	 * breaking, which is why it is pinned to
-	 * DEPRECATED_AUDIENCE_REMOVED_IN_API_VERSION — the coordinated bump that
-	 * also retires the `doriath-machine-secret-v1` envelope name and the
-	 * `.well-known/doriath` path, per openspec/specs/secret-store-api/spec.md.
+	 * Accepting both instead is ADDITIVE, so it costs nothing and no consumer
+	 * needs a change window: existing ones keep working untouched, new ones
+	 * read CANONICAL_AUDIENCE from discovery. The shim is removed before the
+	 * first stable release — see
+	 * Application::PRE_STABLE_COMPAT_REMOVED_IN — together with the
+	 * `.well-known/doriath` path and the `doriath-machine-secret-v1` envelope
+	 * name. It is not deferred to a future apiVersion: nothing stable has
+	 * shipped, so there is no released contract that a version bump would
+	 * protect.
 	 *
 	 * Every assertion arriving on this value is logged with its `iss`, so the
 	 * set of consumers still to migrate is observable rather than guessed at
@@ -125,11 +128,11 @@ class JwtAuthService {
 	public const DEPRECATED_AUDIENCE = 'doriath';
 
 	/**
-	 * The apiVersion in which DEPRECATED_AUDIENCE stops being accepted.
+	 * The app version in which DEPRECATED_AUDIENCE stops being accepted.
 	 *
-	 * @var int
+	 * @var string
 	 */
-	public const DEPRECATED_AUDIENCE_REMOVED_IN_API_VERSION = 2;
+	public const DEPRECATED_AUDIENCE_REMOVED_IN = KeepiqApp::PRE_STABLE_COMPAT_REMOVED_IN;
 
 	/**
 	 * Every audience value an assertion may carry to reach this instance.

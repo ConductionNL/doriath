@@ -406,7 +406,7 @@ class JwtAuthServiceTest extends TestCase {
 		$this->assertSame('Bearer', $result['token_type'], 'the deprecated audience must still exchange');
 		$this->assertSame('app-1', $context['iss'] ?? null, 'the warning must name the issuer still to migrate');
 		$this->assertSame('doriath', $context['deprecated'] ?? null);
-		$this->assertSame(2, $context['version'] ?? null, 'the warning must name the retiring apiVersion');
+		$this->assertSame('1.0.0', $context['version'] ?? null, 'the warning must name the removing app version');
 	}//end testDeprecatedAudienceAcceptedAndReported()
 
 	/**

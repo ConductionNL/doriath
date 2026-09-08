@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Keepiq\Service;
 
+use OCA\Keepiq\AppInfo\Application as KeepiqApp;
 use OCA\Keepiq\Db\EncryptionSuiteMapper;
 use OCA\Keepiq\Db\FolderMapper;
 use OCA\Keepiq\Db\Secret;
@@ -44,20 +45,47 @@ class MachineSecretEnvelopeService {
 	/**
 	 * The current envelope format identifier.
 	 *
-	 * DELIBERATELY STILL `doriath-` AFTER THE doriath -> keepiq RENAME. This
-	 * string is a version tag on a published wire format, not an app id: it
-	 * is advertised in the discovery document's `envelopeFormats`, and every
-	 * machine consumer asserts on it before attempting decryption. Changing
-	 * it in place is precisely what the paragraph above — and
-	 * openspec/specs/secret-store-api/spec.md — forbid: a breaking change to
-	 * the envelope ships as a NEW format identifier under a NEW apiVersion,
-	 * so that a consumer pinned to v1 keeps working instead of silently
-	 * refusing every secret. The v1 envelope's BYTES did not change here, so
-	 * neither may its name.
+	 * STILL `doriath-` AFTER THE doriath -> keepiq RENAME, and it stays that
+	 * way until the first stable release. This string is a version tag on a published
+	 * wire format, not an app id: it is advertised in the discovery
+	 * document's `envelopeFormats`, and every machine consumer asserts on it
+	 * before attempting decryption.
+	 *
+	 * IT CANNOT BE DUAL-VALUED THE WAY THE AUDIENCE AND THE DISCOVERY PATH
+	 * CAN. Those are inbound — the consumer offers a value and this server
+	 * decides whether to honour it, so accepting a second one costs nothing
+	 * and no consumer notices. This is outbound: exactly one string goes into
+	 * the envelope's `format` field, and whichever one it is, every consumer
+	 * pinned to the other rejects the secret. There is no server-side change
+	 * that makes a flip safe.
+	 *
+	 * So the compatibility work is on the consumer, and the only thing this
+	 * server can usefully do is say what is coming. UPCOMING_FORMAT is
+	 * published in discovery so consumers can be updated to accept BOTH names
+	 * ahead of time; once they do, the switch is a non-event.
+	 * The v1 envelope's BYTES do not change with the name — the successor
+	 * differs in identifier only.
 	 *
 	 * @var string
 	 */
 	public const FORMAT = 'doriath-machine-secret-v1';
+
+	/**
+	 * The format identifier that replaces FORMAT at the first stable release.
+	 *
+	 * Published, not emitted. Nothing writes this value yet; it exists so a
+	 * consumer can be taught to accept it before it starts arriving.
+	 *
+	 * @var string
+	 */
+	public const UPCOMING_FORMAT = 'keepiq-machine-secret-v1';
+
+	/**
+	 * The app version in which UPCOMING_FORMAT starts being emitted.
+	 *
+	 * @var string
+	 */
+	public const UPCOMING_FORMAT_APP_VERSION = KeepiqApp::PRE_STABLE_COMPAT_REMOVED_IN;
 
 	/**
 	 * The encryption scheme identifier naming the existing ADR-003 path
