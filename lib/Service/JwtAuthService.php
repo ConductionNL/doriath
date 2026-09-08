@@ -194,7 +194,7 @@ class JwtAuthService {
 		// Audience is asserted here rather than inside the verifier: which
 		// values this deployment answers to, and for how much longer, is a
 		// published contract decision, not a property of a well-formed JWS.
-		$this->audiencePolicy->assertNamesThisInstance(claims: $claims);
+		$usesDeprecated = $this->audiencePolicy->assertNamesThisInstance(claims: $claims);
 
 		$jtiCache = $this->cacheFactory->createDistributed(self::JTI_CACHE_NS);
 		$jti = (string)$claims['jti'];
@@ -211,6 +211,14 @@ class JwtAuthService {
 
 		// Store jti to prevent replay during max assertion lifetime.
 		$jtiCache->set($jti, true, self::ACCESS_TOKEN_TTL);
+
+		// Reported only now: everything above can reject, and an issuer named
+		// by a rejected assertion is unverified. Warning earlier would let a
+		// forged or replayed assertion manufacture migration traffic for any
+		// issuer it cared to name.
+		if ($usesDeprecated === true) {
+			$this->audiencePolicy->reportDeprecatedUse(claims: $claims);
+		}
 
 		return $application;
 	}//end verifyAssertion()

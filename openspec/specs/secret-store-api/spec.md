@@ -122,7 +122,20 @@ The claim MUST be read strictly and MUST NOT be coerced. A value that is not a
 string, and an array containing any member that is not a non-empty string, are
 malformed and MUST be rejected — an array MUST NOT be filtered down to its
 well-formed members, because authenticating on the remainder is exactly what a
-malformed claim must not achieve. The instance MUST accept both `keepiq` (canonical) and
+malformed claim must not achieve.
+
+An OBJECT-valued claim MUST be rejected, and the distinction between a JSON
+array and a JSON object MUST survive decoding for that to be possible: decoding
+an object into a keyed map makes `{"target": "keepiq"}` indistinguishable from
+`["keepiq"]`, and a list check does not recover it, since `{"0": "keepiq"}`
+decodes to a list.
+
+Use of a deprecated audience MUST be reported only after the assertion is fully
+authenticated — signature, issuer and replay checks all passed. The report
+names an issuer, and before authentication that issuer is a string the caller
+chose; reporting earlier would let an unauthenticated or replayed assertion
+manufacture migration traffic for any issuer it named, and the log exists
+precisely to decide when the deprecated value can be withdrawn. The instance MUST accept both `keepiq` (canonical) and
 `doriath` (deprecated, the pre-rename name), and MUST reject any other value.
 
 The discovery document MUST publish the canonical value as `audience`, the full
@@ -162,6 +175,16 @@ assumed.
 - **WHEN** an assertion presents `aud: 123`, `aud: true` or `aud: ["keepiq", 123]`
 - **THEN** the exchange MUST be rejected
 - **AND** the well-formed members of a mixed array MUST NOT be matched against the accepted set
+
+#### Scenario: An object-valued audience is rejected
+@e2e exclude Machine-to-machine API contract with no UI surface; covered by JwtAuthServiceTest.
+- **WHEN** an assertion presents `aud: {"target": "keepiq"}` or `aud: {"0": "keepiq"}`
+- **THEN** the exchange MUST be rejected, even though an accepted value appears among the object's values
+
+#### Scenario: A rejected assertion is never reported as a migration
+@e2e exclude Machine-to-machine API contract with no UI surface; covered by JwtAuthServiceTest.
+- **WHEN** an assertion carrying a deprecated audience fails signature verification or replays a `jti`
+- **THEN** no deprecation warning MUST be emitted for its issuer
 
 #### Scenario: Foreign audience rejected
 @e2e exclude Machine-to-machine API contract with no UI surface; covered by JwtAuthServiceTest.

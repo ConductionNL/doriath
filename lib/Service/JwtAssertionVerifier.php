@@ -146,10 +146,19 @@ class JwtAssertionVerifier {
 			throw new RuntimeException(message: 'Assertion has no payload');
 		}
 
-		$claims = json_decode($payloadRaw, true);
-		if (is_array($claims) === false) {
+		// Decoded WITHOUT assoc, then cast at the top level only. `json_decode`
+		// with $associative=true erases the difference between a JSON array and
+		// a JSON object, so `"aud": {"target": "keepiq"}` would arrive as a PHP
+		// array indistinguishable from `["keepiq"]` and match on its values.
+		// array_is_list() does not recover it either: `{"0": "keepiq"}` decodes
+		// to a list. Keeping nested objects as stdClass is what lets a claim
+		// check reject one.
+		$decoded = json_decode($payloadRaw);
+		if (is_object($decoded) === false) {
 			throw new RuntimeException(message: 'Assertion payload is not a JSON object');
 		}
+
+		$claims = (array)$decoded;
 
 		// Required claims.
 		foreach (['iss', 'aud', 'exp', 'iat', 'jti'] as $required) {

@@ -496,6 +496,115 @@ class JwtAuthServiceTest extends TestCase {
 	}//end testNonStringAudienceIsRejected()
 
 	/**
+	 * A rejected assertion never produces a migration warning.
+	 *
+	 * The deprecation log is the checklist for deciding when `doriath` can stop
+	 * being accepted, so it has to contain only issuers that actually
+	 * authenticated. Warning before signature, issuer and replay checks let any
+	 * unauthenticated caller manufacture traffic for any issuer it named.
+	 *
+	 * @return void
+	 */
+	public function testAReplayedDeprecatedAudienceAssertionIsNotReported(): void {
+		$this->stubActiveApp('app-1');
+
+		$warnings = [];
+		$this->logger->method('warning')->willReturnCallback(
+			static function (string $message) use (&$warnings): void {
+				$warnings[] = $message;
+			}
+		);
+
+		$now = time();
+		$claims = [
+			'iss' => 'app-1',
+			'aud' => 'doriath',
+			'iat' => $now,
+			'exp' => ($now + 60),
+			'jti' => 'jti-replay-deprecated',
+		];
+
+		// First exchange succeeds and legitimately reports.
+		$this->service->exchangeAssertion($this->buildAssertion($claims));
+		$this->assertCount(1, $warnings, 'an authenticated deprecated-audience exchange is reported');
+
+		$warnings = [];
+
+		try {
+			$this->service->exchangeAssertion($this->buildAssertion($claims));
+			$this->fail('the replayed assertion should have been rejected');
+		} catch (RuntimeException $e) {
+			$this->assertSame('Assertion jti replayed', $e->getMessage());
+		}
+
+		$this->assertSame([], $warnings, 'a replayed assertion must not be reported as a migration');
+	}//end testAReplayedDeprecatedAudienceAssertionIsNotReported()
+
+	/**
+	 * A badly signed assertion never produces a migration warning.
+	 *
+	 * Same reasoning as the replay case: the `iss` in a failed exchange is a
+	 * string the caller chose, not one this instance verified.
+	 *
+	 * @return void
+	 */
+	public function testABadlySignedDeprecatedAudienceAssertionIsNotReported(): void {
+		$this->stubActiveApp('app-1');
+
+		$warnings = [];
+		$this->logger->method('warning')->willReturnCallback(
+			static function (string $message) use (&$warnings): void {
+				$warnings[] = $message;
+			}
+		);
+
+		$now = time();
+		$assertion = $this->buildAssertionWithForeignKey(
+			[
+				'iss' => 'app-1',
+				'aud' => 'doriath',
+				'iat' => $now,
+				'exp' => ($now + 60),
+				'jti' => 'jti-badsig-deprecated',
+			]
+		);
+
+		try {
+			$this->service->exchangeAssertion($assertion);
+			$this->fail('the badly signed assertion should have been rejected');
+		} catch (RuntimeException) {
+			// Expected.
+		}
+
+		$this->assertSame([], $warnings, 'an unverified issuer must not appear in the migration log');
+	}//end testABadlySignedDeprecatedAudienceAssertionIsNotReported()
+
+	/**
+	 * Build an assertion signed with a key the application does not hold.
+	 *
+	 * Mirrors what testInvalidSignatureRejected() does inline, so a test that
+	 * needs a well-formed but unauthentic assertion does not have to restate
+	 * the whole builder.
+	 *
+	 * @param array<string,mixed> $claims The claim set to sign.
+	 *
+	 * @return string The compact serialization.
+	 */
+	private function buildAssertionWithForeignKey(array $claims): string {
+		$foreignPkey = openssl_pkey_new(
+			['private_key_type' => OPENSSL_KEYTYPE_RSA, 'private_key_bits' => 2048]
+		);
+		openssl_pkey_export($foreignPkey, $foreignPem);
+
+		$jws = (new JWSBuilder(new AlgorithmManager([new RS256()])))->create()
+			->withPayload((string)json_encode($claims))
+			->addSignature(JWKFactory::createFromKey($foreignPem), ['alg' => 'RS256', 'typ' => 'JWT'])
+			->build();
+
+		return (new CompactSerializer())->serialize($jws, 0);
+	}//end buildAssertionWithForeignKey()
+
+	/**
 	 * Claim shapes RFC 7519 section 4.1.3 does not permit.
 	 *
 	 * The mixed array is the one that matters: filtering it down to its string
@@ -511,6 +620,10 @@ class JwtAuthServiceTest extends TestCase {
 			'array with an integer member' => [['keepiq', 123]],
 			'array with a nested array' => [['keepiq', ['keepiq']]],
 			'array with an empty string' => [['keepiq', '']],
+			// Objects: json_decode(..., true) would flatten these into arrays
+			// whose VALUES contain an accepted audience.
+			'object naming the audience in a field' => [(object)['target' => 'keepiq']],
+			'object with a numeric key' => [(object)['0' => 'keepiq']],
 		];
 	}//end malformedAudiences()
 

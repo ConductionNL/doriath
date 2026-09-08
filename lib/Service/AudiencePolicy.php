@@ -106,15 +106,24 @@ class AudiencePolicy {
 	 * the values. Both accepted values name this app, so honouring the pair is
 	 * the claim's own semantics rather than a relaxation of it.
 	 *
+	 * REPORTING IS NOT DONE HERE. This runs before replay detection, issuer
+	 * lookup and signature verification, so at this point the assertion is
+	 * merely well-addressed, not authentic — and its `iss` is a string an
+	 * unauthenticated caller chose. Warning here would let anyone forge
+	 * migration traffic for any issuer they name, and the resulting log could
+	 * not be used to decide when the deprecated value is safe to remove, which
+	 * is the only reason the log exists. The caller reports separately, after
+	 * authentication succeeds.
+	 *
 	 * @param array<string,mixed> $claims The decoded claim set.
 	 *
-	 * @return void
+	 * @return bool True when ONLY the deprecated value named this instance.
 	 *
 	 * @throws RuntimeException When no presented value names this instance.
 	 *
 	 * @spec openspec/specs/secret-store-api/spec.md#requirement-assertion-audience
 	 */
-	public function assertNamesThisInstance(array $claims): void {
+	public function assertNamesThisInstance(array $claims): bool {
 		$presented = $this->presentedValues(claim: ($claims['aud'] ?? null));
 		$matched = array_values(array_intersect($presented, self::ACCEPTED_AUDIENCES));
 
@@ -122,12 +131,24 @@ class AudiencePolicy {
 			throw new RuntimeException(message: 'Wrong audience');
 		}
 
-		if (in_array(self::CANONICAL_AUDIENCE, $matched, true) === true) {
-			return;
-		}
+		return (in_array(self::CANONICAL_AUDIENCE, $matched, true) === false);
+	}//end assertNamesThisInstance()
 
-		// Reached only on the deprecated value. Logged with the issuer so the
-		// set of consumers still to migrate is observable before the removal.
+	/**
+	 * Report that an AUTHENTICATED assertion used the deprecated audience.
+	 *
+	 * Called only once the signature, issuer and replay checks have passed, so
+	 * the issuer named here is one this instance verified rather than one the
+	 * caller asserted. That is what makes the resulting set of issuers usable
+	 * as the migration checklist it is meant to be.
+	 *
+	 * @param array<string,mixed> $claims The decoded claim set.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/secret-store-api/spec.md#requirement-assertion-audience
+	 */
+	public function reportDeprecatedUse(array $claims): void {
 		$this->logger->warning(
 			'Assertion accepted on the deprecated audience "{deprecated}", which is '
 			. 'removed in app version {version}. Update issuer "{iss}" to send "{canonical}".',
@@ -138,7 +159,7 @@ class AudiencePolicy {
 				'iss' => (string)($claims['iss'] ?? 'unknown'),
 			]
 		);
-	}//end assertNamesThisInstance()
+	}//end reportDeprecatedUse()
 
 	/**
 	 * Read the `aud` claim as the list of strings it presents.
