@@ -259,6 +259,10 @@
 					</NcEmptyContent>
 				</NcAppSettingsSection>
 
+				<!--
+				  Browser extension: hidden until the extension actually ships.
+				  Kept in place — markup, styles and the securitySettingsUrl
+				  computed — so restoring it is a matter of uncommenting.
 				<NcAppSettingsSection
 					id="browser-extension"
 					:name="t('keepiq', 'Browser extension')">
@@ -269,7 +273,7 @@
 						{{
 							t(
 								'keepiq',
-								'The Keepiq browser extension autofills your logins, provides passkeys, and shows TOTP codes — decrypting everything inside the extension. The server only ever ships encrypted blobs, so your master password and secrets never leave your device.',
+								'The Keepiq browser extension autofills your logins, provides passkeys, and shows TOTP codes — without your secrets ever leaving your device.',
 							)
 						}}
 					</p>
@@ -313,6 +317,7 @@
 						}}
 					</p>
 				</NcAppSettingsSection>
+				-->
 
 				<!-- Version footer: a plain trailing line,
 				     matching the legacy UserSettings.vue surface. Hidden when
@@ -339,7 +344,7 @@ import {
 	NcTextField,
 } from '@nextcloud/vue'
 import KeyIcon from 'vue-material-design-icons/Key.vue'
-import PuzzleIcon from 'vue-material-design-icons/Puzzle.vue'
+// import PuzzleIcon from 'vue-material-design-icons/Puzzle.vue' // browser-extension section, hidden until it ships
 import ShieldIcon from 'vue-material-design-icons/Shield.vue'
 import TimerIcon from 'vue-material-design-icons/Timer.vue'
 import CompromiseRecoveryForm from './components/CompromiseRecoveryForm.vue'
@@ -374,7 +379,7 @@ export default {
 		TimerIcon,
 		ShieldIcon,
 		KeyIcon,
-		PuzzleIcon,
+		// PuzzleIcon, // browser-extension section, hidden until it ships
 		MasterPasswordForm,
 		PasskeyManager,
 		CompromiseRecoveryForm,
@@ -530,6 +535,8 @@ export default {
 		/**
 		 * Link to Nextcloud personal security settings, where the extension's
 		 * app password is created and revoked (browser-extension-autofill §5.1).
+		 * Kept for the browser-extension section, which is commented out in the
+		 * template until the extension ships.
 		 *
 		 * @return {string}
 		 */
@@ -892,6 +899,16 @@ export default {
 
 .user-settings__suite-info p {
 	margin: 0.25rem 0;
+}
+
+/*
+ * Server CSS zeroes list padding, which left the markers hanging outside
+ * the settings section instead of lining up under the paragraph above.
+ * Logical property so RTL indents on the correct side. Used by the
+ * browser-extension section, which is commented out until it ships.
+ */
+.user-settings__steps {
+	padding-inline-start: 1.5rem;
 }
 
 .user-settings__version {
