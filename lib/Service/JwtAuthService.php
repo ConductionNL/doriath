@@ -88,27 +88,63 @@ class JwtAuthService {
 	public const CLOCK_SKEW_SECONDS = 60;
 
 	/**
-	 * The expected audience claim ("aud") for assertions targeted at
-	 * this Keepiq instance.
+	 * The audience claim ("aud") this instance advertises and prefers.
 	 *
-	 * DELIBERATELY STILL `doriath` AFTER THE RENAME. This value is not an
-	 * app id, it is a published authentication parameter: every registered
-	 * application signs `aud=doriath` into its RS256 assertion with a
-	 * private key this server does not hold and cannot re-sign. Changing
-	 * the expected audience would reject every existing application's
-	 * assertion with an opaque 400 — a fleet-wide credential outage that
-	 * no repair step can heal, because the fix lives in each consumer's
-	 * configuration.
-	 *
-	 * The value is advertised in the `.well-known` discovery document, so a
-	 * self-configuring consumer reads it rather than hardcoding it; rolling
-	 * it to `keepiq` is a coordinated cross-app change (a new `apiVersion`
-	 * per openspec/specs/secret-store-api/spec.md), not part of an app-id
-	 * rename.
+	 * Assertions are ACCEPTED on any value in ACCEPTED_AUDIENCES; this is
+	 * the one published in the `.well-known` discovery document, so a
+	 * self-configuring consumer converges on it without being told.
 	 *
 	 * @var string
 	 */
-	public const EXPECTED_AUDIENCE = 'doriath';
+	public const CANONICAL_AUDIENCE = 'keepiq';
+
+	/**
+	 * The pre-rename audience, still accepted and now deprecated.
+	 *
+	 * This value is not an app id, it is a published authentication
+	 * parameter: every application registered before the rename signs
+	 * `aud=doriath` into its RS256 assertion with a private key this server
+	 * does not hold and cannot re-sign. Rejecting it outright would be a
+	 * fleet-wide credential outage that no repair step can heal, because the
+	 * fix lives in each consumer's configuration.
+	 *
+	 * Accepting both instead is ADDITIVE, so it ships inside the current
+	 * apiVersion: every existing consumer keeps working untouched, and new
+	 * ones read CANONICAL_AUDIENCE from discovery. Only the REMOVAL is
+	 * breaking, which is why it is pinned to
+	 * DEPRECATED_AUDIENCE_REMOVED_IN_API_VERSION — the coordinated bump that
+	 * also retires the `doriath-machine-secret-v1` envelope name and the
+	 * `.well-known/doriath` path, per openspec/specs/secret-store-api/spec.md.
+	 *
+	 * Every assertion arriving on this value is logged with its `iss`, so the
+	 * set of consumers still to migrate is observable rather than guessed at
+	 * before the removal lands.
+	 *
+	 * @var string
+	 */
+	public const DEPRECATED_AUDIENCE = 'doriath';
+
+	/**
+	 * The apiVersion in which DEPRECATED_AUDIENCE stops being accepted.
+	 *
+	 * @var int
+	 */
+	public const DEPRECATED_AUDIENCE_REMOVED_IN_API_VERSION = 2;
+
+	/**
+	 * Every audience value an assertion may carry to reach this instance.
+	 *
+	 * Order is meaningful only for readability; membership is what the
+	 * verifier tests. RFC 7519 §4.1.3 requires the recipient to identify
+	 * itself with a value in the claim — both of these name this app, so
+	 * accepting the pair does not widen the confused-deputy guard.
+	 *
+	 * @var string[]
+	 */
+	public const ACCEPTED_AUDIENCES = [
+		self::CANONICAL_AUDIENCE,
+		self::DEPRECATED_AUDIENCE,
+	];
 
 	/**
 	 * Constructor for JwtAuthService.

@@ -340,6 +340,127 @@ class JwtAuthServiceTest extends TestCase {
 	}//end testWrongAudienceRejected()
 
 	/**
+	 * The canonical audience is accepted and raises no deprecation warning.
+	 *
+	 * @return void
+	 */
+	public function testCanonicalAudienceAccepted(): void {
+		$this->stubActiveApp('app-1');
+
+		$warnings = [];
+		$this->logger->method('warning')->willReturnCallback(
+			static function (string $message) use (&$warnings): void {
+				$warnings[] = $message;
+			}
+		);
+
+		$now = time();
+		$assertion = $this->buildAssertion(
+			[
+				'iss' => 'app-1',
+				'aud' => 'keepiq',
+				'iat' => $now,
+				'exp' => ($now + 60),
+				'jti' => 'jti-aud-canonical',
+			]
+		);
+
+		$result = $this->service->exchangeAssertion($assertion);
+
+		$this->assertSame('Bearer', $result['token_type']);
+		$this->assertSame([], $warnings, 'the canonical audience must not be reported as deprecated');
+	}//end testCanonicalAudienceAccepted()
+
+	/**
+	 * The pre-rename audience still works, and is reported with its issuer.
+	 *
+	 * Rejecting it would be a fleet-wide credential outage; accepting it
+	 * silently would leave nobody knowing who still has to migrate before
+	 * the value is retired.
+	 *
+	 * @return void
+	 */
+	public function testDeprecatedAudienceAcceptedAndReported(): void {
+		$this->stubActiveApp('app-1');
+
+		$context = [];
+		$this->logger->method('warning')->willReturnCallback(
+			static function (string $message, array $ctx = []) use (&$context): void {
+				$context = $ctx;
+			}
+		);
+
+		$now = time();
+		$assertion = $this->buildAssertion(
+			[
+				'iss' => 'app-1',
+				'aud' => 'doriath',
+				'iat' => $now,
+				'exp' => ($now + 60),
+				'jti' => 'jti-aud-deprecated',
+			]
+		);
+
+		$result = $this->service->exchangeAssertion($assertion);
+
+		$this->assertSame('Bearer', $result['token_type'], 'the deprecated audience must still exchange');
+		$this->assertSame('app-1', $context['iss'] ?? null, 'the warning must name the issuer still to migrate');
+		$this->assertSame('doriath', $context['deprecated'] ?? null);
+		$this->assertSame(2, $context['version'] ?? null, 'the warning must name the retiring apiVersion');
+	}//end testDeprecatedAudienceAcceptedAndReported()
+
+	/**
+	 * An array-valued `aud` is accepted when any member names this instance.
+	 *
+	 * RFC 7519 §4.1.3 permits `aud` to be an array; a conformant client
+	 * sending one used to be rejected outright.
+	 *
+	 * @return void
+	 */
+	public function testArrayValuedAudienceAccepted(): void {
+		$this->stubActiveApp('app-1');
+
+		$now = time();
+		$assertion = $this->buildAssertion(
+			[
+				'iss' => 'app-1',
+				'aud' => ['someoneelse', 'keepiq'],
+				'iat' => $now,
+				'exp' => ($now + 60),
+				'jti' => 'jti-aud-array',
+			]
+		);
+
+		$result = $this->service->exchangeAssertion($assertion);
+
+		$this->assertSame('Bearer', $result['token_type']);
+	}//end testArrayValuedAudienceAccepted()
+
+	/**
+	 * An array-valued `aud` naming only foreign audiences is rejected.
+	 *
+	 * @return void
+	 */
+	public function testArrayValuedForeignAudienceRejected(): void {
+		$this->stubActiveApp('app-1');
+
+		$now = time();
+		$assertion = $this->buildAssertion(
+			[
+				'iss' => 'app-1',
+				'aud' => ['someoneelse', 'anotherapp'],
+				'iat' => $now,
+				'exp' => ($now + 60),
+				'jti' => 'jti-aud-array-foreign',
+			]
+		);
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('Wrong audience');
+		$this->service->exchangeAssertion($assertion);
+	}//end testArrayValuedForeignAudienceRejected()
+
+	/**
 	 * Replayed jti is rejected on second use.
 	 *
 	 * @return void

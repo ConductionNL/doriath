@@ -172,9 +172,7 @@ class JwtAssertionVerifier {
 	private function assertClaimsAcceptable(array $claims): void {
 		$now = time();
 
-		if ((string)$claims['aud'] !== JwtAuthService::EXPECTED_AUDIENCE) {
-			throw new RuntimeException(message: 'Wrong audience');
-		}
+		$this->assertAudienceAcceptable(claims: $claims);
 
 		if ((int)$claims['exp'] <= $now) {
 			throw new RuntimeException(message: 'Assertion expired');
@@ -194,4 +192,78 @@ class JwtAssertionVerifier {
 			);
 		}
 	}//end assertClaimsAcceptable()
+	/**
+	 * Assert the assertion names this instance, and flag the deprecated name.
+	 *
+	 * RFC 7519 §4.1.3 makes `aud` either a single string or an array of them,
+	 * and requires only that the recipient identify itself with ONE of the
+	 * values. Both accepted values name this app, so honouring the pair is the
+	 * claim's own semantics rather than a relaxation of it.
+	 *
+	 * @param array<string,mixed> $claims The decoded claim set.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException When no value names this instance.
+	 *
+	 * @spec openspec/specs/secret-store-api/spec.md
+	 */
+	private function assertAudienceAcceptable(array $claims): void {
+		$presented = $this->audienceValues(claim: $claims['aud']);
+		$matched = array_values(
+			array_intersect($presented, JwtAuthService::ACCEPTED_AUDIENCES)
+		);
+
+		if ($matched === []) {
+			throw new RuntimeException(message: 'Wrong audience');
+		}
+
+		if (in_array(JwtAuthService::CANONICAL_AUDIENCE, $matched, true) === true) {
+			return;
+		}
+
+		// Reached only on the deprecated value. Logged with the issuer so the
+		// set of consumers still to migrate is observable before the removal.
+		$this->logger->warning(
+			'Assertion accepted on the deprecated audience "{deprecated}", which is '
+			. 'retired in apiVersion {version}. Update issuer "{iss}" to send "{canonical}".',
+			[
+				'deprecated' => JwtAuthService::DEPRECATED_AUDIENCE,
+				'canonical' => JwtAuthService::CANONICAL_AUDIENCE,
+				'version' => JwtAuthService::DEPRECATED_AUDIENCE_REMOVED_IN_API_VERSION,
+				'iss' => (string)($claims['iss'] ?? 'unknown'),
+			]
+		);
+	}//end assertAudienceAcceptable()
+
+	/**
+	 * Normalise an `aud` claim to the list of strings it presents.
+	 *
+	 * Anything that is neither a string nor an array of scalars presents no
+	 * audience at all, which the caller treats as a rejection.
+	 *
+	 * @param mixed $claim The raw `aud` claim.
+	 *
+	 * @return string[] The presented audience values.
+	 *
+	 * @spec openspec/specs/secret-store-api/spec.md
+	 */
+	private function audienceValues(mixed $claim): array {
+		if (is_array($claim) === true) {
+			$values = [];
+			foreach ($claim as $value) {
+				if (is_scalar($value) === true && (string)$value !== '') {
+					$values[] = (string)$value;
+				}
+			}
+
+			return $values;
+		}
+
+		if (is_scalar($claim) === true && (string)$claim !== '') {
+			return [(string)$claim];
+		}
+
+		return [];
+	}//end audienceValues()
 }//end class

@@ -76,6 +76,47 @@ The system MUST allow an authenticated application to create and update secrets 
 ### Requirement: Token Endpoint Hardening
 The token endpoint MUST verify the JWT assertion's signature against the application's registered certificate, reject assertions with a lifetime over 300 seconds or an expired/future validity window, and reject any reuse of a `jti` within the assertion's lifetime (replay protection). Failed exchanges MUST be subject to Nextcloud brute-force throttling. Applications that are pending, rejected, deleted, or whose EncryptionSuite is revoked or compromised MUST be refused a token. Issued bearer tokens MUST be opaque, expire within 5 minutes, and grant access to exactly one application's vault.
 
+### Requirement: Assertion Audience
+The token endpoint MUST accept an assertion whose `aud` claim names this
+instance, honouring RFC 7519 §4.1.3: `aud` MAY be a single string or an array
+of strings, and the assertion is acceptable when ANY presented value is one the
+instance accepts. The instance MUST accept both `keepiq` (canonical) and
+`doriath` (deprecated, the pre-rename name), and MUST reject any other value.
+
+The discovery document MUST publish the canonical value as `audience`, the full
+accepted set as `acceptedAudiences`, and each deprecated value together with the
+apiVersion that retires it as `deprecatedAudiences[].removedInApiVersion`. This
+is additive and therefore valid within the current apiVersion: an existing
+consumer is unaffected, and a self-configuring consumer converges on the
+canonical value without coordination.
+
+Accepting `doriath` MUST be removed in apiVersion 2, alongside the
+`doriath-machine-secret-v1` envelope name and the `.well-known/doriath` path.
+Until then, every assertion accepted on a deprecated value MUST be logged with
+its `iss`, so the set of consumers still to migrate is observable rather than
+assumed.
+
+#### Scenario: Canonical audience accepted
+@e2e exclude Machine-to-machine API contract with no UI surface; covered by JwtAuthServiceTest.
+- **WHEN** an assertion presents `aud: "keepiq"`
+- **THEN** the audience check MUST pass and nothing MUST be logged as deprecated
+
+#### Scenario: Deprecated audience accepted and reported
+@e2e exclude Machine-to-machine API contract with no UI surface; covered by JwtAuthServiceTest.
+- **WHEN** an assertion presents `aud: "doriath"`
+- **THEN** the audience check MUST pass
+- **AND** a warning naming the assertion's `iss` and the retiring apiVersion MUST be logged
+
+#### Scenario: Array-valued audience accepted
+@e2e exclude Machine-to-machine API contract with no UI surface; covered by JwtAuthServiceTest.
+- **WHEN** an assertion presents `aud: ["something-else", "keepiq"]`
+- **THEN** the audience check MUST pass
+
+#### Scenario: Foreign audience rejected
+@e2e exclude Machine-to-machine API contract with no UI surface; covered by JwtAuthServiceTest.
+- **WHEN** an assertion presents an `aud` naming neither accepted value
+- **THEN** the exchange MUST be rejected
+
 #### Scenario: Replayed assertion rejected
 @e2e exclude Machine-to-machine API contract with no UI surface; covered by JwtAuthServiceTest (jti replay) and the Newman token negative cases.
 - **WHEN** the same signed assertion (same `jti`) is presented twice within its lifetime
