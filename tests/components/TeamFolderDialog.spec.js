@@ -16,25 +16,71 @@ import TeamFolderDialog from '../../src/modals/TeamFolderDialog.vue'
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
 
 /**
- * Mock the GETs the dialog issues on open: team-folder list, reconcile, the
- * suites list behind the user candidates, and the provisioning API behind the
- * group candidates.
+ * Mock the calls the dialog issues on open: the team-folder list, reconcile,
+ * the provisioning API behind the group candidates, Nextcloud's sharee search
+ * behind the user candidates, and keepiq's shareability probe over them.
+ *
+ * @param {object}        [options]           Fixture options.
+ * @param {Array<object>} [options.owned]     Team folders the user owns.
+ * @param {Array<object>} [options.missing]   Reconcile's missing pairs.
+ * @param {Array<string>} [options.groups]    Group ids the server returns.
+ * @param {Array<string>} [options.sharees]   User ids the sharee search returns.
+ * @param {Array<string>} [options.shareable] Which of those hold a suite.
  */
-function mockApi({ owned = [], missing = [], suites = [], groups = [] } = {}) {
+function mockApi({
+	owned = [],
+	missing = [],
+	groups = [],
+	sharees = [],
+	shareable = [],
+} = {}) {
 	vi.spyOn(axios, 'get').mockImplementation((url) => {
 		if (url.includes('/reconcile')) {
 			return Promise.resolve({
 				data: { secrets: [], recipients: [], missing },
 			})
 		}
-		if (url.includes('/suites')) {
-			return Promise.resolve({ data: suites })
-		}
 		if (url.includes('cloud/groups')) {
 			// The OCS envelope, as the provisioning API actually answers it.
 			return Promise.resolve({ data: { ocs: { data: { groups } } } })
 		}
+		if (url.includes('sharees')) {
+			return Promise.resolve({
+				data: {
+					ocs: {
+						data: {
+							exact: { users: [] },
+							users: sharees.map((userId) => ({
+								label: userId,
+								value: { shareType: 0, shareWith: userId },
+							})),
+						},
+					},
+				},
+			})
+		}
 		return Promise.resolve({ data: { owned, memberOf: [] } })
+	})
+
+	vi.spyOn(axios, 'post').mockImplementation((url, body) => {
+		if (url.includes('recipient-certificates')) {
+			// Order preserved and every id answered — shareable ones with a
+			// certificate, the rest with the one reason the server gives.
+			return Promise.resolve({
+				data: {
+					recipients: (body?.userIds ?? []).map((userId) =>
+						shareable.includes(userId)
+							? { userId, shareable: true, certificate: 'PEM' }
+							: {
+									userId,
+									shareable: false,
+									reason: 'no_active_suite',
+								},
+					),
+				},
+			})
+		}
+		return Promise.resolve({ data: {} })
 	})
 }
 
@@ -42,11 +88,6 @@ describe('TeamFolderDialog', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
 		vi.restoreAllMocks()
-		// Where @nextcloud/auth reads the session user from. The member picker
-		// drops the current user from its candidates — they already own the
-		// folder — and that is also what keeps today's own-suites-only response
-		// from listing a single bogus candidate.
-		document.head.setAttribute('data-user', 'me')
 	})
 
 	it('offers to share an unshared folder', async () => {
@@ -94,13 +135,11 @@ describe('TeamFolderDialog', () => {
 		)
 	})
 
-	it('asks for an id by hand while no suite owners can be listed', async () => {
-		// What the server does TODAY: /suites answers with the caller's own
-		// suites, so there is nobody to offer and the field must stay usable.
-		mockApi({
-			owned: [{ id: 'tf-1', folderId: 'folder-1', members: [] }],
-			suites: [{ ownerType: 'user', ownerId: 'me', status: 'active' }],
-		})
+	it('asks for an id by hand when the search returns nobody', async () => {
+		// A legitimate answer: an instance restricting shares to group members
+		// can leave a user with no candidates at all, and the field has to stay
+		// usable rather than becoming a dropdown that cannot be opened.
+		mockApi({ owned: [{ id: 'tf-1', folderId: 'folder-1', members: [] }] })
 		const wrapper = mount(TeamFolderDialog, {
 			propsData: { open: true, folderId: 'folder-1', folderName: 'DevOps' },
 		})
@@ -116,9 +155,7 @@ describe('TeamFolderDialog', () => {
 		).toBe(false)
 	})
 
-	it('offers a picker of suite owners once the endpoint reports them', async () => {
-		// What the same code does once /suites can answer for everyone: no
-		// change here beyond the response.
+	it('offers the sharees, marking the ones with no suite unselectable', async () => {
 		mockApi({
 			owned: [
 				{
@@ -127,16 +164,8 @@ describe('TeamFolderDialog', () => {
 					members: [{ id: 'm1', memberType: 'user', memberId: 'bob' }],
 				},
 			],
-			suites: [
-				{ ownerType: 'user', ownerId: 'carol', status: 'active' },
-				// Already a member — offering them again invites a no-op.
-				{ ownerType: 'user', ownerId: 'bob', status: 'active' },
-				// Revoked: no key to encrypt to, so the copies could never
-				// be created.
-				{ ownerType: 'user', ownerId: 'dave', status: 'revoked' },
-				// Not a user: a suite can be owned by other things.
-				{ ownerType: 'group', ownerId: 'devops', status: 'active' },
-			],
+			sharees: ['carol', 'bob', 'dave'],
+			shareable: ['carol', 'bob'],
 		})
 		const wrapper = mount(TeamFolderDialog, {
 			propsData: { open: true, folderId: 'folder-1', folderName: 'DevOps' },
@@ -144,7 +173,12 @@ describe('TeamFolderDialog', () => {
 		wrapper.vm.refresh()
 		await flush()
 
-		expect(wrapper.vm.memberCandidates).toEqual(['carol'])
+		// bob is already a member, so he goes; dave stays, flagged — "dave is
+		// missing" is a bug report, "dave has no encryption suite" is an answer.
+		expect(wrapper.vm.memberCandidates).toEqual([
+			{ label: 'carol', value: 'carol', shareable: true },
+			{ label: 'dave', value: 'dave', shareable: false },
+		])
 		expect(
 			wrapper.find('[data-testid="team-folder-member-select"]').exists(),
 		).toBe(true)
@@ -175,17 +209,23 @@ describe('TeamFolderDialog', () => {
 		wrapper.vm.newMemberType = 'group'
 		await flush()
 
-		expect(wrapper.vm.memberCandidates).toEqual(['admin', 'support'])
+		// Groups hold no key of their own, so every one of them is selectable.
+		expect(wrapper.vm.memberCandidates).toEqual([
+			{ label: 'admin', value: 'admin', shareable: true },
+			{ label: 'support', value: 'support', shareable: true },
+		])
 		expect(
 			wrapper.find('[data-testid="team-folder-member-select"]').exists(),
 		).toBe(true)
 	})
 
-	it('searches the groups endpoint as the user types, once', async () => {
+	it('searches the directory as the user types, once per burst', async () => {
 		vi.useFakeTimers()
 		mockApi({
 			owned: [{ id: 'tf-1', folderId: 'folder-1', members: [] }],
 			groups: ['devops'],
+			sharees: ['carol'],
+			shareable: ['carol'],
 		})
 		const wrapper = mount(TeamFolderDialog, {
 			propsData: { open: true, folderId: 'folder-1', folderName: 'DevOps' },
@@ -197,23 +237,32 @@ describe('TeamFolderDialog', () => {
 		wrapper.vm.onCandidateSearch('devo')
 		vi.runAllTimers()
 
-		// One call for three keystrokes, carrying the LAST term — the endpoint
-		// pages, so searching is how a group past the first page is reached.
-		const searches = axios.get.mock.calls.filter(([url]) =>
+		// One call for three keystrokes, carrying the LAST term — both
+		// directories page, so searching is how anyone past the first page is
+		// reached.
+		const groupSearches = axios.get.mock.calls.filter(([url]) =>
 			url.includes('cloud/groups'),
 		)
-		expect(searches).toHaveLength(1)
-		expect(searches[0][1].params.search).toBe('devo')
+		expect(groupSearches).toHaveLength(1)
+		expect(groupSearches[0][1].params.search).toBe('devo')
 
-		// Users are a local list; typing must not hit the groups endpoint.
+		// The user side searches its own directory, not the group one.
 		wrapper.vm.newMemberType = 'user'
 		wrapper.vm.onCandidateSearch('ca')
 		vi.runAllTimers()
+		// Back to real timers BEFORE flushing: flush() is itself a timeout, so
+		// under fake ones it would never resolve.
+		vi.useRealTimers()
+		await flush()
+
 		expect(
 			axios.get.mock.calls.filter(([url]) => url.includes('cloud/groups')),
 		).toHaveLength(1)
-
-		vi.useRealTimers()
+		const shareeSearches = axios.get.mock.calls.filter(([url]) =>
+			url.includes('sharees'),
+		)
+		expect(shareeSearches).toHaveLength(1)
+		expect(shareeSearches[0][1].params.search).toBe('ca')
 	})
 
 	it('clears a picked id when the member type changes', async () => {

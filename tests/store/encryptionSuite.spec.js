@@ -134,72 +134,8 @@ describe('useEncryptionSuiteStore — revocation', () => {
 	})
 })
 
-/**
- * The share-candidate list behind the team-folder member picker.
- *
- * Holding an ACTIVE suite is what makes someone shareable at all — without one
- * there is no public key to encrypt a copy for — so this is the only membership
- * list worth offering. It reads that off whatever `GET /suites` returns, which
- * is why it needs no change on the day that endpoint stops answering for the
- * caller alone.
- *
- * @spec openspec/specs/team-folder-sharing/spec.md#requirement-share-a-folder-as-a-team-folder
- */
-describe('useEncryptionSuiteStore — suite owners', () => {
-	beforeEach(() => {
-		setActivePinia(createPinia())
-		vi.restoreAllMocks()
-		document.head.setAttribute('data-user', 'me')
-	})
-
-	it('is empty while the endpoint answers for the caller alone', async () => {
-		// Today's server: EncryptionSuiteController::index passes the session
-		// user to getSuitesByOwner, so every row is the caller's own. They are
-		// not a candidate for their own team folder, which leaves nothing —
-		// and callers fall back to asking for an id by hand rather than
-		// showing a list of one useless entry.
-		vi.spyOn(axios, 'get').mockResolvedValue({
-			data: [
-				{ ownerType: 'user', ownerId: 'me', status: 'active' },
-				{ ownerType: 'user', ownerId: 'me', status: 'revoked' },
-			],
-		})
-
-		await expect(useEncryptionSuiteStore().fetchSuiteOwners()).resolves.toEqual(
-			[],
-		)
-	})
-
-	it('lists the other active user owners once the endpoint reports them', async () => {
-		vi.spyOn(axios, 'get').mockResolvedValue({
-			data: [
-				{ ownerType: 'user', ownerId: 'carol', status: 'active' },
-				{ ownerType: 'user', ownerId: 'alice', status: 'active' },
-				// Duplicate owner: one candidate, not two.
-				{ ownerType: 'user', ownerId: 'alice', status: 'active' },
-				// Revoked — no key to encrypt to, so its copies could never
-				// be created and the reconcile pass would report them missing
-				// for good.
-				{ ownerType: 'user', ownerId: 'dave', status: 'revoked' },
-				// Not a user: a suite can be owned by other things.
-				{ ownerType: 'group', ownerId: 'devops', status: 'active' },
-				{ ownerType: 'user', ownerId: 'me', status: 'active' },
-			],
-		})
-
-		const store = useEncryptionSuiteStore()
-		await store.fetchSuiteOwners()
-
-		expect(store.suiteOwners).toEqual(['alice', 'carol'])
-	})
-
-	it('survives a response that is not a list', async () => {
-		// An error payload ({message: ...}) must not throw on iteration: the
-		// picker is a convenience and its failure cannot take the dialog down.
-		vi.spyOn(axios, 'get').mockResolvedValue({ data: { message: 'nope' } })
-
-		await expect(useEncryptionSuiteStore().fetchSuiteOwners()).resolves.toEqual(
-			[],
-		)
-	})
-})
+// The share-candidate lookup used to live here, reading user ids off
+// `GET /suites`. It has moved to `useShareStore` and changed shape with it:
+// the server deliberately has no endpoint listing who holds a suite, so
+// candidates are named by Nextcloud's sharee search and PROBED
+// (tests/store/share.recipients.spec.js).
