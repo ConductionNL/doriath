@@ -40,10 +40,11 @@ class ShareController extends OCSController {
 	/**
 	 * The most recipients recipientCertificates() will probe in one request.
 	 *
-	 * A cap rather than an unbounded loop: the endpoint fans out to a single
-	 * IN query, but an unbounded id list still lets one request cost an
-	 * arbitrary amount of work. 100 comfortably covers a sharee-search page,
-	 * which is where the ids come from.
+	 * A limit on how many distinct people one lookup may ask about, not a
+	 * defensive bound on input size: the endpoint fans out to a single IN
+	 * query and deduplication is linear, so the work is proportional to what
+	 * was actually asked. 100 comfortably covers a sharee-search page, which
+	 * is where the ids come from.
 	 *
 	 * @var int
 	 */
@@ -377,11 +378,16 @@ class ShareController extends OCSController {
 			);
 		}
 
+		// The bound is on DISTINCT recipients, which is the thing a caller can
+		// reason about: "this secret may not go to more than N people". It is
+		// checked after deduplication because a list naming the same person
+		// twice is asking about one person, and normaliseUserIds() is now cheap
+		// enough that reaching this point costs nothing worth guarding.
 		if (count($requested) > self::MAX_RECIPIENT_PROBE) {
 			return new JSONResponse(
 				data: [
 					'message' => sprintf(
-						'At most %d user ids may be probed at once, %d given',
+						'At most %d distinct recipients may be looked up at once, %d given',
 						self::MAX_RECIPIENT_PROBE,
 						count($requested)
 					),
@@ -446,26 +452,30 @@ class ShareController extends OCSController {
 	/**
 	 * Reduce a raw id list to the distinct non-empty strings it contains.
 	 *
-	 * Input order is preserved so the caller can zip the response against the
-	 * list it sent.
+	 * First-seen order is preserved as a convenience, but it is NOT a
+	 * positional contract: duplicates and non-string entries are dropped, so
+	 * the result can be shorter than the input. Callers correlate by `userId`.
 	 *
 	 * @param array<mixed> $userIds The raw ids as submitted.
 	 *
 	 * @return string[] The distinct ids, in the order first seen.
 	 */
 	private function normaliseUserIds(array $userIds): array {
-		$requested = [];
-
-		foreach ($userIds as $candidate) {
-			if (is_string($candidate) === false || $candidate === '') {
-				continue;
-			}
-
-			if (in_array($candidate, $requested, true) === false) {
-				$requested[] = $candidate;
-			}
-		}
-
-		return $requested;
+		// Deduplication is array_unique's job: it keeps the FIRST occurrence and
+		// the original order, which is exactly the semantics wanted here. The hand-rolled loop this
+		// replaces called in_array() against a growing array, making the walk
+		// quadratic in the number of distinct ids.
+		//
+		// Not a keyed set: PHP coerces a numeric-string array key to int, and
+		// Nextcloud user ids may be numeric strings, so "0123" would come back
+		// as 123.
+		return array_values(
+			array_unique(
+				array_filter(
+					$userIds,
+					static fn (mixed $candidate): bool => (is_string($candidate) === true && $candidate !== '')
+				)
+			)
+		);
 	}//end normaliseUserIds()
 }//end class

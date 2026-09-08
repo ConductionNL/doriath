@@ -95,8 +95,17 @@ single-recipient resolution. Returning the older one would hand back the
 certificate the owner is migrating away from, producing a copy the recipient
 cannot open.
 
-The number of ids accepted in one request MUST be bounded, and a request
-exceeding the bound MUST be refused rather than truncated.
+The number of DISTINCT recipients one lookup may cover MUST be bounded, and a
+request exceeding the bound MUST be refused rather than truncated. The bound
+counts recipients, not submitted entries: a list naming the same person twice
+asks about one person. Deduplication MUST NOT be quadratic in the number of
+entries, so that reaching the bound check costs work proportional to what was
+actually asked.
+
+Results MUST carry the user id they describe, and callers MUST correlate by
+that id rather than by position: duplicate and malformed entries are dropped,
+so the result may be shorter than the request. Returning the surviving ids in
+first-seen order is a convenience, not a positional guarantee.
 
 #### Scenario: Mixed candidates answered in one request
 @e2e exclude Machine-to-machine lookup with no UI surface of its own; covered by ShareControllerTest.
@@ -116,6 +125,12 @@ exceeding the bound MUST be refused rather than truncated.
 - GIVEN user B has two active EncryptionSuites from an in-flight compromise recovery
 - WHEN a client looks up B
 - THEN the certificate returned MUST be that of the most recently created suite
+
+#### Scenario: Results are correlated by id, not position
+@e2e exclude Machine-to-machine lookup with no UI surface of its own; covered by ShareControllerTest.
+- WHEN a client submits a list containing duplicate and empty entries
+- THEN each result MUST name the user it describes
+- AND the result list MAY be shorter than the submitted list
 
 #### Scenario: Oversized request refused
 @e2e exclude Machine-to-machine lookup with no UI surface of its own; covered by ShareControllerTest.

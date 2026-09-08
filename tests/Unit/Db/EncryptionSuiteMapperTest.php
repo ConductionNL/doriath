@@ -39,6 +39,16 @@ use Throwable;
 class EncryptionSuiteMapperTest extends TestCase {
 
 	/**
+	 * The table findActiveByOwners() reads, unprefixed.
+	 *
+	 * Mirrors EncryptionSuiteMapper's own table name; a mismatch shows up as a
+	 * skipped suite, which is why it is asserted below.
+	 *
+	 * @var string
+	 */
+	private const TABLE = 'keepiq_enc_suites';
+
+	/**
 	 * The live database connection, or null without Nextcloud.
 	 *
 	 * @var IDBConnection|null
@@ -62,8 +72,11 @@ class EncryptionSuiteMapperTest extends TestCase {
 	/**
 	 * Resolve a real connection, or skip.
 	 *
-	 * The reachability check goes through the mapper rather than naming a
-	 * table, so it holds on either side of the doriath -> keepiq table rename.
+	 * The missing-schema condition is tested DIRECTLY, with tableExists(), and
+	 * nothing else is caught. Running the query and skipping on any Throwable
+	 * would report a genuine regression in findActiveByOwners() — a syntax
+	 * error, a binding mistake, a driver incompatibility — as "migrations have
+	 * not run", turning a red build green.
 	 *
 	 * @return void
 	 */
@@ -75,13 +88,12 @@ class EncryptionSuiteMapperTest extends TestCase {
 		}
 
 		$this->db = \OC::$server->get(IDBConnection::class);
-		$this->mapper = new EncryptionSuiteMapper(db: $this->db);
 
-		try {
-			$this->mapper->findActiveByOwners(ownerType: 'user', ownerIds: ['__probe__']);
-		} catch (Throwable) {
+		if ($this->db->tableExists(self::TABLE) === false) {
 			$this->markTestSkipped(message: 'keepiq migrations have not run on this instance');
 		}
+
+		$this->mapper = new EncryptionSuiteMapper(db: $this->db);
 	}//end setUp()
 
 	/**
@@ -201,4 +213,19 @@ class EncryptionSuiteMapperTest extends TestCase {
 	public function testAnEmptyIdListReturnsNothing(): void {
 		$this->assertSame([], $this->mapper->findActiveByOwners(ownerType: 'user', ownerIds: []));
 	}//end testAnEmptyIdListReturnsNothing()
+	/**
+	 * The skip guard names the table the mapper actually reads.
+	 *
+	 * Without this, renaming the table would make every test above skip rather
+	 * than fail — the exact silent-green Wilco flagged, one level up.
+	 *
+	 * @return void
+	 */
+	public function testTheSkipGuardNamesTheMappersOwnTable(): void {
+		$this->assertStringContainsString(
+			self::TABLE,
+			(new EncryptionSuiteMapper(db: $this->db))->getTableName(),
+			'the skip guard must name the table the mapper reads'
+		);
+	}//end testTheSkipGuardNamesTheMappersOwnTable()
 }//end class

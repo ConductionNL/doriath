@@ -552,6 +552,53 @@ class ShareControllerTest extends TestCase {
 	}//end testRecipientCertificatesRejectsAnOversizedList()
 
 	/**
+	 * The bound counts distinct recipients, not submitted entries.
+	 *
+	 * A long list naming the same two people is asking about two people, and
+	 * is answered rather than refused. The limit exists to cap how many
+	 * recipients one lookup covers, not to police payload size.
+	 *
+	 * @return void
+	 */
+	public function testRecipientCertificatesBoundsDistinctRecipientsNotSubmittedEntries(): void {
+		$this->shareService->expects($this->once())
+			->method('recipientCertificates')
+			->with(['alice', 'bob'])
+			->willReturn(['alice' => 'PEM-ALICE', 'bob' => 'PEM-BOB']);
+
+		$ids = [];
+		for ($i = 0; $i < 101; $i++) {
+			$ids[] = (($i % 2) === 0) ? 'alice' : 'bob';
+		}
+
+		$response = $this->controller()->recipientCertificates($ids);
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(['alice', 'bob'], array_column($response->getData()['recipients'], 'userId'));
+	}//end testRecipientCertificatesBoundsDistinctRecipientsNotSubmittedEntries()
+
+	/**
+	 * Every result names the user it describes.
+	 *
+	 * Callers correlate by id: duplicates and malformed entries are dropped, so
+	 * the result can be shorter than the request and positions do not line up.
+	 *
+	 * @return void
+	 */
+	public function testRecipientCertificatesResultsAreCorrelatedById(): void {
+		$this->shareService->method('recipientCertificates')->willReturn(['alice' => 'PEM-ALICE']);
+
+		$response = $this->controller()->recipientCertificates(['alice', 'alice', '', 'bob']);
+		$recipients = $response->getData()['recipients'];
+
+		$this->assertCount(2, $recipients, 'the result is shorter than the request');
+		foreach ($recipients as $entry) {
+			$this->assertArrayHasKey('userId', $entry);
+		}
+		$this->assertSame(['alice', 'bob'], array_column($recipients, 'userId'));
+	}//end testRecipientCertificatesResultsAreCorrelatedById()
+
+	/**
 	 * An anonymous caller is refused before the service is touched.
 	 *
 	 * @return void
