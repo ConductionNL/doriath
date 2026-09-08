@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2020 Nextcloud GmbH and Nextcloud contributors
+// SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+// SPDX-License-Identifier: AGPL-3.0-or-later
+//
+// ⚠️ THIS FILE IS AGPL-3.0-or-later. The rest of keepiq is EUPL-1.2.
+//
+// The config object below was inlined from `@nextcloud/webpack-vue-config`
+// (AGPL-3.0-or-later, © Nextcloud GmbH) when that package was dropped from the
+// dependency tree — see the WHY block further down. Roughly half of the inlined
+// literal, including several of upstream's own explanatory comments, is
+// verbatim, so the file carries Nextcloud's licence rather than the repo-wide
+// EUPL-1.2 blanket in REUSE.toml. `precedence = "closest"` there means this
+// header wins; the same arrangement `.editorconfig` already uses.
+//
+// Consequence for anyone editing this file: code copied OUT of here is
+// AGPL-3.0-or-later and cannot simply be pasted into an EUPL-1.2 source file.
+
 const fs = require('fs')
 const MinimizerPlugin = require('minimizer-webpack-plugin')
 const path = require('path')
