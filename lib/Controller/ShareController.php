@@ -466,9 +466,12 @@ class ShareController extends OCSController {
 		// replaces called in_array() against a growing array, making the walk
 		// quadratic in the number of distinct ids.
 		//
-		// Not a keyed set: PHP coerces a numeric-string array key to int, and
-		// Nextcloud user ids may be numeric strings, so "0123" would come back
-		// as 123.
+		// Not a keyed set. PHP coerces an array key that is a CANONICAL decimal
+		// integer string, so a user id of "123" or "-7" comes back from
+		// array_keys() as an int, while "0123", "007" and "1e3" stay strings.
+		// Nextcloud user ids may be numeric, so the ones that survive and the
+		// ones that change type would depend on the id - which is worse than
+		// if it broke uniformly.
 		return array_values(
 			array_unique(
 				array_filter(

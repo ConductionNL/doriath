@@ -496,10 +496,12 @@ class ShareControllerTest extends TestCase {
 	}//end testRecipientCertificatesReportsBothShareableAndNot()
 
 	/**
-	 * Input order is preserved and duplicates collapse.
+	 * Duplicates collapse, and first-seen order is kept.
 	 *
-	 * The caller zips the response against the list it sent, so order is part
-	 * of the contract, not an accident of the query.
+	 * Order is a convenience, NOT a positional contract - the result can be
+	 * shorter than the request, so callers correlate by `userId`. Asserted
+	 * here because the order is still the one a reader would expect, not
+	 * because anything may depend on the positions lining up.
 	 *
 	 * @return void
 	 */
