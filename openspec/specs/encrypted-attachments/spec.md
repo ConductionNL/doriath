@@ -29,6 +29,43 @@ The system MUST encrypt an attachment's bytes exactly once under a random file k
 - THEN the browser MUST re-wrap the file key under the recipient's certificate and create a grant referencing the existing blob
 - AND the blob MUST NOT be re-uploaded or duplicated
 
+### Requirement: Blob addressing survives relocation
+A blob's address has two halves that live in different stores: the AppData
+namespace naming the folder, and the `blob_ref` column naming the file inside
+it. The system MUST keep them consistent. Changing the namespace without moving
+the files, or moving the files without updating the namespace, MUST NOT be
+possible as a partial change — the failure is silent, because uploads keep
+working, every existing download 404s, and no error is logged.
+
+Relocating blobs MUST go through the storage API rather than the filesystem, so
+the file cache moves with the files; a filesystem move leaves the cache naming
+paths that no longer exist, which reproduces the same silent 404 one layer down.
+
+A relocation MUST verify each copy before removing its source, MUST refuse
+rather than overwrite where the destination already holds a blob of that name,
+and MUST NOT abort the surrounding upgrade on a single failure. Attachment
+bytes are AES-GCM ciphertext whose file key is RSA-wrapped per recipient, so a
+blob orphaned by a half-finished move cannot be reconstructed from anything the
+server holds.
+
+#### Scenario: Relocation verifies before deleting
+@e2e exclude Storage-layer relocation with no UI surface; covered by MoveAttachmentBlobsTest.
+- GIVEN a blob exists under the old namespace
+- WHEN it is relocated and the copy does not match the source's byte count
+- THEN the source MUST be left in place and the mismatch reported
+
+#### Scenario: Relocation refuses to overwrite
+@e2e exclude Storage-layer relocation with no UI surface; covered by MoveAttachmentBlobsTest.
+- GIVEN a blob of the same name already exists under the new namespace
+- WHEN relocation runs
+- THEN both copies MUST be left untouched and the collision reported
+
+#### Scenario: Nothing to relocate is not an error
+@e2e exclude Storage-layer relocation with no UI surface; covered by MoveAttachmentBlobsTest.
+- GIVEN an install with no blobs under the old namespace
+- WHEN relocation runs
+- THEN it MUST complete without error and without touching storage
+
 ### Requirement: Per-attachment size limit and per-user quota
 The system MUST enforce an admin-configurable per-attachment maximum size (default 25 MiB) and per-user storage quota (default 100 MiB) in stored ciphertext bytes, server-side at upload time.
 
