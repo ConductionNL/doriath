@@ -111,20 +111,6 @@ class ShareService {
 	}//end registerDirectShares()
 
 	/**
-	 * The active-suite PEM certificate of a share recipient — public key
-	 * material only (needed client-side to encrypt the copy; ADR-003).
-	 *
-	 * @param string $targetUserId The prospective recipient
-	 *
-	 * @return string|null The PEM certificate (null = no active suite)
-	 *
-	 * @spec openspec/specs/user-sharing/spec.md#requirement-share-a-secret
-	 */
-	public function recipientCertificate(string $targetUserId): ?string {
-		return $this->directRegistrar->recipientCertificate(targetUserId: $targetUserId);
-	}//end recipientCertificate()
-
-	/**
 	 * The active certificates of several prospective recipients.
 	 *
 	 * @param string[] $targetUserIds The prospective recipients

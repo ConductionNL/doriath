@@ -309,7 +309,10 @@ class ShareController extends OCSController {
 			return new JSONResponse(data: ['message' => 'Unauthorized'], statusCode: Http::STATUS_UNAUTHORIZED);
 		}
 
-		$certificate = $this->shareService->recipientCertificate(targetUserId: $userId);
+		// Goes through the batch lookup so both endpoints resolve a recipient
+		// by exactly one code path and cannot drift apart.
+		$certificates = $this->shareService->recipientCertificates(targetUserIds: [$userId]);
+		$certificate = ($certificates[$userId] ?? null);
 		if ($certificate === null) {
 			return new JSONResponse(
 				data: ['message' => 'Recipient has no active encryption suite'],
@@ -363,18 +366,7 @@ class ShareController extends OCSController {
 			return new JSONResponse(data: ['message' => 'Unauthorized'], statusCode: Http::STATUS_UNAUTHORIZED);
 		}
 
-		$requested = [];
-		foreach ($userIds as $candidate) {
-			if (is_string($candidate) === false || $candidate === '') {
-				continue;
-			}
-
-			// Deduplicated, and input order preserved so the caller can zip the
-			// response against the list it sent.
-			if (in_array($candidate, $requested, true) === false) {
-				$requested[] = $candidate;
-			}
-		}
+		$requested = $this->normaliseUserIds(userIds: $userIds);
 
 		if ($requested === []) {
 			return new JSONResponse(
@@ -449,4 +441,29 @@ class ShareController extends OCSController {
 			return new JSONResponse(data: ['message' => 'Not found'], statusCode: Http::STATUS_NOT_FOUND);
 		}
 	}//end writeContext()
+	/**
+	 * Reduce a raw id list to the distinct non-empty strings it contains.
+	 *
+	 * Input order is preserved so the caller can zip the response against the
+	 * list it sent.
+	 *
+	 * @param array<mixed> $userIds The raw ids as submitted.
+	 *
+	 * @return string[] The distinct ids, in the order first seen.
+	 */
+	private function normaliseUserIds(array $userIds): array {
+		$requested = [];
+
+		foreach ($userIds as $candidate) {
+			if (is_string($candidate) === false || $candidate === '') {
+				continue;
+			}
+
+			if (in_array($candidate, $requested, true) === false) {
+				$requested[] = $candidate;
+			}
+		}
+
+		return $requested;
+	}//end normaliseUserIds()
 }//end class

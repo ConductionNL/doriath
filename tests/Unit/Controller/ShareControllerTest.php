@@ -358,9 +358,9 @@ class ShareControllerTest extends TestCase {
 	 */
 	public function testRecipientCertificateReturnsTheRequestedUsersPublicMaterial(): void {
 		$this->shareService->expects($this->once())
-			->method('recipientCertificate')
-			->with('bob')
-			->willReturn('-----BEGIN CERTIFICATE-----BOB-----END CERTIFICATE-----');
+			->method('recipientCertificates')
+			->with(['bob'])
+			->willReturn(['bob' => '-----BEGIN CERTIFICATE-----BOB-----END CERTIFICATE-----']);
 
 		$response = $this->controller('alice')->recipientCertificate(userId: 'bob');
 
@@ -383,9 +383,9 @@ class ShareControllerTest extends TestCase {
 	 */
 	public function testRecipientCertificateAnswers404WhenTheRecipientHasNoActiveSuite(): void {
 		$this->shareService->expects($this->once())
-			->method('recipientCertificate')
-			->with('mallory')
-			->willReturn(null);
+			->method('recipientCertificates')
+			->with(['mallory'])
+			->willReturn([]);
 
 		$response = $this->controller('alice')->recipientCertificate(userId: 'mallory');
 
@@ -402,7 +402,7 @@ class ShareControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testRecipientCertificateRejectsAnAnonymousCallerBeforeTheService(): void {
-		$this->shareService->expects($this->never())->method('recipientCertificate');
+		$this->shareService->expects($this->never())->method('recipientCertificates');
 
 		$response = $this->controller(null)->recipientCertificate(userId: 'bob');
 
