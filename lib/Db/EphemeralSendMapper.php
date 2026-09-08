@@ -27,7 +27,7 @@ use OCP\AppFramework\Db\QBMapper;
 use OCP\IDBConnection;
 
 /**
- * Mapper for the doriath_ephemeral_sends table.
+ * Mapper for the keepiq_ephemeral_sends table.
  *
  * @template-extends QBMapper<EphemeralSend>
  */
@@ -40,7 +40,7 @@ class EphemeralSendMapper extends QBMapper {
 	 * @return void
 	 */
 	public function __construct(IDBConnection $db) {
-		parent::__construct(db: $db, tableName: 'doriath_ephemeral_sends', entityClass: EphemeralSend::class);
+		parent::__construct(db: $db, tableName: 'keepiq_ephemeral_sends', entityClass: EphemeralSend::class);
 	}//end __construct()
 
 	/**

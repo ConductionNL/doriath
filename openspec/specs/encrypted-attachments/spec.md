@@ -83,6 +83,6 @@ The system MUST dispatch typed events for attachment upload, download, and delet
 
 ## Notes
 
-- Storage backend (provisional): ciphertext blobs in Nextcloud app data (`IAppData`); metadata + wrapped keys in own DB tables (`doriath_attachments`, `doriath_attachment_grants`). See the change's design "Decisions made under uncertainty".
+- Storage backend (provisional): ciphertext blobs in Nextcloud app data (`IAppData`); metadata + wrapped keys in own DB tables (`keepiq_attachments`, `keepiq_attachment_grants`). See the change's design "Decisions made under uncertainty".
 - Out of scope for v1: server-side preview/thumbnailing/scanning (impossible under ADR-003), and attachments on link shares / secret requests (deferred).
 - Related ADRs: ADR-001 (own DB tables), ADR-003 (RSA/AES encryption architecture).

@@ -9,7 +9,7 @@
   ⚠️ This waiver is not "no baseline needed" — it records a defect, and a larger
   one than its neighbour: this view is the ONLY consumer of
   useDashboardSettingsStore, which is backed by a real controller and the
-  oc_doriath_dashboard_settings table, so the whole dashboard-preferences
+  oc_keepiq_dashboard_settings table, so the whole dashboard-preferences
   feature is implemented end to end with no way in. Remove this waiver together
   with issue #208, by wiring the view up or by deleting the feature.
 -->

@@ -433,7 +433,7 @@ test.describe('Routed page surfaces — public recipient routes', () => {
 		// Mint the fixture rather than relying on the seeded rows: the
 		// link-share workflow spec REVOKES them (hard delete), so depending on
 		// them makes this test a function of run order. Observed on a dev rig:
-		// oc_doriath_link_shares went 3 rows -> 0 across one suite run.
+		// oc_keepiq_link_shares went 3 rows -> 0 across one suite run.
 		const created = await api(
 			page,
 			'POST',

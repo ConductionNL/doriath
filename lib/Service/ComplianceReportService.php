@@ -104,34 +104,34 @@ class ComplianceReportService {
 		$activeStateWhere = "state IN ('granted','accepted','active')";
 		$aggregate = [
 			'adoption' => [
-				'usersWithActiveSuite' => $this->countDistinct(table: 'doriath_enc_suites', column: 'owner_id', where: $activeSuiteWhere),
-				'usersWithSecrets' => $this->countDistinct(table: 'doriath_secrets', column: 'owner_id', where: "owner_type = 'user'"),
-				'usersWithEmergencyContact' => $this->countDistinct(table: 'doriath_emergency_contacts', column: 'grantor_user_id', where: null),
+				'usersWithActiveSuite' => $this->countDistinct(table: 'keepiq_enc_suites', column: 'owner_id', where: $activeSuiteWhere),
+				'usersWithSecrets' => $this->countDistinct(table: 'keepiq_secrets', column: 'owner_id', where: "owner_type = 'user'"),
+				'usersWithEmergencyContact' => $this->countDistinct(table: 'keepiq_emergency_contacts', column: 'grantor_user_id', where: null),
 			],
 			'secretsPerUser' => $this->secretsPerUserSection(),
 			'shareHygiene' => [
-				'userShares' => $this->countAll(table: 'doriath_share_targets'),
-				'groupShares' => $this->countAll(table: 'doriath_group_shares'),
-				'linkShares' => $this->countAll(table: 'doriath_link_shares'),
+				'userShares' => $this->countAll(table: 'keepiq_share_targets'),
+				'groupShares' => $this->countAll(table: 'keepiq_group_shares'),
+				'linkShares' => $this->countAll(table: 'keepiq_link_shares'),
 				// Every link share carries an Argon2id-wrapped snapshot;
 				// "password protected" = the whole population by protocol.
-				'linkSharesPasswordProtected' => $this->countWhere(table: 'doriath_link_shares', where: "argon2id_salt <> ''"),
-				'linkSharesExpiring' => $this->countWhere(table: 'doriath_link_shares', where: 'expires_at IS NOT NULL'),
+				'linkSharesPasswordProtected' => $this->countWhere(table: 'keepiq_link_shares', where: "argon2id_salt <> ''"),
+				'linkSharesExpiring' => $this->countWhere(table: 'keepiq_link_shares', where: 'expires_at IS NOT NULL'),
 			],
 			'rotationPosture' => $this->rotationPostureSection(),
 			'auditIntegrity' => [
 				'retentionDays' => $this->appConfig->getValueInt(Application::APP_ID, 'audit_retention_days', 365),
-				'totalEntries' => $this->countAll(table: 'doriath_audit_log'),
-				'firstEntryAt' => $this->scalar(sql: 'SELECT MIN(occurred_at) FROM *PREFIX*doriath_audit_log'),
+				'totalEntries' => $this->countAll(table: 'keepiq_audit_log'),
+				'firstEntryAt' => $this->scalar(sql: 'SELECT MIN(occurred_at) FROM *PREFIX*keepiq_audit_log'),
 				'appendOnly' => true,
 			],
 			'emergencyAccess' => [
 				'grantorsWithActiveContact' => $this->countDistinct(
-					table: 'doriath_emergency_contacts',
+					table: 'keepiq_emergency_contacts',
 					column: 'grantor_user_id',
 					where: $activeStateWhere
 				),
-				'pendingRequests' => $this->countWhere(table: 'doriath_emergency_contacts', where: "state IN ('requested','pending')"),
+				'pendingRequests' => $this->countWhere(table: 'keepiq_emergency_contacts', where: "state IN ('requested','pending')"),
 			],
 		];
 
@@ -260,7 +260,7 @@ class ComplianceReportService {
 	private function secretsPerUserSection(): array {
 		$counts = [];
 		$result = $this->db->executeQuery(
-			'SELECT COUNT(*) AS c FROM *PREFIX*doriath_secrets WHERE owner_type = ? GROUP BY owner_id',
+			'SELECT COUNT(*) AS c FROM *PREFIX*keepiq_secrets WHERE owner_type = ? GROUP BY owner_id',
 			['user']
 		);
 		while (($row = $result->fetch()) !== false) {
@@ -306,7 +306,7 @@ class ComplianceReportService {
 		try {
 			$flagsByReason = [];
 			$result = $this->db->executeQuery(
-				'SELECT reason, COUNT(*) AS c FROM *PREFIX*doriath_rotation_flags WHERE status = ? GROUP BY reason',
+				'SELECT reason, COUNT(*) AS c FROM *PREFIX*keepiq_rotation_flags WHERE status = ? GROUP BY reason',
 				['open']
 			);
 			while (($row = $result->fetch()) !== false) {
@@ -319,12 +319,12 @@ class ComplianceReportService {
 
 			return [
 				'available' => true,
-				'expiryPolicies' => $this->countAll(table: 'doriath_expiry_policies'),
-				'secretsWithExpiry' => $this->countWhere(table: 'doriath_secrets', where: 'expires_at IS NOT NULL'),
-				'overdueSecrets' => $this->countWhere(table: 'doriath_secrets', where: $overdueWhere),
+				'expiryPolicies' => $this->countAll(table: 'keepiq_expiry_policies'),
+				'secretsWithExpiry' => $this->countWhere(table: 'keepiq_secrets', where: 'expires_at IS NOT NULL'),
+				'overdueSecrets' => $this->countWhere(table: 'keepiq_secrets', where: $overdueWhere),
 				'openFlagsByReason' => $flagsByReason,
 				'ciphertextAgeBands' => $this->ciphertextAgeBands(),
-				'possiblyCompromised' => $this->countWhere(table: 'doriath_secrets', where: 'possibly_compromised_at IS NOT NULL'),
+				'possiblyCompromised' => $this->countWhere(table: 'keepiq_secrets', where: 'possibly_compromised_at IS NOT NULL'),
 			];
 		} catch (Throwable) {
 			return ['available' => false];
@@ -344,7 +344,7 @@ class ComplianceReportService {
 			'over1Year' => 0,
 		];
 		$result = $this->db->executeQuery(
-			'SELECT key_updated_at FROM *PREFIX*doriath_secrets WHERE key_updated_at IS NOT NULL'
+			'SELECT key_updated_at FROM *PREFIX*keepiq_secrets WHERE key_updated_at IS NOT NULL'
 		);
 		$now = time();
 		while (($row = $result->fetch()) !== false) {

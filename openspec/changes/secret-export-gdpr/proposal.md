@@ -29,7 +29,7 @@ _(none in delta form — the user-sharing spec's existing SecretDelegation `is_p
 
 ## Impact
 
-- **Database**: One small migration — `tombstoned_at` (datetime, nullable) and `tombstone_reason` (string, nullable) columns on `doriath_secrets` for detached recipient copies. No new tables
+- **Database**: One small migration — `tombstoned_at` (datetime, nullable) and `tombstone_reason` (string, nullable) columns on `keepiq_secrets` for detached recipient copies. No new tables
 - **Backend**: New `ExportController` (GDPR metadata package endpoint + export-event endpoints), new `AccountDeletionService` (cascade orchestration + shared-secret semantics), `UserDeletedEvent` listener registered in `Application.php`, three typed event classes under `lib/Event/`
 - **Frontend**: New `src/export/` serializer modules (backup format, CSV, GDPR package assembly), new Pinia store (`useExportStore`), export dialog and account-deletion dialog (own files per ADR-004), user-settings entry points
 - **API**: `GET /api/v1/gdpr/metadata` (server-side personal-data metadata), `POST /api/v1/export/events` (export event emission), `DELETE /api/v1/gdpr/account-data` (in-app deletion)

@@ -27,7 +27,7 @@ use OCP\AppFramework\Db\QBMapper;
 use OCP\IDBConnection;
 
 /**
- * Mapper for the doriath_compliance_reports table.
+ * Mapper for the keepiq_compliance_reports table.
  *
  * @template-extends QBMapper<ComplianceReport>
  */
@@ -40,7 +40,7 @@ class ComplianceReportMapper extends QBMapper {
 	 * @return void
 	 */
 	public function __construct(IDBConnection $db) {
-		parent::__construct(db: $db, tableName: 'doriath_compliance_reports', entityClass: ComplianceReport::class);
+		parent::__construct(db: $db, tableName: 'keepiq_compliance_reports', entityClass: ComplianceReport::class);
 	}//end __construct()
 
 	/**

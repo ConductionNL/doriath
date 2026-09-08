@@ -51,7 +51,7 @@ class MigrationFailureMapper extends QBMapper {
 	public function __construct(IDBConnection $db) {
 		parent::__construct(
 			db: $db,
-			tableName: 'doriath_migration_failures',
+			tableName: 'keepiq_migration_failures',
 			entityClass: MigrationFailure::class
 		);
 	}//end __construct()

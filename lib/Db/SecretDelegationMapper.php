@@ -41,7 +41,7 @@ class SecretDelegationMapper extends QBMapper {
 	 * @return void
 	 */
 	public function __construct(IDBConnection $db) {
-		parent::__construct(db: $db, tableName: 'doriath_secret_delegations', entityClass: SecretDelegation::class);
+		parent::__construct(db: $db, tableName: 'keepiq_secret_delegations', entityClass: SecretDelegation::class);
 	}//end __construct()
 
 	/**

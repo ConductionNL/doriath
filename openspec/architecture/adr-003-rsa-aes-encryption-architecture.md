@@ -136,8 +136,8 @@ Same guarantees: no state, no database, no entity context.
 $encryptedBlob = $secretService->getEncryptedValue($secretId, $appId);
 
 // 2. Read own credentials from Nextcloud's credential store
-$privateKey = $credentialsManager->retrieve($appId, 'doriath_private_key');
-$passphrase = $credentialsManager->retrieve($appId, 'doriath_passphrase');
+$privateKey = $credentialsManager->retrieve($appId, 'keepiq_private_key');
+$passphrase = $credentialsManager->retrieve($appId, 'keepiq_passphrase');
 
 // 3. Decrypt using Keepiq's stateless crypto utility
 $plaintext = $decryptService->decrypt($privateKey, $passphrase, $encryptedBlob);

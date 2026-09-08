@@ -113,7 +113,7 @@ suite rotation.
 
 ## Notes
 
-- New table `doriath_passkey_credentials` (own Doctrine entity/migration per ADR-001 — no OpenRegister).
+- New table `keepiq_passkey_credentials` (own Doctrine entity/migration per ADR-001 — no OpenRegister).
 - KEK = HKDF-SHA256(prfOutput, salt=credentialId, info="keepiq-passkey-kek-v1"); envelope reuses `src/crypto/envelope.js` (AES-256-GCM).
 - Staleness is tracked via an `unlock_key_epoch` on the private-key wrap.
 - Related specs: encryption-suites (unlock/session, master-password change), user-settings (management surface). Related ADRs: ADR-001, ADR-003.

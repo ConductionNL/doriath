@@ -30,7 +30,7 @@ Keepiq SHALL serve `GET /apps/keepiq/api/health` through the AppHost `GenericHea
 
 ### Requirement: Admin-Only Declarative Metrics Endpoint
 
-Keepiq SHALL serve `GET /apps/keepiq/api/metrics` through the AppHost `GenericMetricsController` in Prometheus text exposition format 0.0.4, restricted to admin users per ADR-006, with `keepiq_suites_total` computed as a SQL `COUNT(*)` over `doriath_enc_suites` filtered to `status = 'active'`.
+Keepiq SHALL serve `GET /apps/keepiq/api/metrics` through the AppHost `GenericMetricsController` in Prometheus text exposition format 0.0.4, restricted to admin users per ADR-006, with `keepiq_suites_total` computed as a SQL `COUNT(*)` over `keepiq_enc_suites` filtered to `status = 'active'`.
 
 #### Scenario: Metrics parity after adoption
 

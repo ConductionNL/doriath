@@ -3,7 +3,7 @@
 /**
  * Keepiq Audit Entry Entity
  *
- * One append-only row in the doriath_audit_log table: a single
+ * One append-only row in the keepiq_audit_log table: a single
  * server-observable secret operation recorded with its actor, event type,
  * object reference, denormalized non-sensitive object name, and a whitelisted
  * metadata payload (add-secret-audit-trail §1.2). The metadata column is

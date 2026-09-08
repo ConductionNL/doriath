@@ -5,7 +5,7 @@
  *
  * Nightly retention pruning of secret version history
  * (secret-version-history §4.2): per-secret count-based pruning plus a
- * bounded age-based batch. The live head is a `doriath_secrets` row and
+ * bounded age-based batch. The live head is a `keepiq_secrets` row and
  * is structurally untouchable here.
  *
  * @category BackgroundJob

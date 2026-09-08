@@ -40,7 +40,7 @@ class GroupShareMapper extends QBMapper {
 	 * @return void
 	 */
 	public function __construct(IDBConnection $db) {
-		parent::__construct(db: $db, tableName: 'doriath_group_shares', entityClass: GroupShare::class);
+		parent::__construct(db: $db, tableName: 'keepiq_group_shares', entityClass: GroupShare::class);
 	}//end __construct()
 
 	/**

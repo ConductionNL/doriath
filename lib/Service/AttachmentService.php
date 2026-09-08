@@ -113,7 +113,7 @@ class AttachmentService {
 	 * `appdata_<instanceid>/<appId>/`, so this string is a STORAGE LOCATION,
 	 * not a label. Every attachment ever uploaded lives at
 	 * `appdata_<instanceid>/doriath/attachments/<blob_ref>`, addressed by the
-	 * `blob_ref` column in `doriath_attachments` — and the bytes are AES-GCM
+	 * `blob_ref` column in `keepiq_attachments` — and the bytes are AES-GCM
 	 * ciphertext whose file key is RSA-wrapped per recipient, so they cannot
 	 * be re-created from anything the server holds.
 	 *
