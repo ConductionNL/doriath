@@ -108,35 +108,22 @@
 					  Both lists come from the SERVER's own directory, one
 					  request per keystroke-burst, because neither is small
 					  enough to hold locally: groups from the provisioning API,
-					  users from Nextcloud's sharee search narrowed to those
-					  who can actually receive a secret.
-
-					  A user who cannot is LISTED AND UNSELECTABLE rather than
-					  absent — "alice is missing" is a bug report, "alice has no
-					  encryption suite" is an answer.
+					  users from Nextcloud's sharee search narrowed to those who
+					  can actually receive a secret — a user without an active
+					  suite has no public key to encrypt a copy to, so they are
+					  not offered at all.
 					-->
 					<NcSelect
 						v-if="memberCandidates.length > 0"
 						class="team-folder-dialog__member-input"
 						:modelValue="newMemberId === '' ? null : newMemberId"
 						:options="memberCandidates"
-						:reduce="(option) => option.value"
-						:selectable="(option) => option.shareable"
 						:inputLabel="memberIdLabel"
 						:loading="candidatesLoading"
 						:disabled="busy"
 						data-testid="team-folder-member-select"
 						@update:modelValue="newMemberId = $event ?? ''"
-						@search="onCandidateSearch">
-						<template #option="option">
-							<span class="team-folder-dialog__candidate">
-								{{ option.label }}
-								<span v-if="!option.shareable">
-									{{ t('keepiq', 'No encryption suite') }}
-								</span>
-							</span>
-						</template>
-					</NcSelect>
+						@search="onCandidateSearch" />
 					<label v-else class="team-folder-dialog__id-field">
 						<span>{{ memberIdLabel }}</span>
 						<input
@@ -339,7 +326,7 @@ export default {
 		 * The two kinds come from different places because they ARE different:
 		 * a user must hold an active encryption suite before a secret can be
 		 * encrypted to them, so those are the sharee search narrowed by the
-		 * shareability probe (share.searchRecipientCandidates); a group holds
+		 * shareability probe (share.searchShareableRecipients); a group holds
 		 * no key of its own — its members are resolved and key-checked when
 		 * the fan-out runs — so those are simply the server's groups.
 		 *
@@ -358,23 +345,11 @@ export default {
 					.filter((member) => (member.memberType === 'group') === isGroup)
 					.map((member) => member.memberId),
 			)
-
-			// One option shape for both kinds, so the picker needs one
-			// template: a group is always shareable (it holds no key of its
-			// own), a user only with an active suite behind them.
 			const candidates = isGroup
-				? useGroupStore().groups.map((groupId) => ({
-						label: groupId,
-						value: groupId,
-						shareable: true,
-					}))
-				: useShareStore().recipientCandidates.map((recipient) => ({
-						label: recipient.userId,
-						value: recipient.userId,
-						shareable: recipient.shareable,
-					}))
+				? useGroupStore().groups
+				: useShareStore().shareableRecipients
 
-			return candidates.filter((option) => !taken.has(option.value))
+			return candidates.filter((id) => !taken.has(id))
 		},
 
 		/**
@@ -430,7 +405,7 @@ export default {
 			// folder itself is the dialog's subject. A failure in either must
 			// not replace the membership list with an error.
 			useShareStore()
-				.searchRecipientCandidates()
+				.searchShareableRecipients()
 				.catch(() => {})
 			useGroupStore()
 				.fetchGroups()
@@ -483,7 +458,7 @@ export default {
 			this.candidateSearchTimer = setTimeout(() => {
 				const search = isGroup
 					? useGroupStore().fetchGroups(term)
-					: useShareStore().searchRecipientCandidates(term)
+					: useShareStore().searchShareableRecipients(term)
 				search.catch(() => {})
 			}, CANDIDATE_SEARCH_DEBOUNCE_MS)
 		},
@@ -647,22 +622,6 @@ export default {
 
 .team-folder-dialog__add-button {
 	flex: 0 0 auto;
-}
-
-/*
- * Layout only — an unselectable candidate takes its grey from the library's
- * disabled-option colour (themed in assets/app.css), not from here.
- *
- * The cursor is the exception: the row carries `not-allowed`, but over the
- * text the topmost box is this span, so without inheriting it the cursor only
- * changed on the row's padding.
- */
-.team-folder-dialog__candidate {
-	display: flex;
-	align-items: baseline;
-	gap: 8px;
-	min-width: 0;
-	cursor: inherit;
 }
 
 .team-folder-dialog__id-field input {

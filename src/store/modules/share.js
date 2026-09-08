@@ -42,12 +42,12 @@ export const useShareStore = defineStore('share', {
 		/** @type {string|null} The last error message. */
 		error: null,
 		/**
-		 * Prospective recipients from the last candidate search, in the order
-		 * Nextcloud's sharee search returned them.
+		 * Users from the last candidate search who can actually receive a
+		 * secret, in the order Nextcloud's sharee search returned them.
 		 *
-		 * @type {Array<{userId: string, shareable: boolean, reason: string|null}>}
+		 * @type {Array<string>}
 		 */
-		recipientCandidates: [],
+		shareableRecipients: [],
 		/** @type {boolean} Whether a candidate search is in flight. */
 		candidatesLoading: false,
 	}),
@@ -64,8 +64,7 @@ export const useShareStore = defineStore('share', {
 
 	actions: {
 		/**
-		 * The users a secret could be shared with, and which of them can
-		 * actually receive one.
+		 * The users a secret can actually be shared with.
 		 *
 		 * TWO STEPS, because the server deliberately offers no third option.
 		 * Nextcloud's sharee search says WHO the caller may share with at all
@@ -81,26 +80,25 @@ export const useShareStore = defineStore('share', {
 		 * users the caller already named
 		 * (ShareController::recipientCertificates).
 		 *
-		 * Non-shareable candidates are KEPT, flagged rather than dropped: the
-		 * caller can then say why a colleague cannot be picked instead of
-		 * leaving them mysteriously absent. An unknown user and one without a
-		 * suite come back identically, on purpose — splitting them would make
-		 * the endpoint a user-existence oracle — so a `reason` never means
-		 * "this account exists".
+		 * Only the shareable ones come back. The endpoint's per-recipient
+		 * `reason` is not carried up: it says `no_active_suite` for a user
+		 * without a suite AND for one that does not exist — on purpose, so
+		 * that it cannot be used as a user-existence oracle — so it can tell a
+		 * caller nothing beyond "not this one".
 		 *
 		 * @param {string} [search] Sharee search term; '' asks for the first page.
 		 *
-		 * @return {Promise<Array<{userId: string, shareable: boolean, reason: string|null}>>}
+		 * @return {Promise<Array<string>>} User ids that can receive a secret.
 		 *
 		 * @spec openspec/specs/user-sharing/spec.md#requirement-recipient-shareability-lookup
 		 */
-		async searchRecipientCandidates(search = '') {
+		async searchShareableRecipients(search = '') {
 			this.candidatesLoading = true
 			try {
 				const userIds = await this.searchSharees(search)
 				if (userIds.length === 0) {
-					this.recipientCandidates = []
-					return this.recipientCandidates
+					this.shareableRecipients = []
+					return this.shareableRecipients
 				}
 
 				const response = await axios.post(
@@ -109,15 +107,13 @@ export const useShareStore = defineStore('share', {
 				)
 
 				const recipients = response.data?.recipients
-				this.recipientCandidates = (
+				this.shareableRecipients = (
 					Array.isArray(recipients) ? recipients : []
-				).map((recipient) => ({
-					userId: String(recipient?.userId ?? ''),
-					shareable: recipient?.shareable === true,
-					reason: recipient?.reason ?? null,
-				}))
+				)
+					.filter((recipient) => recipient?.shareable === true)
+					.map((recipient) => String(recipient.userId ?? ''))
 
-				return this.recipientCandidates
+				return this.shareableRecipients
 			} finally {
 				this.candidatesLoading = false
 			}

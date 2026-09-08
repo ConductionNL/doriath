@@ -19,32 +19,6 @@
 }
 
 /*
- * NcSelect's teleported dropdown: unselectable options.
- *
- * The menu is appended to <body> (vue-select's appendToBody, which NcSelect
- * defaults to true), so it sits outside the control and loses every theme
- * variable NcSelect declares on it. @nextcloud/vue re-declares the menu's own
- * set on the teleported `.nc-select__dropdown` — background, text, option
- * padding, active and keyboard-focus colours — but not the DISABLED ones, so
- * an option ruled out by `selectable` falls back to vue-select's own `:root`
- * defaults: an #f8f8f8 block with rgba(60,60,60,.5) text. Near-white against
- * the light theme, glaring against the dark one.
- *
- * A transparent background leaves the row looking like every other row, which
- * is the point: unavailable is said by the grey text and the cursor, not by a
- * block of colour.
- *
- * Global because the teleport puts the menu beyond the reach of any
- * component's scoped styles, and the gap is the same for every NcSelect in the
- * app that rules options out. @nextcloud/vue 9.11.0.
- */
-.nc-select__dropdown.vs__dropdown-menu {
-	--vs-state-disabled-bg: transparent;
-	--vs-state-disabled-color: var(--color-text-maxcontrast);
-	--vs-state-disabled-cursor: not-allowed;
-}
-
-/*
  * Mobile-first PWA touch + responsive audit (mobile-pwa §4).
  * A single narrow-viewport breakpoint drives single-column layout and a
  * 44×44 CSS-px minimum touch target on the vault-critical controls

@@ -13,9 +13,9 @@
  * (ShareController::recipientCertificates).
  *
  * So the mistakes worth pinning are all about the seam between the two:
- * probing ids nobody asked for, dropping the ones that came back
- * non-shareable, or exceeding the server's own bound and turning a full
- * directory into a 400 that reads like "nobody is shareable".
+ * probing ids nobody asked for, keeping the ones that came back non-shareable,
+ * or exceeding the server's own bound and turning a full directory into a 400
+ * that reads like "nobody is shareable".
  *
  * @spec openspec/specs/user-sharing/spec.md#requirement-recipient-shareability-lookup
  */
@@ -66,7 +66,7 @@ describe('useShareStore — recipient candidates', () => {
 		})
 
 		const store = useShareStore()
-		const candidates = await store.searchRecipientCandidates('car')
+		const candidates = await store.searchShareableRecipients('car')
 
 		// The search is Nextcloud's own, users only, and not the global address
 		// book — a lookup answers with users this server holds no suite for.
@@ -86,14 +86,13 @@ describe('useShareStore — recipient candidates', () => {
 		expect(post.mock.calls[0][0]).toContain('shares/recipient-certificates')
 		expect(post.mock.calls[0][1]).toEqual({ userIds: ['carol', 'carolyn'] })
 
-		// Non-shareable candidates are KEPT and flagged. Dropping them leaves a
-		// colleague mysteriously absent from the picker; the flag lets the
-		// caller say why instead.
-		expect(candidates).toEqual([
-			{ userId: 'carol', shareable: true, reason: null },
-			{ userId: 'carolyn', shareable: false, reason: 'no_active_suite' },
-		])
-		expect(store.recipientCandidates).toEqual(candidates)
+		// Only the shareable ones survive. The endpoint's `reason` is not
+		// carried up: it says no_active_suite both for a user without a suite
+		// and for one that does not exist — deliberately, so that it cannot be
+		// read as a user-existence oracle — so it can say nothing beyond "not
+		// this one".
+		expect(candidates).toEqual(['carol'])
+		expect(store.shareableRecipients).toEqual(candidates)
 		expect(store.candidatesLoading).toBe(false)
 	})
 
@@ -109,7 +108,7 @@ describe('useShareStore — recipient candidates', () => {
 			.spyOn(axios, 'post')
 			.mockResolvedValue({ data: { recipients: [] } })
 
-		await useShareStore().searchRecipientCandidates('user')
+		await useShareStore().searchShareableRecipients('user')
 
 		expect(post.mock.calls[0][1].userIds).toHaveLength(100)
 	})
@@ -121,7 +120,7 @@ describe('useShareStore — recipient candidates', () => {
 		const post = vi.spyOn(axios, 'post')
 
 		await expect(
-			useShareStore().searchRecipientCandidates('nobody'),
+			useShareStore().searchShareableRecipients('nobody'),
 		).resolves.toEqual([])
 
 		// An empty probe is a 400, and asking for it would turn "no matches"
@@ -134,7 +133,7 @@ describe('useShareStore — recipient candidates', () => {
 		vi.spyOn(axios, 'post').mockRejectedValue(new Error('boom'))
 
 		const store = useShareStore()
-		await expect(store.searchRecipientCandidates('c')).rejects.toThrow('boom')
+		await expect(store.searchShareableRecipients('c')).rejects.toThrow('boom')
 
 		// The dialog swallows this error; a stuck spinner would be the only
 		// trace left of it.

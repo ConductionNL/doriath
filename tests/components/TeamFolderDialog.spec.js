@@ -155,7 +155,7 @@ describe('TeamFolderDialog', () => {
 		).toBe(false)
 	})
 
-	it('offers the sharees, marking the ones with no suite unselectable', async () => {
+	it('offers only the sharees who can receive a secret', async () => {
 		mockApi({
 			owned: [
 				{
@@ -173,12 +173,9 @@ describe('TeamFolderDialog', () => {
 		wrapper.vm.refresh()
 		await flush()
 
-		// bob is already a member, so he goes; dave stays, flagged — "dave is
-		// missing" is a bug report, "dave has no encryption suite" is an answer.
-		expect(wrapper.vm.memberCandidates).toEqual([
-			{ label: 'carol', value: 'carol', shareable: true },
-			{ label: 'dave', value: 'dave', shareable: false },
-		])
+		// dave holds no active suite, so there is no key to encrypt a copy to;
+		// bob holds one but is already a member.
+		expect(wrapper.vm.memberCandidates).toEqual(['carol'])
 		expect(
 			wrapper.find('[data-testid="team-folder-member-select"]').exists(),
 		).toBe(true)
@@ -209,11 +206,8 @@ describe('TeamFolderDialog', () => {
 		wrapper.vm.newMemberType = 'group'
 		await flush()
 
-		// Groups hold no key of their own, so every one of them is selectable.
-		expect(wrapper.vm.memberCandidates).toEqual([
-			{ label: 'admin', value: 'admin', shareable: true },
-			{ label: 'support', value: 'support', shareable: true },
-		])
+		// Groups hold no key of their own, so none of them is probed.
+		expect(wrapper.vm.memberCandidates).toEqual(['admin', 'support'])
 		expect(
 			wrapper.find('[data-testid="team-folder-member-select"]').exists(),
 		).toBe(true)
