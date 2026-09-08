@@ -39,9 +39,7 @@
  * directory and one cache row are harmless; the step reports them so nobody
  * has to wonder whether the move half-finished.
  *
- * @spec exclude One-off doriath -> keepiq blob relocation. It moves existing
- *  storage onto the new namespace and is removed once every install has run it;
- *  no canonical spec describes the move itself.
+ * @spec openspec/specs/encrypted-attachments/spec.md#requirement-blob-addressing-survives-relocation
  *
  * @category  Repair
  * @package   OCA\Keepiq\Repair
@@ -71,8 +69,7 @@ use Throwable;
 /**
  * Relocates attachment blobs to the keepiq AppData namespace.
  *
- * @spec exclude One-off doriath -> keepiq blob relocation; no canonical spec
- *  describes the move itself.
+ * @spec openspec/specs/encrypted-attachments/spec.md#requirement-blob-addressing-survives-relocation
  */
 class MoveAttachmentBlobs implements IRepairStep {
 
@@ -105,8 +102,7 @@ class MoveAttachmentBlobs implements IRepairStep {
 	/**
 	 * Human-readable step name.
 	 *
-	 * @spec exclude One-off doriath -> keepiq blob relocation; no canonical
-	 *  spec describes the move itself.
+	 * @spec openspec/specs/encrypted-attachments/spec.md#requirement-blob-addressing-survives-relocation
 	 *
 	 * @return string The name.
 	 */
@@ -121,8 +117,7 @@ class MoveAttachmentBlobs implements IRepairStep {
 	 *
 	 * @return void
 	 *
-	 * @spec exclude One-off doriath -> keepiq blob relocation; no canonical
-	 *  spec describes the move itself.
+	 * @spec openspec/specs/encrypted-attachments/spec.md#requirement-blob-addressing-survives-relocation
 	 */
 	public function run(IOutput $output): void {
 		$source = $this->sourceFolder();
