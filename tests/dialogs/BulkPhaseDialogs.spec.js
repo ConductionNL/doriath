@@ -159,10 +159,12 @@ describe.each(CASES)(
 			expect(
 				wrapper.find(`[data-testid="${closeTestid}"]`).attributes('variant'),
 			).toBe('primary')
-			expect(wrapper.find('[data-testid="bulk-run-panel"]').exists()).toBe(true)
+			expect(wrapper.find('[data-testid="bulk-run-panel"]').exists()).toBe(
+				true,
+			)
 		})
 
-		it('does not show a previous run\'s report on a fresh open', async () => {
+		it("does not show a previous run's report on a fresh open", async () => {
 			bulk.report = [{ secretId: 'gone', status: 'ok' }]
 			bulk.setSelection(['a'])
 			const wrapper = mountDialog(component)

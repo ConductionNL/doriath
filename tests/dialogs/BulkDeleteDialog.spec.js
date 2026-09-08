@@ -133,7 +133,7 @@ describe('BulkDeleteDialog', () => {
 
 	// The report is stored, not per-dialog: it survives until the selection is
 	// cleared. A dialog reopened over a previous run's report must still ASK.
-	it('does not show a previous run\'s report on a fresh open', () => {
+	it("does not show a previous run's report on a fresh open", () => {
 		bulk.report = [{ secretId: 'gone', status: 'ok' }]
 		bulk.setSelection(['a'])
 		const wrapper = mountDialog()
