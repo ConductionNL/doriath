@@ -27,7 +27,7 @@ use OCP\AppFramework\Db\QBMapper;
 use OCP\IDBConnection;
 
 /**
- * Mapper for the doriath_passkey_credentials table.
+ * Mapper for the keepiq_passkey_credentials table.
  *
  * @template-extends QBMapper<PasskeyCredential>
  */
@@ -40,7 +40,7 @@ class PasskeyMapper extends QBMapper {
 	 * @return void
 	 */
 	public function __construct(IDBConnection $db) {
-		parent::__construct(db: $db, tableName: 'doriath_passkey_credentials', entityClass: PasskeyCredential::class);
+		parent::__construct(db: $db, tableName: 'keepiq_passkey_credentials', entityClass: PasskeyCredential::class);
 	}//end __construct()
 
 	/**

@@ -27,7 +27,7 @@ use OCP\AppFramework\Db\QBMapper;
 use OCP\IDBConnection;
 
 /**
- * Mapper for the doriath_siem_queue table.
+ * Mapper for the keepiq_siem_queue table.
  *
  * @template-extends QBMapper<SiemQueueItem>
  */
@@ -40,7 +40,7 @@ class SiemQueueItemMapper extends QBMapper {
 	 * @return void
 	 */
 	public function __construct(IDBConnection $db) {
-		parent::__construct(db: $db, tableName: 'doriath_siem_queue', entityClass: SiemQueueItem::class);
+		parent::__construct(db: $db, tableName: 'keepiq_siem_queue', entityClass: SiemQueueItem::class);
 	}//end __construct()
 
 	/**

@@ -201,20 +201,20 @@ After all secrets are processed — and only once nothing remains that nobody ha
 
 ### Requirement: Migration Covers Every Suite-Bound Store
 
-The Suite Migration requirement speaks of migrating "all secrets". Because a user's ciphertext is bound to an EncryptionSuite in six separate stores, a migration that walks `doriath_secrets` alone silently strands the other five. The system MUST therefore treat compromise-recovery migration as complete only when every suite-bound store has been given its disposition. Outstanding work MUST be derivable server-side from the data itself — rows still bound to `old_suite_id` — rather than from a client-reported count, so that a resumed migration knows what remains without trusting the browser.
+The Suite Migration requirement speaks of migrating "all secrets". Because a user's ciphertext is bound to an EncryptionSuite in six separate stores, a migration that walks `keepiq_secrets` alone silently strands the other five. The system MUST therefore treat compromise-recovery migration as complete only when every suite-bound store has been given its disposition. Outstanding work MUST be derivable server-side from the data itself — rows still bound to `old_suite_id` — rather than from a client-reported count, so that a resumed migration knows what remains without trusting the browser.
 
 The disposition of each store is fixed as follows. All fields listed as re-encrypted are stored as RSA ciphertext; plaintext columns (`name`, `url`, `folder_id`, `requested_fields`) are organisational metadata and MUST NOT be touched.
 
 | Store | Suite-bound content | Disposition |
 |-------|---------------------|-------------|
-| `doriath_secrets` | `key`, `login`, `additional_fields` | Re-encrypt under the new suite; re-point `encryption_suite_id` |
-| `doriath_secret_versions` | `key`, `login`, `additional_fields` (own `encryption_suite_id`) | Re-encrypt the bounded window fixed by the `secret-version-history` spec (head plus the N most recent versions, default 5); drop older versions |
-| `doriath_attachment_grants` | `wrapped_file_key` (RSA-wrapped per-file AES key) | Re-wrap the rotating owner's own grants under the new suite. Grants belonging to other recipients MUST NOT be altered |
-| `doriath_secret_requests` | No ciphertext of its own; `encryption_suite_id` selects the certificate used to encrypt future submissions | Lock for the duration of the migration, then unlock and re-point to the new suite |
-| `doriath_link_shares` | `encrypted_secret_snapshot` | Revoke (cascade), unchanged from current behaviour |
-| `doriath_emergency_contacts` | `recovery_envelope` | Invalidate, unchanged. The envelope is wrapped to the *grantee's* certificate and escrows the grantor's old private key as its plaintext, so the rotating owner cannot re-wrap it alone; the grantor MUST be prompted to re-establish emergency access (see the `emergency-access` spec) |
+| `keepiq_secrets` | `key`, `login`, `additional_fields` | Re-encrypt under the new suite; re-point `encryption_suite_id` |
+| `keepiq_secret_versions` | `key`, `login`, `additional_fields` (own `encryption_suite_id`) | Re-encrypt the bounded window fixed by the `secret-version-history` spec (head plus the N most recent versions, default 5); drop older versions |
+| `keepiq_attachment_grants` | `wrapped_file_key` (RSA-wrapped per-file AES key) | Re-wrap the rotating owner's own grants under the new suite. Grants belonging to other recipients MUST NOT be altered |
+| `keepiq_secret_requests` | No ciphertext of its own; `encryption_suite_id` selects the certificate used to encrypt future submissions | Lock for the duration of the migration, then unlock and re-point to the new suite |
+| `keepiq_link_shares` | `encrypted_secret_snapshot` | Revoke (cascade), unchanged from current behaviour |
+| `keepiq_emergency_contacts` | `recovery_envelope` | Invalidate, unchanged. The envelope is wrapped to the *grantee's* certificate and escrows the grantor's old private key as its plaintext, so the rotating owner cannot re-wrap it alone; the grantor MUST be prompted to re-establish emergency access (see the `emergency-access` spec) |
 
-Re-encryption of `doriath_secrets`, `doriath_secret_versions` and `doriath_attachment_grants` MUST happen in the browser under the same rules as ordinary migration: the old private key decrypts and the new public key encrypts, both as WebCrypto `CryptoKey` objects, and only ciphertext crosses the wire. RSA has a per-chunk plaintext cap (446 bytes at RSA-4096), so every value MUST be re-chunked against the new key rather than having its existing chunk framing reused.
+Re-encryption of `keepiq_secrets`, `keepiq_secret_versions` and `keepiq_attachment_grants` MUST happen in the browser under the same rules as ordinary migration: the old private key decrypts and the new public key encrypts, both as WebCrypto `CryptoKey` objects, and only ciphertext crosses the wire. RSA has a per-chunk plaintext cap (446 bytes at RSA-4096), so every value MUST be re-chunked against the new key rather than having its existing chunk framing reused.
 
 Owner and suite scoping MUST be enforced server-side on every re-encryption write, resolving the acting user through the Nextcloud `OCP\IUserSession` the surrounding controllers already use: a write MUST be refused unless the target row's current `encryption_suite_id` is the migration's `old_suite_id` and the row is owned by the migration's owner.
 

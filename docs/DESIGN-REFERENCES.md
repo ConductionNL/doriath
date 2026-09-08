@@ -323,7 +323,7 @@ CnDetailPage (title="AWS Console Login", back-route={name:'Secrets'})
 │   │   └─ Recipient list (owner only), share/link/request buttons
 │   └─ CnDetailCard (title="Encryption")
 │       └─ Suite ID, status badge, timestamps
-└─ CnObjectSidebar (object-type="doriath_secret", object-id, ...)
+└─ CnObjectSidebar (object-type="keepiq_secret", object-id, ...)
     ├─ Tab: Files    — attachments (e.g., key files, certificates)
     ├─ Tab: Notes    — team notes about this secret
     ├─ Tab: Tags     — categorization tags

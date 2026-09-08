@@ -60,7 +60,7 @@ class SecretMapper extends QBMapper {
 	 * @return void
 	 */
 	public function __construct(IDBConnection $db) {
-		parent::__construct(db: $db, tableName: 'doriath_secrets', entityClass: Secret::class);
+		parent::__construct(db: $db, tableName: 'keepiq_secrets', entityClass: Secret::class);
 	}//end __construct()
 
 	/**

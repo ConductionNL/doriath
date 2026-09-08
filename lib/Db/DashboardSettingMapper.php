@@ -40,7 +40,7 @@ class DashboardSettingMapper extends QBMapper {
 	 * @return void
 	 */
 	public function __construct(IDBConnection $db) {
-		parent::__construct(db: $db, tableName: 'doriath_dashboard_settings', entityClass: DashboardSetting::class);
+		parent::__construct(db: $db, tableName: 'keepiq_dashboard_settings', entityClass: DashboardSetting::class);
 	}//end __construct()
 
 	/**

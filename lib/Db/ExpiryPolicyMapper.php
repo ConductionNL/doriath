@@ -26,7 +26,7 @@ use OCP\AppFramework\Db\QBMapper;
 use OCP\IDBConnection;
 
 /**
- * Mapper for the doriath_expiry_policies table.
+ * Mapper for the keepiq_expiry_policies table.
  *
  * @template-extends QBMapper<ExpiryPolicy>
  */
@@ -39,7 +39,7 @@ class ExpiryPolicyMapper extends QBMapper {
 	 * @return void
 	 */
 	public function __construct(IDBConnection $db) {
-		parent::__construct(db: $db, tableName: 'doriath_expiry_policies', entityClass: ExpiryPolicy::class);
+		parent::__construct(db: $db, tableName: 'keepiq_expiry_policies', entityClass: ExpiryPolicy::class);
 	}//end __construct()
 
 	/**

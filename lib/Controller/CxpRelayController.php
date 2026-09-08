@@ -88,10 +88,10 @@ class CxpRelayController extends Controller {
 		private IUserSession $userSession,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
-		// Namespace deliberately still `doriath_` after the doriath -> keepiq
+		// Namespace deliberately still `keepiq_` after the doriath -> keepiq
 		// rename: it is an ICache key prefix, not an app id, and a rename would
 		// drop every in-flight CXP handshake mid-transfer. See appinfo/info.xml.
-		$this->cache = $cacheFactory->createDistributed('doriath_cxp_relay');
+		$this->cache = $cacheFactory->createDistributed('keepiq_cxp_relay');
 	}//end __construct()
 
 	/**

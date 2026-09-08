@@ -26,7 +26,7 @@ _(none — import composes the existing Create Secret and Create Folder operatio
 
 ## Impact
 
-- **Database**: No new tables. Import produces ordinary `doriath_secrets` and `doriath_folders` rows
+- **Database**: No new tables. Import produces ordinary `keepiq_secrets` and `keepiq_folders` rows
 - **Backend**: New `ImportController` with a chunked batch-create endpoint (`POST /api/v1/secrets/import-batch`) delegating to the existing SecretService/FolderService; per-item validation errors are returned per index, not as a whole-request failure
 - **Frontend**: New `src/import/` parser modules (csv, bitwarden, keepass-xml, nc-passwords) with a common normalized intermediate row model; new Pinia store (`useImportStore`); new import wizard dialog (file pick → mapping preview → duplicates → commit progress → summary); entry point in the vault toolbar/settings
 - **API**: One new authenticated endpoint for batch commit; everything else reuses existing folder/secret APIs
