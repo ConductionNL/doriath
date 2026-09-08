@@ -4,21 +4,27 @@
  * Keepiq Machine API Discovery Controller
  *
  * Serves the unauthenticated, machine-readable discovery document at
- * `GET /api/v1/app/.well-known/doriath`. A consumer configures one base
+ * `GET /api/v1/app/.well-known/keepiq`, and at the pre-rename
+ * `.well-known/doriath` until that path is retired. A consumer configures one base
  * URL plus its application id and private key, fetches this document, and
  * derives every contract URL (token endpoint, grant type, assertion
  * requirements, secret endpoints, envelope formats) without reading
  * Keepiq source. The document carries no instance-private data.
  *
- * THE PATH SEGMENT STILL SAYS `doriath` AFTER THE doriath -> keepiq RENAME,
- * on purpose. It is the one URL a machine consumer is configured with by
- * hand; everything else it uses is derived from the document this endpoint
- * returns. Renaming the segment would break every configured consumer at the
- * same moment as, and independently of, the `/apps/<id>/` prefix change —
- * two breaking changes where the contract (openspec/specs/secret-store-api/
- * spec.md) allows none in place. Moving it belongs to the coordinated
- * apiVersion bump that also retires the `doriath-machine-secret-v1` envelope
- * name and the `aud=doriath` claim, not to an app-id rename.
+ * BOTH PATHS ARE SERVED, and the pre-rename one is not going away yet. This
+ * is the one URL a machine consumer is configured with by hand — everything
+ * else it uses is derived from the document this endpoint returns — so moving
+ * it would break every configured consumer at once. Serving both instead is
+ * additive: the document names the canonical path in `discoveryPath`, so a
+ * consumer re-points itself without anyone coordinating a change window, and
+ * `deprecatedDiscoveryPaths[].removedInAppVersion` says when the old one
+ * stops. Every hit on it is logged so the migration is observable.
+ *
+ * The old path retires at Application::PRE_STABLE_COMPAT_REMOVED_IN, together
+ * with the `doriath-machine-secret-v1` envelope name and the `aud=doriath`
+ * claim — not at a future apiVersion. Nothing stable has shipped, so there is
+ * no released contract a version bump would protect; PreStableCompatDeadlineTest
+ * fails the build if any of the three outlives that version.
  *
  * @category Controller
  * @package  OCA\Keepiq\Controller

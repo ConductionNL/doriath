@@ -132,6 +132,48 @@ class DiscoveryControllerTest extends TestCase {
 	}//end testDocumentAdvertisesDiscoveryPaths()
 
 	/**
+	 * The document publishes the audience contract the spec requires.
+	 *
+	 * Token ACCEPTANCE is tested thoroughly in JwtAuthServiceTest, but what a
+	 * consumer is TOLD to send is a separate surface: a swapped constant or a
+	 * dropped field would break self-configuring clients while every
+	 * acceptance test stayed green.
+	 *
+	 * @return void
+	 */
+	public function testDocumentPublishesTheAudienceContract(): void {
+		$assertion = $this->controller->document()->getData()['assertion'];
+
+		$this->assertSame('keepiq', $assertion['audience'], 'the value a consumer should send');
+		$this->assertSame(
+			['keepiq', 'doriath'],
+			$assertion['acceptedAudiences'],
+			'both values are honoured until the deprecated one is removed'
+		);
+		$this->assertSame(
+			[['value' => 'doriath', 'removedInAppVersion' => '1.0.0']],
+			$assertion['deprecatedAudiences'],
+			'the deprecated value must be published with the version that retires it'
+		);
+	}//end testDocumentPublishesTheAudienceContract()
+
+	/**
+	 * The canonical audience is not also listed as deprecated.
+	 *
+	 * A copy-paste swapping the two would tell every consumer to migrate away
+	 * from the value they should be adopting, and read as plausible.
+	 *
+	 * @return void
+	 */
+	public function testTheCanonicalAudienceIsNotAlsoDeprecated(): void {
+		$assertion = $this->controller->document()->getData()['assertion'];
+		$deprecated = array_column($assertion['deprecatedAudiences'], 'value');
+
+		$this->assertContains($assertion['audience'], $assertion['acceptedAudiences']);
+		$this->assertNotContains($assertion['audience'], $deprecated);
+	}//end testTheCanonicalAudienceIsNotAlsoDeprecated()
+
+	/**
 	 * Fetching the deprecated path reports it, naming the retiring version.
 	 *
 	 * @return void

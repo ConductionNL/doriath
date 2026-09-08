@@ -64,8 +64,9 @@ class JwtAssertionVerifier {
 	 * Deserialize an assertion and return its claim set, having asserted
 	 * that every required claim is present and acceptable.
 	 *
-	 * Required claims: iss (application id), aud="doriath", exp (>now),
-	 * iat (<=now+CLOCK_SKEW), jti.
+	 * Required claims: iss (application id), aud (PRESENCE only — which values
+	 * name this instance is AudiencePolicy's decision, asserted by
+	 * JwtAuthService), exp (>now), iat (<=now+CLOCK_SKEW), jti.
 	 *
 	 * @param string $assertion The JWS compact serialization
 	 *
