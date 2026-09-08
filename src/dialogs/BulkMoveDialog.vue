@@ -99,6 +99,7 @@ export default {
 		 * Whether the dialog has switched from asking to reporting.
 		 *
 		 * @return {boolean}
+		 * @spec openspec/specs/bulk-actions/spec.md#requirement-chunked-execution-with-a-per-item-report
 		 */
 		finished() {
 			return this.ran && !this.bulk.progress.running
@@ -110,6 +111,7 @@ export default {
 		 * the host's post-run reload empties.
 		 *
 		 * @return {string}
+		 * @spec openspec/specs/bulk-actions/spec.md#requirement-chunked-execution-with-a-per-item-report
 		 */
 		title() {
 			if (this.finished) {

@@ -304,6 +304,8 @@ export default {
 		 * member the type selector is on.
 		 *
 		 * @return {string}
+		 * @spec exclude Presentation — a control label; the membership it
+		 *   labels is specified on onAddMember().
 		 */
 		memberIdLabel() {
 			return this.newMemberType === 'group'
@@ -350,6 +352,8 @@ export default {
 		 * rather than looking momentarily empty.
 		 *
 		 * @return {boolean}
+		 * @spec exclude Presentation — a spinner flag read off the stores that
+		 *   own the lookups.
 		 */
 		candidatesLoading() {
 			return this.newMemberType === 'group'
@@ -370,15 +374,24 @@ export default {
 		 * A user id is not a group id. Keeping the old value across a type
 		 * switch offered to add "bob" as a group — accepted by the field,
 		 * refused by the server, and confusing in between.
+		 *
+		 * @spec exclude Input hygiene — which pair may be added is specified
+		 *   on onAddMember(), and the server validates it regardless.
 		 */
 		newMemberType() {
 			this.newMemberId = ''
 		},
 	},
 
+	/**
+	 * Drop the pending candidate search, so one that lands after the dialog is
+	 * gone cannot write into a store nothing is reading — or hold this
+	 * component alive until it does.
+	 *
+	 * @spec exclude Lifecycle teardown — clears one timer; the search it would
+	 *   have run is specified on onCandidateSearch().
+	 */
 	beforeUnmount() {
-		// A search that lands after the dialog is gone would write into a
-		// store nothing is reading, and hold this component alive until it did.
 		clearTimeout(this.candidateSearchTimer)
 	},
 
@@ -416,6 +429,14 @@ export default {
 			}
 		},
 
+		/**
+		 * Share this folder as a team folder — the step that has to happen
+		 * before there is any membership to manage.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/specs/team-folder-sharing/spec.md#requirement-share-a-folder-as-a-team-folder
+		 */
 		async onShareFolder() {
 			this.busy = true
 			this.error = null

@@ -121,6 +121,7 @@ export default {
 		 * happened here and is no longer in flight.
 		 *
 		 * @return {boolean}
+		 * @spec openspec/specs/bulk-actions/spec.md#requirement-chunked-execution-with-a-per-item-report
 		 */
 		finished() {
 			return this.ran && !this.bulk.progress.running
@@ -132,6 +133,7 @@ export default {
 		 * host's post-run reload empties.
 		 *
 		 * @return {string}
+		 * @spec openspec/specs/bulk-actions/spec.md#requirement-chunked-execution-with-a-per-item-report
 		 */
 		title() {
 			if (this.finished) {

@@ -17,7 +17,8 @@
  *  - The store's report outlives the dialog, so a freshly opened dialog must
  *    not show the previous run's table before anything has been asked for.
  *
- * @spec openspec/specs/bulk-actions/spec.md#requirement-bulk-delete
+ * @spec openspec/specs/bulk-actions/spec.md#requirement-chunked-execution-with-a-per-item-report
+ * @spec openspec/specs/bulk-actions/spec.md#requirement-the-four-bulk-operations
  */
 
 import { mount } from '@vue/test-utils'

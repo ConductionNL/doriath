@@ -115,6 +115,7 @@ export default {
 		 * neither may still be in flight.
 		 *
 		 * @return {boolean}
+		 * @spec openspec/specs/bulk-actions/spec.md#requirement-chunked-execution-with-a-per-item-report
 		 */
 		finished() {
 			return this.ran && !this.bulk.progress.running && !this.fanOut.running
@@ -126,6 +127,7 @@ export default {
 		 * the host's post-run reload empties.
 		 *
 		 * @return {string}
+		 * @spec openspec/specs/bulk-actions/spec.md#requirement-chunked-execution-with-a-per-item-report
 		 */
 		title() {
 			if (this.finished) {
