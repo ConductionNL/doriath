@@ -101,23 +101,29 @@
 						:clearable="false" />
 					<!--
 					  Pick from a list when there IS one, ask for an id by hand
-					  when there is not. The candidate list is the users holding
-					  an active suite (a recipient without one has no public key
-					  to encrypt a copy for), which the suites endpoint cannot
-					  report for anyone but the caller yet — see
-					  encryptionSuite.fetchSuiteOwners(). It resolves to empty
-					  until then, so the text field stays and nobody is left with
-					  a dropdown that cannot be opened; when the endpoint learns
-					  to list all suites the picker appears on its own.
+					  when there is not.
+
+					  GROUPS come from the server's own provisioning API, so
+					  that list is there today; the endpoint pages, hence the
+					  search below rather than one big fetch.
+
+					  USERS are the ones holding an active suite (a recipient
+					  without one has no public key to encrypt a copy for), and
+					  the suites endpoint cannot report anyone but the caller
+					  yet — see encryptionSuite.fetchSuiteOwners(). That half
+					  resolves to empty until it can, so the text field stays
+					  and nobody is left with a dropdown that cannot be opened.
 					-->
 					<NcSelect
 						v-if="memberCandidates.length > 0"
 						:modelValue="newMemberId === '' ? null : newMemberId"
 						:options="memberCandidates"
 						:inputLabel="memberIdLabel"
+						:loading="candidatesLoading"
 						:disabled="busy"
 						data-testid="team-folder-member-select"
-						@update:modelValue="newMemberId = $event ?? ''" />
+						@update:modelValue="newMemberId = $event ?? ''"
+						@search="onCandidateSearch" />
 					<label v-else class="team-folder-dialog__id-field">
 						<span>{{ memberIdLabel }}</span>
 						<input
@@ -202,7 +208,19 @@ import Account from 'vue-material-design-icons/Account.vue'
 import AccountGroup from 'vue-material-design-icons/AccountGroup.vue'
 import Close from 'vue-material-design-icons/Close.vue'
 import { useEncryptionSuiteStore } from '../store/modules/encryptionSuite.js'
+import { useGroupStore } from '../store/modules/group.js'
 import { useTeamFolderStore } from '../store/modules/teamFolder.js'
+
+/**
+ * How long the group search waits after the last keystroke.
+ *
+ * The provisioning API is a real server round-trip per term, and the picker
+ * filters what it already has locally in the meantime, so there is nothing to
+ * gain from querying every character.
+ *
+ * @type {number}
+ */
+const GROUP_SEARCH_DEBOUNCE_MS = 300
 
 export default {
 	name: 'TeamFolderDialog',
@@ -242,6 +260,8 @@ export default {
 			newMemberType: 'user',
 			newMemberId: '',
 			pendingCount: 0,
+			/** Pending group search, so keystrokes coalesce into one call. */
+			groupSearchTimer: null,
 		}
 	},
 
@@ -301,12 +321,11 @@ export default {
 		 * listed — which is what decides between the picker and the free-text
 		 * field in the template.
 		 *
-		 * Users come from the suites table: holding an active suite is what
-		 * makes someone shareable at all, so it is also the only membership
-		 * list worth offering. Groups have NO source yet — the suites table
-		 * knows users, and a group directory would have to come from
-		 * elsewhere (the sharee API, or the provisioning API for an admin),
-		 * which is a decision of its own rather than a detail of this one.
+		 * The two kinds come from different places because they ARE different:
+		 * a user must hold an encryption suite before a secret can be
+		 * encrypted to them, so those come from the suites table; a group
+		 * holds no key of its own (its members are resolved and key-checked
+		 * when the fan-out runs), so those are simply the server's groups.
 		 *
 		 * Existing members are removed: re-adding one is at best a no-op, and
 		 * a list that offers it invites the attempt.
@@ -314,21 +333,30 @@ export default {
 		 * @return {Array<string>} Selectable member ids.
 		 *
 		 * @spec openspec/specs/team-folder-sharing/spec.md#requirement-share-a-folder-as-a-team-folder
+		 * @spec openspec/specs/team-folder-sharing/spec.md#requirement-membership-propagation-with-group-membership
 		 */
 		memberCandidates() {
-			if (this.newMemberType === 'group') {
-				return []
-			}
-
+			const isGroup = this.newMemberType === 'group'
 			const taken = new Set(
 				this.members
-					.filter((member) => member.memberType !== 'group')
+					.filter((member) => (member.memberType === 'group') === isGroup)
 					.map((member) => member.memberId),
 			)
+			const candidates = isGroup
+				? useGroupStore().groups
+				: useEncryptionSuiteStore().suiteOwners
 
-			return useEncryptionSuiteStore().suiteOwners.filter(
-				(userId) => !taken.has(userId),
-			)
+			return candidates.filter((id) => !taken.has(id))
+		},
+
+		/**
+		 * Whether a candidate lookup is in flight, so the picker can say so
+		 * rather than looking momentarily empty.
+		 *
+		 * @return {boolean}
+		 */
+		candidatesLoading() {
+			return this.newMemberType === 'group' ? useGroupStore().loading : false
 		},
 	},
 
@@ -350,6 +378,12 @@ export default {
 		},
 	},
 
+	beforeUnmount() {
+		// A search that lands after the dialog is gone would write into a
+		// store nothing is reading, and hold this component alive until it did.
+		clearTimeout(this.groupSearchTimer)
+	},
+
 	methods: {
 		onUpdateOpen(value) {
 			this.$emit('update:open', value)
@@ -363,10 +397,13 @@ export default {
 		async refresh() {
 			// Best-effort and deliberately not awaited into the error path: who
 			// can be offered as a member is a convenience, while the team
-			// folder itself is the dialog's subject. A failure here must not
-			// replace the membership list with an error.
+			// folder itself is the dialog's subject. A failure in either must
+			// not replace the membership list with an error.
 			useEncryptionSuiteStore()
 				.fetchSuiteOwners()
+				.catch(() => {})
+			useGroupStore()
+				.fetchGroups()
 				.catch(() => {})
 
 			try {
@@ -391,6 +428,34 @@ export default {
 			} finally {
 				this.busy = false
 			}
+		},
+
+		/**
+		 * Re-run the group search as the user types in the picker.
+		 *
+		 * The provisioning API pages (GROUP_PAGE_SIZE at a time), so on an
+		 * instance with more groups than one page the answer to "why is my
+		 * group not in the list" has to be "keep typing" rather than "scroll".
+		 * Users need none of this: their candidates are a suite-table list the
+		 * picker already filters locally.
+		 *
+		 * @param {string} term The current search term.
+		 *
+		 * @return {void}
+		 *
+		 * @spec openspec/specs/team-folder-sharing/spec.md#requirement-membership-propagation-with-group-membership
+		 */
+		onCandidateSearch(term) {
+			if (this.newMemberType !== 'group') {
+				return
+			}
+
+			clearTimeout(this.groupSearchTimer)
+			this.groupSearchTimer = setTimeout(() => {
+				useGroupStore()
+					.fetchGroups(term)
+					.catch(() => {})
+			}, GROUP_SEARCH_DEBOUNCE_MS)
 		},
 
 		async onAddMember() {

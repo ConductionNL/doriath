@@ -16,10 +16,11 @@ import TeamFolderDialog from '../../src/modals/TeamFolderDialog.vue'
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
 
 /**
- * Mock the GETs the dialog issues on open: team-folder list, reconcile, and
- * the suites list behind the member picker's candidates.
+ * Mock the GETs the dialog issues on open: team-folder list, reconcile, the
+ * suites list behind the user candidates, and the provisioning API behind the
+ * group candidates.
  */
-function mockApi({ owned = [], missing = [], suites = [] } = {}) {
+function mockApi({ owned = [], missing = [], suites = [], groups = [] } = {}) {
 	vi.spyOn(axios, 'get').mockImplementation((url) => {
 		if (url.includes('/reconcile')) {
 			return Promise.resolve({
@@ -28,6 +29,10 @@ function mockApi({ owned = [], missing = [], suites = [] } = {}) {
 		}
 		if (url.includes('/suites')) {
 			return Promise.resolve({ data: suites })
+		}
+		if (url.includes('cloud/groups')) {
+			// The OCS envelope, as the provisioning API actually answers it.
+			return Promise.resolve({ data: { ocs: { data: { groups } } } })
 		}
 		return Promise.resolve({ data: { owned, memberOf: [] } })
 	})
@@ -143,14 +148,72 @@ describe('TeamFolderDialog', () => {
 		expect(
 			wrapper.find('[data-testid="team-folder-member-select"]').exists(),
 		).toBe(true)
+	})
 
-		// Groups have no source yet, so that half stays a text field.
+	it('offers a picker of the server groups, minus the ones already members', async () => {
+		mockApi({
+			owned: [
+				{
+					id: 'tf-1',
+					folderId: 'folder-1',
+					members: [
+						{ id: 'm1', memberType: 'group', memberId: 'devops' },
+						// A USER named like a group must not remove the group:
+						// the two id spaces are separate.
+						{ id: 'm2', memberType: 'user', memberId: 'support' },
+					],
+				},
+			],
+			groups: ['devops', 'support', 'admin'],
+		})
+		const wrapper = mount(TeamFolderDialog, {
+			propsData: { open: true, folderId: 'folder-1', folderName: 'DevOps' },
+		})
+		wrapper.vm.refresh()
+		await flush()
+
 		wrapper.vm.newMemberType = 'group'
 		await flush()
-		expect(wrapper.vm.memberCandidates).toEqual([])
-		expect(wrapper.find('[data-testid="team-folder-member-id"]').exists()).toBe(
-			true,
+
+		expect(wrapper.vm.memberCandidates).toEqual(['admin', 'support'])
+		expect(
+			wrapper.find('[data-testid="team-folder-member-select"]').exists(),
+		).toBe(true)
+	})
+
+	it('searches the groups endpoint as the user types, once', async () => {
+		vi.useFakeTimers()
+		mockApi({
+			owned: [{ id: 'tf-1', folderId: 'folder-1', members: [] }],
+			groups: ['devops'],
+		})
+		const wrapper = mount(TeamFolderDialog, {
+			propsData: { open: true, folderId: 'folder-1', folderName: 'DevOps' },
+		})
+		wrapper.vm.newMemberType = 'group'
+
+		wrapper.vm.onCandidateSearch('de')
+		wrapper.vm.onCandidateSearch('dev')
+		wrapper.vm.onCandidateSearch('devo')
+		vi.runAllTimers()
+
+		// One call for three keystrokes, carrying the LAST term — the endpoint
+		// pages, so searching is how a group past the first page is reached.
+		const searches = axios.get.mock.calls.filter(([url]) =>
+			url.includes('cloud/groups'),
 		)
+		expect(searches).toHaveLength(1)
+		expect(searches[0][1].params.search).toBe('devo')
+
+		// Users are a local list; typing must not hit the groups endpoint.
+		wrapper.vm.newMemberType = 'user'
+		wrapper.vm.onCandidateSearch('ca')
+		vi.runAllTimers()
+		expect(
+			axios.get.mock.calls.filter(([url]) => url.includes('cloud/groups')),
+		).toHaveLength(1)
+
+		vi.useRealTimers()
 	})
 
 	it('clears a picked id when the member type changes', async () => {
