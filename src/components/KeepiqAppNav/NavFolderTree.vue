@@ -61,6 +61,20 @@
 				<DotsVertical :size="20" />
 			</template>
 			<template v-if="depth === 0" #actions>
+				<!-- First, because it is the only one that ADDS something:
+				     the rest edit or remove the vault you opened the menu on.
+				     A folder is only ever created inside a vault, which is
+				     exactly what this menu has to hand. -->
+				<NcActionButton
+					:data-testid="`nav-folder-new-${node.id}`"
+					:closeAfterClick="true"
+					@click="$emit('newFolder', node)">
+					<template #icon>
+						<FolderPlusOutline :size="20" />
+					</template>
+					{{ t('keepiq', 'New folder') }}
+				</NcActionButton>
+				<NcActionSeparator />
 				<NcActionButton
 					:data-testid="`nav-folder-edit-${node.id}`"
 					:closeAfterClick="true"
@@ -135,6 +149,7 @@ import {
 import DotsVertical from 'vue-material-design-icons/DotsVertical.vue'
 import FolderMove from 'vue-material-design-icons/FolderMove.vue'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
+import FolderPlusOutline from 'vue-material-design-icons/FolderPlusOutline.vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
 import Safe from 'vue-material-design-icons/Safe.vue'
 import ShareVariantOutline from 'vue-material-design-icons/ShareVariantOutline.vue'
@@ -163,6 +178,7 @@ export default {
 		DotsVertical,
 		FolderMove,
 		FolderOutline,
+		FolderPlusOutline,
 		Pencil,
 		ShareVariantOutline,
 		TrashCanOutline,
@@ -203,7 +219,7 @@ export default {
 		},
 	},
 
-	emits: ['edit', 'share', 'move', 'delete'],
+	emits: ['edit', 'share', 'move', 'delete', 'newFolder'],
 
 	data() {
 		return {
