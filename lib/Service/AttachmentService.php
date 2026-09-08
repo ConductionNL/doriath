@@ -69,6 +69,26 @@ class AttachmentService {
 	private const BLOB_APP_DATA_NAMESPACE = Application::APP_ID;
 
 	/**
+	 * The pre-rename AppData namespace, still consulted on READ.
+	 *
+	 * MoveAttachmentBlobs relocates blobs out of here, but it is deliberately
+	 * incapable of aborting an upgrade: a pre-migration step that throws leaves
+	 * the app half-migrated. That safety has a cost — a blob it declines to
+	 * move (a collision, a short copy, a storage error) keeps its bytes here
+	 * while reads look only in the new namespace, so preserving the source
+	 * would protect the data and still make the attachment unavailable.
+	 *
+	 * So reads fall back here. Availability then does not depend on the
+	 * migration having completed, which is what makes the migration safe to
+	 * make non-fatal. Writes never come here; this is a read-only tail that
+	 * goes away with the rest of the pre-stable compatibility, per
+	 * Application::PRE_STABLE_COMPAT_REMOVED_IN.
+	 *
+	 * @var string
+	 */
+	private const LEGACY_BLOB_APP_DATA_NAMESPACE = 'doriath';
+
+	/**
 	 * Constructor for AttachmentService.
 	 *
 	 * @param AttachmentMapper $mapper The attachment mapper
@@ -135,6 +155,32 @@ class AttachmentService {
 			return $appData->newFolder(self::BLOB_FOLDER);
 		}
 	}//end blobFolder()
+
+	/**
+	 * Locate one blob for reading or deleting, new namespace first.
+	 *
+	 * Falls back to the pre-rename namespace so an attachment MoveAttachmentBlobs
+	 * declined to relocate stays readable. Without this, a skipped blob is
+	 * bytes-intact and unreachable, which is indistinguishable from lost.
+	 *
+	 * @param string $blobRef The blob file name.
+	 *
+	 * @return \OCP\Files\SimpleFS\ISimpleFile The blob.
+	 *
+	 * @throws NotFoundException When neither namespace holds it.
+	 */
+	private function blobFileForRead(string $blobRef): \OCP\Files\SimpleFS\ISimpleFile {
+		try {
+			return $this->blobFolder()->getFile($blobRef);
+		} catch (NotFoundException) {
+			// Not in the current namespace — it may not have been relocated.
+		}
+
+		return $this->appDataFactory
+			->get(self::LEGACY_BLOB_APP_DATA_NAMESPACE)
+			->getFolder(self::BLOB_FOLDER)
+			->getFile($blobRef);
+	}//end blobFileForRead()
 
 	/**
 	 * Upload a client-encrypted attachment against an owned secret.
@@ -297,7 +343,7 @@ class AttachmentService {
 		}
 
 		try {
-			$bytes = $this->blobFolder()->getFile($attachment->getBlobRef())->getContent();
+			$bytes = $this->blobFileForRead(blobRef: $attachment->getBlobRef())->getContent();
 		} catch (NotFoundException) {
 			throw new InvalidArgumentException('Attachment blob is missing');
 		}
@@ -531,7 +577,7 @@ class AttachmentService {
 		}
 
 		try {
-			$this->blobFolder()->getFile($attachment->getBlobRef())->delete();
+			$this->blobFileForRead(blobRef: $attachment->getBlobRef())->delete();
 		} catch (NotFoundException) {
 			// Already gone — idempotent.
 		}

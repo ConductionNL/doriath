@@ -172,26 +172,61 @@ class MoveAttachmentBlobsTest extends TestCase {
 	}//end testDoesNotDeleteTheSourceWhenTheCopyIsShort()
 
 	/**
-	 * A name already present in the target is left alone on both sides.
+	 * A target of the same size is this step having already run.
+	 *
+	 * The source is then redundant and goes, so a resumed migration converges
+	 * instead of leaving a permanent duplicate.
 	 *
 	 * @return void
 	 */
-	public function testRefusesWhenTheTargetAlreadyHasTheBlob(): void {
+	public function testTreatsAnEqualSizedTargetAsAlreadyRelocated(): void {
+		$file = $this->blob('blob-1.bin', 100);
+		$file->expects($this->once())->method('delete');
+
+		$source = $this->createMock(ISimpleFolder::class);
+		$source->method('getDirectoryListing')->willReturnOnConsecutiveCalls([$file], []);
+
+		$existing = $this->createMock(ISimpleFile::class);
+		$existing->method('getSize')->willReturn(100);
+
+		$target = $this->createMock(ISimpleFolder::class);
+		$target->method('fileExists')->willReturn(true);
+		$target->method('getFile')->willReturn($existing);
+		$target->expects($this->never())->method('newFile');
+
+		(new MoveAttachmentBlobs($this->factory($source, $target)))->run($this->recordingOutput());
+
+		$this->assertSame([], $this->warnings);
+	}//end testTreatsAnEqualSizedTargetAsAlreadyRelocated()
+
+	/**
+	 * Two distinct blobs sharing a ref are both left in place, and reported.
+	 *
+	 * Reads resolve the new namespace first, so silently keeping the source
+	 * would not help: a human has to say which is correct.
+	 *
+	 * @return void
+	 */
+	public function testReportsWhenBothNamespacesHoldDifferentBlobs(): void {
 		$file = $this->blob('blob-1.bin', 100);
 		$file->expects($this->never())->method('delete');
 
 		$source = $this->createMock(ISimpleFolder::class);
 		$source->method('getDirectoryListing')->willReturn([$file]);
 
+		$other = $this->createMock(ISimpleFile::class);
+		$other->method('getSize')->willReturn(41);
+
 		$target = $this->createMock(ISimpleFolder::class);
 		$target->method('fileExists')->willReturn(true);
+		$target->method('getFile')->willReturn($other);
 		$target->expects($this->never())->method('newFile');
 
 		(new MoveAttachmentBlobs($this->factory($source, $target)))->run($this->recordingOutput());
 
 		$this->assertCount(1, $this->warnings);
-		$this->assertStringContainsString('already exists', $this->warnings[0]);
-	}//end testRefusesWhenTheTargetAlreadyHasTheBlob()
+		$this->assertStringContainsString('different sizes', $this->warnings[0]);
+	}//end testReportsWhenBothNamespacesHoldDifferentBlobs()
 
 	/**
 	 * No old namespace at all is a silent no-op.

@@ -31,6 +31,7 @@ use OCA\Keepiq\Service\AttachmentService;
 use OCA\Keepiq\Service\WriteLockService;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\Files\AppData\IAppDataFactory;
+use OCP\Files\NotFoundException;
 use OCP\Files\IAppData;
 use OCP\Files\SimpleFS\ISimpleFile;
 use OCP\Files\SimpleFS\ISimpleFolder;
@@ -217,6 +218,76 @@ class AttachmentServiceTest extends TestCase {
 		$this->expectException(InvalidArgumentException::class);
 		$this->service->downloadBlob(attachmentId: 'att-1', userId: 'mallory');
 	}//end testDownloadRequiresGrant()
+
+	/**
+	 * A blob still in the pre-rename namespace is readable.
+	 *
+	 * MoveAttachmentBlobs cannot abort an upgrade, so a blob it declines to
+	 * relocate keeps its bytes in the old namespace. Reads must find it there,
+	 * or preserving the source protects the data and still loses the
+	 * attachment - bytes intact and unreachable is indistinguishable from
+	 * gone.
+	 *
+	 * @return void
+	 */
+	public function testDownloadFallsBackToThePreRenameNamespace(): void {
+		$attachment = new Attachment();
+		$attachment->setId('att-1');
+		$attachment->setBlobRef('blob.bin');
+		$this->mapper->method('findById')->willReturn($attachment);
+		$this->grantMapper->method('findForRecipient')->willReturn(new AttachmentGrant());
+
+		// Current namespace: relocation never happened, so the blob is absent.
+		$current = $this->createMock(originalClassName: ISimpleFolder::class);
+		$current->method('getFile')->willThrowException(new NotFoundException());
+
+		// Pre-rename namespace: still holding the bytes.
+		$legacyFile = $this->createMock(originalClassName: ISimpleFile::class);
+		$legacyFile->method('getContent')->willReturn('LEGACY-CIPHERTEXT');
+		$legacy = $this->createMock(originalClassName: ISimpleFolder::class);
+		$legacy->method('getFile')->willReturn($legacyFile);
+
+		$service = $this->serviceWithNamespaces(current: $current, legacy: $legacy);
+
+		$this->assertSame(
+			'LEGACY-CIPHERTEXT',
+			$service->downloadBlob(attachmentId: 'att-1', userId: 'alice')
+		);
+	}//end testDownloadFallsBackToThePreRenameNamespace()
+
+	/**
+	 * Build a service whose two AppData namespaces hold different folders.
+	 *
+	 * @param ISimpleFolder $current The keepiq namespace folder.
+	 * @param ISimpleFolder $legacy  The doriath namespace folder.
+	 *
+	 * @return AttachmentService The service under test.
+	 */
+	private function serviceWithNamespaces(ISimpleFolder $current, ISimpleFolder $legacy): AttachmentService {
+		$currentAppData = $this->createMock(originalClassName: IAppData::class);
+		$currentAppData->method('getFolder')->willReturn($current);
+		$legacyAppData = $this->createMock(originalClassName: IAppData::class);
+		$legacyAppData->method('getFolder')->willReturn($legacy);
+
+		$factory = $this->createMock(originalClassName: IAppDataFactory::class);
+		$factory->method('get')->willReturnCallback(
+			static fn (string $ns): IAppData => ($ns === 'doriath') ? $legacyAppData : $currentAppData
+		);
+
+		$suiteMapper = $this->createMock(originalClassName: EncryptionSuiteMapper::class);
+		$suiteMapper->method('findActiveByOwner')->willThrowException(new DoesNotExistException(''));
+
+		return new AttachmentService(
+			mapper: $this->mapper,
+			grantMapper: $this->grantMapper,
+			secretMapper: $this->secretMapper,
+			suiteMapper: $suiteMapper,
+			appDataFactory: $factory,
+			appConfig: $this->appConfig,
+			writeLockService: $this->createMock(WriteLockService::class),
+			eventDispatcher: null,
+		);
+	}//end serviceWithNamespaces()
 
 	/**
 	 * deleteForSecret removes grants, unlinks orphaned blobs, and is

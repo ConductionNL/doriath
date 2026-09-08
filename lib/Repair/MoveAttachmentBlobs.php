@@ -25,9 +25,17 @@
  * exists and reports the same byte count, because the alternative to a correct
  * copy here is unrecoverable data loss, not an inconvenience.
  *
- * IT REFUSES RATHER THAN OVERWRITES. Where a blob of the same name already
- * exists in the target, something has already written it and choosing between
- * two ciphertexts is not a decision a repair step can make.
+ * IT NEVER OVERWRITES. Where the target already holds that name, equal sizes
+ * mean this step has already run and the source is redundant, so it goes.
+ * Different sizes mean two distinct blobs share a ref: both are left in place
+ * and reported, because choosing between two ciphertexts is a decision about
+ * data, not a rename.
+ *
+ * IT CANNOT MAKE AN ATTACHMENT UNREADABLE. Every failure path here leaves the
+ * source where it is, and AttachmentService reads the old namespace as a
+ * fallback, so a blob this step declines to move stays reachable. Preserving
+ * bytes that nothing looks for would protect the data and still lose the
+ * attachment; the fallback is what makes a non-fatal migration honest.
  *
  * IT NEVER THROWS. It runs as a pre-migration step, where an escaping
  * exception aborts the upgrade.
@@ -223,14 +231,33 @@ class MoveAttachmentBlobs implements IRepairStep {
 		$name = $file->getName();
 
 		try {
+			$expected = $file->getSize();
+
 			if ($target->fileExists($name) === true) {
+				// A name already present is almost always this step having run
+				// before, but "almost always" is not a basis for switching
+				// reads onto it. Compare sizes: equal means already relocated,
+				// and the source is redundant. Different means two distinct
+				// blobs share a ref, which is a data question, not a rename.
+				if ($target->getFile($name)->getSize() === $expected) {
+					$file->delete();
+
+					return true;
+				}
+
 				$output->warning(
-					sprintf('Blob "%s" already exists under the new namespace - leaving both alone.', $name)
+					sprintf(
+						'Blob "%s" exists under BOTH namespaces with different sizes (%s vs %s bytes). '
+						. 'Leaving both untouched: reads resolve the new namespace first, so verify by hand '
+						. 'which is correct before removing either.',
+						$name,
+						(string)$expected,
+						(string)$target->getFile($name)->getSize()
+					)
 				);
+
 				return false;
 			}
-
-			$expected = $file->getSize();
 			$written = $this->copy(file: $file, target: $target, name: $name);
 
 			if ($written->getSize() !== $expected) {

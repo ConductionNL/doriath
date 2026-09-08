@@ -41,12 +41,23 @@ Relocating blobs MUST go through the storage API rather than the filesystem, so
 the file cache moves with the files; a filesystem move leaves the cache naming
 paths that no longer exist, which reproduces the same silent 404 one layer down.
 
-A relocation MUST verify each copy before removing its source, MUST refuse
-rather than overwrite where the destination already holds a blob of that name,
-and MUST NOT abort the surrounding upgrade on a single failure. Attachment
-bytes are AES-GCM ciphertext whose file key is RSA-wrapped per recipient, so a
-blob orphaned by a half-finished move cannot be reconstructed from anything the
-server holds.
+A relocation MUST verify each copy before removing its source and MUST NOT
+abort the surrounding upgrade on a single failure. Attachment bytes are AES-GCM
+ciphertext whose file key is RSA-wrapped per recipient, so a blob orphaned by a
+half-finished move cannot be reconstructed from anything the server holds.
+
+BECAUSE a relocation may therefore leave blobs behind, reads MUST resolve the
+new location first and fall back to the old one. Preserving a source that
+nothing reads protects the bytes and still makes the attachment unavailable,
+which is indistinguishable from losing it; availability MUST NOT depend on a
+relocation having completed.
+
+Where the destination already holds that name, the system MUST compare the two
+before treating either as canonical. Equal size means the relocation already
+ran and the source is redundant. Different size means two distinct blobs share
+a reference: both MUST be left in place and reported, since reads resolve the
+new location first and choosing between two ciphertexts is a decision about
+data, not a rename.
 
 #### Scenario: Relocation verifies before deleting
 @e2e exclude Storage-layer relocation with no UI surface; covered by MoveAttachmentBlobsTest.
@@ -54,11 +65,23 @@ server holds.
 - WHEN it is relocated and the copy does not match the source's byte count
 - THEN the source MUST be left in place and the mismatch reported
 
+#### Scenario: A blob left behind stays readable
+@e2e exclude Storage-layer relocation with no UI surface; covered by AttachmentServiceTest.
+- GIVEN a blob the relocation declined to move, still under the old namespace
+- WHEN it is downloaded
+- THEN the bytes MUST be returned from the old namespace
+
+#### Scenario: An equal-sized destination is already-relocated
+@e2e exclude Storage-layer relocation with no UI surface; covered by MoveAttachmentBlobsTest.
+- GIVEN the destination holds that name at the same size
+- WHEN relocation runs
+- THEN the source MUST be removed and nothing reported
+
 #### Scenario: Relocation refuses to overwrite
 @e2e exclude Storage-layer relocation with no UI surface; covered by MoveAttachmentBlobsTest.
-- GIVEN a blob of the same name already exists under the new namespace
+- GIVEN the destination holds that name at a DIFFERENT size
 - WHEN relocation runs
-- THEN both copies MUST be left untouched and the collision reported
+- THEN both copies MUST be left untouched and the conflict reported
 
 #### Scenario: Nothing to relocate is not an error
 @e2e exclude Storage-layer relocation with no UI surface; covered by MoveAttachmentBlobsTest.
