@@ -166,7 +166,7 @@ class MoveAttachmentBlobs implements IRepairStep {
 	private function sourceFolder(): ?ISimpleFolder {
 		try {
 			return $this->appDataFactory->get(self::OLD_NAMESPACE)->getFolder(self::BLOB_FOLDER);
-		} catch (NotFoundException | Throwable) {
+		} catch (Throwable) {
 			return null;
 		}
 	}//end sourceFolder()
@@ -275,9 +275,10 @@ class MoveAttachmentBlobs implements IRepairStep {
 		try {
 			return $target->newFile($name, $handle);
 		} finally {
-			if (is_resource($handle) === true) {
-				fclose($handle);
-			}
+			// The caller owns this handle: Nextcloud's file_put_contents copies
+			// FROM a passed resource and closes only its own target, never the
+			// source. So it is still open here, on the throwing path too.
+			fclose($handle);
 		}
 	}//end copy()
 
