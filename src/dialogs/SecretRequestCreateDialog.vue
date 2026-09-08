@@ -62,7 +62,12 @@
 				  filters '' out) — an option valued '' would render as though
 				  nothing were selected, hiding the choice the user is on. It is
 				  clearable for the same reason: that is how the unfiled state is
-				  chosen again.
+				  chosen again, and the list still shows what it produces, since
+				  a null `folderId` is the whole-vault query.
+
+				  "Folder" covers every level on purpose (team decision): the
+				  first level under the root is a vault and everything below it
+				  is a folder, so folder is the word for the picker as a whole.
 				-->
 				<NcSelect
 					:modelValue="newFolderId"
@@ -272,6 +277,15 @@ export default {
 		// creates the placeholder. Only a re-request needs an existing one.
 		secret: { type: Object, default: null },
 		isReRequest: { type: Boolean, default: false },
+		/**
+		 * The vault or folder being browsed, pre-selected as the destination.
+		 *
+		 * Asking for a credential from inside a vault says where it belongs, so
+		 * the picker should not start empty and make the requester name it again.
+		 * `null` (the root list, which shows every vault) leaves it unfiled,
+		 * which the list still shows: a null `folderId` is the whole-vault query.
+		 */
+		folderId: { type: String, default: null },
 	},
 
 	emits: ['update:open', 'created'],
@@ -286,7 +300,8 @@ export default {
 			customFieldInput: '',
 			customFieldError: '',
 			newName: '',
-			newFolderId: '',
+			// Starts on the vault or folder the requester opened this from.
+			newFolderId: this.folderId || '',
 			expiresAt: suggestedExpiry(),
 			fillUrl: '',
 			error: '',
@@ -694,7 +709,9 @@ export default {
 			this.customFieldInput = ''
 			this.customFieldError = ''
 			this.newName = ''
-			this.newFolderId = ''
+			// Back to the browsed vault or folder, not to nothing: reopening
+			// from the same place must offer the same destination again.
+			this.newFolderId = this.folderId || ''
 			this.expiresAt = suggestedExpiry()
 			this.fillUrl = ''
 			this.error = ''

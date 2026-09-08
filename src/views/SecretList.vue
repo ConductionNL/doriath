@@ -453,10 +453,13 @@
 				</template>
 			</CnIndexPage>
 		</div>
-		<!-- No `:secret` prop: the dialog creates the placeholder itself. -->
+		<!-- No `:secret` prop: the dialog creates the placeholder itself.
+		     `folderId` is the vault or folder being browsed, so the placeholder
+		     is filed where the requester was standing when they asked. -->
 		<SecretRequestCreateDialog
 			v-if="credentialRequestOpen"
 			:open="credentialRequestOpen"
+			:folderId="selectedFolderId"
 			data-testid="credential-request-dialog"
 			@update:open="credentialRequestOpen = $event"
 			@created="onCredentialRequested" />

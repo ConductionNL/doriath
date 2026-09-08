@@ -427,6 +427,30 @@ describe('SecretRequestCreateDialog', () => {
 		expect(wrapper.vm.error).not.toBe('')
 	})
 
+	it('pre-selects the vault or folder it was opened from', async () => {
+		const store = useSecretRequestStore()
+		store.createRequest = vi.fn().mockResolvedValue({ id: 'r', token: 't' })
+		useFolderStore().folders = [{ id: 'vault-1', name: 'Suppliers' }]
+
+		const wrapper = mount(SecretRequestCreateDialog, {
+			propsData: { open: true, folderId: 'vault-1' },
+			global: { stubs: ncStubs },
+		})
+
+		// Asking from inside a vault says where the credential belongs; the
+		// requester should not have to name the place they are standing in.
+		expect(wrapper.vm.newFolderId).toBe('vault-1')
+
+		wrapper.vm.newName = 'Supplier API key'
+		await wrapper.vm.submit()
+		expect(store.createRequest.mock.calls[0][0].folderId).toBe('vault-1')
+
+		// And reopening from the same place offers it again, rather than
+		// resetting to unfiled.
+		await wrapper.vm.onClose()
+		expect(wrapper.vm.newFolderId).toBe('vault-1')
+	})
+
 	it('maps the folders into picker options and leaves the request unfiled by default', () => {
 		useFolderStore().folders = [{ id: 'f-1', name: 'Suppliers' }]
 
