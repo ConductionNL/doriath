@@ -1125,7 +1125,14 @@
         "Weak, reused and ageing passwords in your unlocked vault.": "Слабыя, паўторна выкарыстаныя і старыя паролі ў разблакаваным сховішчы.",
         "Everything you did, from the audit trail.": "Усё, што вы зрабілі, з журнала аўдыту.",
         "Reports": "Звіты",
-        "Vault unlocked. Opening your vault…": "Сховішча разблакіравана. Адкрыццё вашага сховішча…"
+        "Vault unlocked. Opening your vault…": "Сховішча разблакіравана. Адкрыццё вашага сховішча…",
+        "Deleted {ok} of {total} secrets": "Выдалена {ok} з {total} сакрэтаў",
+        "Moved {ok} of {total} secrets": "Перамешчана {ok} з {total} сакрэтаў",
+        "Shared {ok} of {total} secrets": "Дадзены доступ да {ok} з {total} сакрэтаў",
+        "Added {ok} of {total} secrets to the team folder": "Дадана {ok} з {total} сакрэтаў у камандную папку",
+        "The Keepiq browser extension autofills your logins, provides passkeys, and shows TOTP codes — without your secrets ever leaving your device.": "Пашырэнне Keepiq для браўзера аўтаматычна запаўняе вашы лагіны, дае ключы доступу і паказвае коды TOTP — і вашы сакрэты ніколі не пакідаюць вашу прыладу.",
+        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Ствараецца запаўняльнік, які застаецца пустым, пакуль атрымальнік яго не запоўніць — вам ніколі не трэба выдумляць значэнне.",
+        "Could not reach the directory": "Не ўдалося звязацца з каталогам"
     },
     "plurals": null
 }

@@ -15,7 +15,10 @@
  *    emits a `created` event with the store's response;
  *  - copyUrl() writes the fill URL to the clipboard and flips `copied`;
  *  - submit failures surface in the `.secret-request-create-dialog__error`
- *    pane and clear the `submitting` flag.
+ *    pane and clear the `submitting` flag;
+ *  - the create action is gated on the required inputs — a name for a fresh
+ *    request, and at least one requested field — rather than on the endpoint
+ *    rejecting a blank request.
  *
  * @spec openspec/changes/implement-secret-requests/tasks.md#13.3
  */
@@ -24,6 +27,7 @@ import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import SecretRequestCreateDialog from '../../src/dialogs/SecretRequestCreateDialog.vue'
+import { useFolderStore } from '../../src/store/modules/folder.js'
 import { useSecretRequestStore } from '../../src/store/modules/secretRequest.js'
 
 const ncStubs = {
@@ -106,6 +110,11 @@ describe('SecretRequestCreateDialog', () => {
 		)
 		expect(wrapper.vm.fillUrl).not.toContain('#/')
 		expect(wrapper.vm.fillUrl).not.toMatch(/apps\/keepiq\/share\/request\//)
+		// Scheme and host included. The requester pastes this into a mail or a
+		// chat, where a bare path opens nothing — and the machine API hands out
+		// the absolute form for the same token, so a path here made one request
+		// look like two different links.
+		expect(wrapper.vm.fillUrl.startsWith(window.location.origin)).toBe(true)
 
 		// `created` event is emitted with the store response.
 		const events = wrapper.emitted('created')
@@ -264,6 +273,49 @@ describe('SecretRequestCreateDialog', () => {
 		expect(wrapper.vm.customFields).toHaveLength(0)
 	})
 
+	it('removeCustomField(): drops the name from the list and the selection', () => {
+		const wrapper = mount(SecretRequestCreateDialog, {
+			propsData: { open: true, secret: { id: 'secret-1' } },
+			global: { stubs: ncStubs },
+		})
+
+		wrapper.vm.customFieldInput = 'zgw-client-id'
+		wrapper.vm.addCustomField()
+		expect(wrapper.vm.requestedFields).toContain('zgw-client-id')
+
+		wrapper.vm.removeCustomField('zgw-client-id')
+
+		// Gone from BOTH: unticking alone left the name in the list, so a typo
+		// could not be taken back without cancelling the dialog.
+		expect(wrapper.vm.customFields).not.toContain('zgw-client-id')
+		expect(wrapper.vm.requestedFields).not.toContain('zgw-client-id')
+		expect(wrapper.vm.availableFields.map((f) => f.key)).not.toContain(
+			'zgw-client-id',
+		)
+	})
+
+	it('marks only the names typed here as removable', () => {
+		const wrapper = mount(SecretRequestCreateDialog, {
+			propsData: {
+				open: true,
+				secret: { id: 'secret-1', additional_fields_keys: ['api-token'] },
+			},
+			global: { stubs: ncStubs },
+		})
+
+		wrapper.vm.customFieldInput = 'client-id'
+		wrapper.vm.addCustomField()
+
+		const custom = Object.fromEntries(
+			wrapper.vm.availableFields.map((f) => [f.key, f.custom === true]),
+		)
+		expect(custom['client-id']).toBe(true)
+		// The secret's own member and the built-ins exist whether or not this
+		// request asks for them, so the dialog must not offer to delete them.
+		expect(custom['api-token']).toBe(false)
+		expect(custom.key).toBe(false)
+	})
+
 	it('closing resets the custom field state', async () => {
 		const wrapper = mount(SecretRequestCreateDialog, {
 			propsData: { open: true, secret: { id: 'secret-1' } },
@@ -321,6 +373,99 @@ describe('SecretRequestCreateDialog', () => {
 
 		expect(store.createRequest).not.toHaveBeenCalled()
 		expect(wrapper.vm.error).not.toBe('')
+	})
+
+	it('cannot be submitted while the form is blank', () => {
+		// A fresh dialog with nothing typed and nothing ticked used to offer an
+		// enabled "Create request": the name was only checked past the button
+		// (reported in a pane below the fold) and the field selection was not
+		// checked at all, so the POST went out and the endpoint answered 400
+		// "requestedFields cannot be empty".
+		const wrapper = mount(SecretRequestCreateDialog, {
+			propsData: { open: true },
+			global: { stubs: ncStubs },
+		})
+
+		expect(wrapper.vm.canSubmit).toBe(false)
+
+		wrapper.vm.newName = 'Supplier API key'
+		expect(wrapper.vm.canSubmit).toBe(true)
+
+		// The default tick can be removed, and that alone blocks submission.
+		wrapper.vm.requestedFields = []
+		expect(wrapper.vm.canSubmit).toBe(false)
+	})
+
+	it('a re-request needs no name, only a field', () => {
+		const wrapper = mount(SecretRequestCreateDialog, {
+			propsData: {
+				open: true,
+				isReRequest: true,
+				secret: { id: 's-1', encryption_suite_id: 'suite-1' },
+			},
+			global: { stubs: ncStubs },
+		})
+
+		// The Secret already exists, so there is no name to give.
+		expect(wrapper.vm.newName).toBe('')
+		expect(wrapper.vm.canSubmit).toBe(true)
+	})
+
+	it('refuses a request with no fields instead of letting the endpoint reject it', async () => {
+		const store = useSecretRequestStore()
+		store.createRequest = vi.fn()
+
+		const wrapper = mount(SecretRequestCreateDialog, {
+			propsData: { open: true, secret: { id: 'secret-1' } },
+			global: { stubs: ncStubs },
+		})
+
+		wrapper.vm.requestedFields = []
+		await wrapper.vm.submit()
+
+		expect(store.createRequest).not.toHaveBeenCalled()
+		expect(wrapper.vm.error).not.toBe('')
+	})
+
+	it('pre-selects the vault or folder it was opened from', async () => {
+		const store = useSecretRequestStore()
+		store.createRequest = vi.fn().mockResolvedValue({ id: 'r', token: 't' })
+		useFolderStore().folders = [{ id: 'vault-1', name: 'Suppliers' }]
+
+		const wrapper = mount(SecretRequestCreateDialog, {
+			propsData: { open: true, folderId: 'vault-1' },
+			global: { stubs: ncStubs },
+		})
+
+		// Asking from inside a vault says where the credential belongs; the
+		// requester should not have to name the place they are standing in.
+		expect(wrapper.vm.newFolderId).toBe('vault-1')
+
+		wrapper.vm.newName = 'Supplier API key'
+		await wrapper.vm.submit()
+		expect(store.createRequest.mock.calls[0][0].folderId).toBe('vault-1')
+
+		// And reopening from the same place offers it again, rather than
+		// resetting to unfiled.
+		await wrapper.vm.onClose()
+		expect(wrapper.vm.newFolderId).toBe('vault-1')
+	})
+
+	it('maps the folders into picker options and leaves the request unfiled by default', () => {
+		useFolderStore().folders = [{ id: 'f-1', name: 'Suppliers' }]
+
+		const wrapper = mount(SecretRequestCreateDialog, {
+			propsData: { open: true },
+			global: { stubs: ncStubs },
+		})
+
+		// Folders ONLY: NcSelect filters an empty-string model value out of its
+		// selection, so a "No folder" option valued '' would render as though
+		// nothing were selected. Unfiled is the picker's empty state instead.
+		expect(wrapper.vm.folderSelectOptions).toEqual([
+			{ value: 'f-1', label: 'Suppliers' },
+		])
+		expect(wrapper.vm.newFolderId).toBe('')
 	})
 
 	it('does not pre-select a field that already holds a value', () => {

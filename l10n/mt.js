@@ -1126,7 +1126,14 @@ OC.L10N.register(
         "Weak, reused and ageing passwords in your unlocked vault.": "Passwords dgħajfa, użati mill-ġdid u qodma fil-kaxxa mhux imsakkra.",
         "Everything you did, from the audit trail.": "Kollox li għamilt, mit-traċċa tal-verifika.",
         "Reports": "Rapporti",
-        "Vault unlocked. Opening your vault…": "Il-vault inħall. Qed jinfetaħ il-vault tiegħek…"
+        "Vault unlocked. Opening your vault…": "Il-vault inħall. Qed jinfetaħ il-vault tiegħek…",
+        "Deleted {ok} of {total} secrets": "Tħassru {ok} minn {total} sigrieti",
+        "Moved {ok} of {total} secrets": "Tċaqalqu {ok} minn {total} sigrieti",
+        "Shared {ok} of {total} secrets": "Inqasmu {ok} minn {total} sigrieti",
+        "Added {ok} of {total} secrets to the team folder": "Żdiedu {ok} minn {total} sigrieti mal-folder tat-tim",
+        "The Keepiq browser extension autofills your logins, provides passkeys, and shows TOTP codes — without your secrets ever leaving your device.": "L-estensjoni tal-browser ta' Keepiq timla awtomatikament il-logins tiegħek, tipprovdi passkeys u turi kodiċi TOTP — mingħajr ma s-sigrieti tiegħek joħorġu qatt mill-apparat tiegħek.",
+        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Jinħoloq post żammiem li jibqa' vojt sakemm ir-riċevitur jimlih — qatt ma trid tivvinta valur.",
+        "Could not reach the directory": "Id-direttorju ma setax jintlaħaq"
     },
     "nplurals=2; plural=(n != 1);"
 )

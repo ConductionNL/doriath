@@ -1126,7 +1126,14 @@ OC.L10N.register(
         "Weak, reused and ageing passwords in your unlocked vault.": "Slabé, opakovane použité a staré heslá v odomknutom trezore.",
         "Everything you did, from the audit trail.": "Všetko, čo ste urobili, zo záznamu auditu.",
         "Reports": "Reporty",
-        "Vault unlocked. Opening your vault…": "Trezor odomknutý. Otvára sa váš trezor…"
+        "Vault unlocked. Opening your vault…": "Trezor odomknutý. Otvára sa váš trezor…",
+        "Deleted {ok} of {total} secrets": "Odstránené {ok} z {total} tajomstiev",
+        "Moved {ok} of {total} secrets": "Presunuté {ok} z {total} tajomstiev",
+        "Shared {ok} of {total} secrets": "Zdieľané {ok} z {total} tajomstiev",
+        "Added {ok} of {total} secrets to the team folder": "Pridané {ok} z {total} tajomstiev do tímovej zložky",
+        "The Keepiq browser extension autofills your logins, provides passkeys, and shows TOTP codes — without your secrets ever leaving your device.": "Rozšírenie prehliadača Keepiq automaticky vypĺňa vaše prihlasovacie údaje, poskytuje prístupové kľúče a zobrazuje kódy TOTP — a vaše tajomstvá pritom nikdy neopustia vaše zariadenie.",
+        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Vytvorí sa zástupný záznam, ktorý zostane prázdny, kým ho príjemca nevyplní — nikdy si nemusíte hodnotu vymýšľať.",
+        "Could not reach the directory": "Adresár sa nepodarilo kontaktovať"
     },
     "nplurals=2; plural=(n != 1);"
 )

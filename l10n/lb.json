@@ -1125,7 +1125,14 @@
         "Weak, reused and ageing passwords in your unlocked vault.": "Schwaach, méi Mol benotzt an al Passwierder an Ärem opgeschlossene Safe.",
         "Everything you did, from the audit trail.": "Alles wat Dir gemaach hutt, aus dem Auditspur.",
         "Reports": "Berichter",
-        "Vault unlocked. Opening your vault…": "Tresor entspaart. Ären Tresor gëtt opgemaach…"
+        "Vault unlocked. Opening your vault…": "Tresor entspaart. Ären Tresor gëtt opgemaach…",
+        "Deleted {ok} of {total} secrets": "{ok} vun {total} Geheimnisser geläscht",
+        "Moved {ok} of {total} secrets": "{ok} vun {total} Geheimnisser geréckelt",
+        "Shared {ok} of {total} secrets": "{ok} vun {total} Geheimnisser gedeelt",
+        "Added {ok} of {total} secrets to the team folder": "{ok} vun {total} Geheimnisser an den Equipendossier gesat",
+        "The Keepiq browser extension autofills your logins, provides passkeys, and shows TOTP codes — without your secrets ever leaving your device.": "D'Keepiq-Browser-Erweiderung fëllt Är Logins automatesch aus, bitt Passkeys a weist TOTP-Coden — ouni datt Är Geheimnisser Ären Apparat jeemools verloossen.",
+        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Et gëtt e Plazhalter erstellt, deen eidel bleift bis den Empfänger en ausfëllt — Dir musst ni e Wäert erfannen.",
+        "Could not reach the directory": "De Verzeechnes konnt net erreecht ginn"
     },
     "plurals": null
 }

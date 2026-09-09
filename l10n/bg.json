@@ -1125,7 +1125,14 @@
         "Weak, reused and ageing passwords in your unlocked vault.": "Слаби, повторно използвани и стари пароли в отключения трезор.",
         "Everything you did, from the audit trail.": "Всичко, което направихте, от одитната следа.",
         "Reports": "Доклади",
-        "Vault unlocked. Opening your vault…": "Хранилището е отключено. Отваряне на вашето хранилище…"
+        "Vault unlocked. Opening your vault…": "Хранилището е отключено. Отваряне на вашето хранилище…",
+        "Deleted {ok} of {total} secrets": "Изтрити {ok} от {total} тайни",
+        "Moved {ok} of {total} secrets": "Преместени {ok} от {total} тайни",
+        "Shared {ok} of {total} secrets": "Споделени {ok} от {total} тайни",
+        "Added {ok} of {total} secrets to the team folder": "Добавени {ok} от {total} тайни към екипната папка",
+        "The Keepiq browser extension autofills your logins, provides passkeys, and shows TOTP codes — without your secrets ever leaving your device.": "Разширението Keepiq за браузър попълва автоматично данните ви за вход, предоставя ключове за достъп и показва кодове TOTP — без тайните ви никога да напускат устройството ви.",
+        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Създава се запазено място, което остава празно, докато получателят не го попълни — никога не се налага да измисляте стойност.",
+        "Could not reach the directory": "Указателят не можа да бъде достигнат"
     },
     "plurals": null
 }

@@ -453,10 +453,13 @@
 				</template>
 			</CnIndexPage>
 		</div>
-		<!-- No `:secret` prop: the dialog creates the placeholder itself. -->
+		<!-- No `:secret` prop: the dialog creates the placeholder itself.
+		     `folderId` is the vault or folder being browsed, so the placeholder
+		     is filed where the requester was standing when they asked. -->
 		<SecretRequestCreateDialog
 			v-if="credentialRequestOpen"
 			:open="credentialRequestOpen"
+			:folderId="selectedFolderId"
 			data-testid="credential-request-dialog"
 			@update:open="credentialRequestOpen = $event"
 			@created="onCredentialRequested" />
@@ -921,6 +924,12 @@ export default {
 		 * last (CnBreadcrumbs renders it unlinked with aria-current). Empty
 		 * at the root — no trail is rendered there.
 		 *
+		 * The Home crumb carries a `label` even though nothing renders it:
+		 * NcBreadcrumb prints the name only for crumbs WITHOUT an icon, but
+		 * declares `name` as a required String, so an icon-only crumb warns
+		 * once per crumb per render ("type check failed for prop name").
+		 * The word matches the nav item pointing at the same route.
+		 *
 		 * @return {Array<object>} CnBreadcrumbs `crumbs` entries.
 		 * @spec openspec/specs/secrets/spec.md#requirement-folder-management
 		 */
@@ -930,7 +939,11 @@ export default {
 				return []
 			}
 			return [
-				{ icon: 'Home', to: { name: 'SecretList' } },
+				{
+					icon: 'Home',
+					label: t('keepiq', 'Vaults'),
+					to: { name: 'SecretList' },
+				},
 				...trail.map((folder, index) =>
 					index === trail.length - 1
 						? { label: folder.name }
@@ -1633,7 +1646,7 @@ export default {
    guards against design-system themes that flatten the bar's box with
    their own !important rules. */
 .secret-list-view :deep(.cn-index-page) {
-	padding-top: 4px;
+	padding-top: 0;
 }
 
 .secret-list-view :deep(.cn-actions-bar) {
@@ -1643,8 +1656,17 @@ export default {
 	   element its shell reads flat at the small element radius next to the
 	   pill-shaped search and view toggle inside. Other apps keep the
 	   library default — their bars sit mid-page under a title, and that
-	   rounding call is theirs. Fallbacks for older server generations. */
-	border-radius: var(
+	   rounding call is theirs. Fallbacks for older server generations.
+	   Top corners stay square: the bar butts against the page's top edge
+	   (padding-top: 0 above), so rounding there would expose the page
+	   background in two notches instead of reading as a seam. */
+	border-start-start-radius: 0;
+	border-start-end-radius: 0;
+	border-end-start-radius: var(
+		--border-radius-container-large,
+		var(--border-radius-large, 12px)
+	);
+	border-end-end-radius: var(
 		--border-radius-container-large,
 		var(--border-radius-large, 12px)
 	);

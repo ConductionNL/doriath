@@ -1126,7 +1126,14 @@ OC.L10N.register(
         "Weak, reused and ageing passwords in your unlocked vault.": "Silpni, pakartotinai naudoti ir seni slaptažodžiai atrakintoje saugykloje.",
         "Everything you did, from the audit trail.": "Viskas, ką padarėte, iš audito įrašo.",
         "Reports": "Ataskaitos",
-        "Vault unlocked. Opening your vault…": "Saugykla atblokuota. Atveriama jūsų saugykla…"
+        "Vault unlocked. Opening your vault…": "Saugykla atblokuota. Atveriama jūsų saugykla…",
+        "Deleted {ok} of {total} secrets": "Ištrinta {ok} iš {total} paslapčių",
+        "Moved {ok} of {total} secrets": "Perkelta {ok} iš {total} paslapčių",
+        "Shared {ok} of {total} secrets": "Bendrinta {ok} iš {total} paslapčių",
+        "Added {ok} of {total} secrets to the team folder": "Į komandos aplanką įtraukta {ok} iš {total} paslapčių",
+        "The Keepiq browser extension autofills your logins, provides passkeys, and shows TOTP codes — without your secrets ever leaving your device.": "Keepiq naršyklės priedas automatiškai užpildo jūsų prisijungimo duomenis, teikia prieigos raktus ir rodo TOTP kodus — o jūsų paslaptys niekada neišeina iš jūsų įrenginio.",
+        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Sukuriamas rezervuotas įrašas, kuris lieka tuščias, kol gavėjas jo neužpildys — jums niekada nereikia išsigalvoti reikšmės.",
+        "Could not reach the directory": "Nepavyko susisiekti su katalogu"
     },
     "nplurals=2; plural=(n != 1);"
 )

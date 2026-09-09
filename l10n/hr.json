@@ -1125,7 +1125,14 @@
         "Weak, reused and ageing passwords in your unlocked vault.": "Slabe, ponovno korištene i stare lozinke u otključanom trezoru.",
         "Everything you did, from the audit trail.": "Sve što ste učinili, iz zapisa revizije.",
         "Reports": "Izvješća",
-        "Vault unlocked. Opening your vault…": "Trezor otključan. Otvaranje vašeg trezora…"
+        "Vault unlocked. Opening your vault…": "Trezor otključan. Otvaranje vašeg trezora…",
+        "Deleted {ok} of {total} secrets": "Izbrisano {ok} od {total} tajni",
+        "Moved {ok} of {total} secrets": "Premješteno {ok} od {total} tajni",
+        "Shared {ok} of {total} secrets": "Podijeljeno {ok} od {total} tajni",
+        "Added {ok} of {total} secrets to the team folder": "Dodano {ok} od {total} tajni u timsku mapu",
+        "The Keepiq browser extension autofills your logins, provides passkeys, and shows TOTP codes — without your secrets ever leaving your device.": "Proširenje preglednika Keepiq automatski ispunjava vaše prijave, pruža pristupne ključeve i prikazuje TOTP kodove — a vaše tajne pritom nikada ne izlaze s vašeg uređaja.",
+        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Stvara se rezervirano mjesto koje ostaje prazno dok ga primatelj ne ispuni — nikada ne morate izmišljati vrijednost.",
+        "Could not reach the directory": "Do imenika nije bilo moguće doći"
     },
     "plurals": null
 }

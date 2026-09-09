@@ -1126,7 +1126,14 @@ OC.L10N.register(
         "Weak, reused and ageing passwords in your unlocked vault.": "Schwache, mehrfach genutzte und alte Passwörter in Ihrem entsperrten Tresor.",
         "Everything you did, from the audit trail.": "Alles, was Sie getan haben, aus dem Prüfprotokoll.",
         "Reports": "Berichte",
-        "Vault unlocked. Opening your vault…": "Tresor entsperrt. Ihr Tresor wird geöffnet…"
+        "Vault unlocked. Opening your vault…": "Tresor entsperrt. Ihr Tresor wird geöffnet…",
+        "Deleted {ok} of {total} secrets": "{ok} von {total} Geheimnissen gelöscht",
+        "Moved {ok} of {total} secrets": "{ok} von {total} Geheimnissen verschoben",
+        "Shared {ok} of {total} secrets": "{ok} von {total} Geheimnissen geteilt",
+        "Added {ok} of {total} secrets to the team folder": "{ok} von {total} Geheimnissen dem Teamordner hinzugefügt",
+        "The Keepiq browser extension autofills your logins, provides passkeys, and shows TOTP codes — without your secrets ever leaving your device.": "Die Keepiq-Browser-Erweiterung füllt Ihre Logins automatisch aus, stellt Passkeys bereit und zeigt TOTP-Codes an — ohne dass Ihre Geheimnisse Ihr Gerät je verlassen.",
+        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Es wird ein Platzhalter erstellt, der leer bleibt, bis der Empfänger ihn ausfüllt – Sie müssen sich niemals einen Wert ausdenken.",
+        "Could not reach the directory": "Das Verzeichnis konnte nicht erreicht werden"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -1125,7 +1125,14 @@
         "Weak, reused and ageing passwords in your unlocked vault.": "Slabá, opakovaně použitá a stará hesla v odemčeném trezoru.",
         "Everything you did, from the audit trail.": "Vše, co jste udělali, ze záznamu auditu.",
         "Reports": "Reporty",
-        "Vault unlocked. Opening your vault…": "Trezor odemčen. Otevírání vašeho trezoru…"
+        "Vault unlocked. Opening your vault…": "Trezor odemčen. Otevírání vašeho trezoru…",
+        "Deleted {ok} of {total} secrets": "Smazáno {ok} z {total} tajemství",
+        "Moved {ok} of {total} secrets": "Přesunuto {ok} z {total} tajemství",
+        "Shared {ok} of {total} secrets": "Nasdíleno {ok} z {total} tajemství",
+        "Added {ok} of {total} secrets to the team folder": "Přidáno {ok} z {total} tajemství do týmové složky",
+        "The Keepiq browser extension autofills your logins, provides passkeys, and shows TOTP codes — without your secrets ever leaving your device.": "Rozšíření prohlížeče Keepiq automaticky vyplňuje vaše přihlašovací údaje, poskytuje přístupové klíče a zobrazuje kódy TOTP — a vaše tajemství přitom nikdy neopustí vaše zařízení.",
+        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Vytvoří se zástupný záznam, který zůstane prázdný, dokud jej příjemce nevyplní — nikdy si nemusíte hodnotu vymýšlet.",
+        "Could not reach the directory": "Adresář se nepodařilo kontaktovat"
     },
     "plurals": null
 }

@@ -1126,7 +1126,14 @@ OC.L10N.register(
         "Weak, reused and ageing passwords in your unlocked vault.": "Слабе, поново коришћене и старе лозинке у откљученом сефу.",
         "Everything you did, from the audit trail.": "Све што сте урадили, из записа ревизије.",
         "Reports": "Извештаји",
-        "Vault unlocked. Opening your vault…": "Трезор откључан. Отварање вашег трезора…"
+        "Vault unlocked. Opening your vault…": "Трезор откључан. Отварање вашег трезора…",
+        "Deleted {ok} of {total} secrets": "Избрисано {ok} од {total} тајни",
+        "Moved {ok} of {total} secrets": "Премештено {ok} од {total} тајни",
+        "Shared {ok} of {total} secrets": "Подељено {ok} од {total} тајни",
+        "Added {ok} of {total} secrets to the team folder": "Додато {ok} од {total} тајни у тимску фасциклу",
+        "The Keepiq browser extension autofills your logins, provides passkeys, and shows TOTP codes — without your secrets ever leaving your device.": "Проширење прегледача Keepiq аутоматски испуњава ваше пријаве, пружа приступне кључеве и приказује TOTP кодове — а ваше тајне никада не излазе са вашег уређаја.",
+        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Креира се резервисано место које остаје празно док га прималац не испуни — никада не морате да измишљате вредност.",
+        "Could not reach the directory": "До именика није било могуће доћи"
     },
     "nplurals=2; plural=(n != 1);"
 )

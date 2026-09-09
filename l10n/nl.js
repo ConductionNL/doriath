@@ -1131,7 +1131,14 @@ OC.L10N.register(
         "Your master password": "Je masterwachtwoord",
         "Your master password changed — re-enroll your passkeys to unlock with them again.": "Je masterwachtwoord is gewijzigd — registreer je passkeys opnieuw om er weer mee te ontgrendelen.",
         "Zero-knowledge boundary: this report aggregates server-visible metadata only. No secret value, name, login, or ciphertext was read; no password strength, reuse, or breach figure exists anywhere in Keepiq server-side. Ciphertext-age figures describe encryption-blob age, not password strength.": "Zero-knowledge-grens: dit rapport bundelt uitsluitend metadata die de server kan zien. Er is geen geheime waarde, naam, inlognaam of versleutelde inhoud gelezen; nergens aan de serverkant van Keepiq bestaat een cijfer over wachtwoordsterkte, hergebruik of datalekken. Cijfers over de leeftijd van versleutelde inhoud beschrijven de leeftijd van het versleutelde blok, niet de sterkte van het wachtwoord.",
-        "Vault unlocked. Opening your vault…": "Kluis ontgrendeld. Uw kluis wordt geopend…"
+        "Vault unlocked. Opening your vault…": "Kluis ontgrendeld. Uw kluis wordt geopend…",
+        "Deleted {ok} of {total} secrets": "{ok} van {total} geheimen verwijderd",
+        "Moved {ok} of {total} secrets": "{ok} van {total} geheimen verplaatst",
+        "Shared {ok} of {total} secrets": "{ok} van {total} geheimen gedeeld",
+        "Added {ok} of {total} secrets to the team folder": "{ok} van {total} geheimen aan de teammap toegevoegd",
+        "The Keepiq browser extension autofills your logins, provides passkeys, and shows TOTP codes — without your secrets ever leaving your device.": "De Keepiq-browserextensie vult je inloggegevens automatisch in, levert passkeys en toont TOTP-codes — zonder dat je geheimen ooit je apparaat verlaten.",
+        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Er wordt een placeholder aangemaakt die leeg blijft totdat de ontvanger hem invult — je hoeft nooit zelf een waarde te bedenken.",
+        "Could not reach the directory": "Kan de directory niet bereiken"
     },
     "nplurals=2; plural=(n != 1);"
 )

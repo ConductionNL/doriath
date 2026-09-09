@@ -1126,7 +1126,14 @@ OC.L10N.register(
         "Weak, reused and ageing passwords in your unlocked vault.": "Слабкі, повторно використані та старі пароли у розблокованому сховищі.",
         "Everything you did, from the audit trail.": "Усе, що ви зробили, із журналу аудиту.",
         "Reports": "Звіти",
-        "Vault unlocked. Opening your vault…": "Сховище розблоковано. Відкриття вашого сховища…"
+        "Vault unlocked. Opening your vault…": "Сховище розблоковано. Відкриття вашого сховища…",
+        "Deleted {ok} of {total} secrets": "Вилучено {ok} з {total} секретів",
+        "Moved {ok} of {total} secrets": "Переміщено {ok} з {total} секретів",
+        "Shared {ok} of {total} secrets": "Надано доступ до {ok} з {total} секретів",
+        "Added {ok} of {total} secrets to the team folder": "Додано {ok} з {total} секретів до командної теки",
+        "The Keepiq browser extension autofills your logins, provides passkeys, and shows TOTP codes — without your secrets ever leaving your device.": "Розширення Keepiq для браузера автоматично заповнює ваші логіни, надає ключі доступу та показує коди TOTP — і ваші секрети ніколи не покидають ваш пристрій.",
+        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Створюється заготовка, яка залишається порожньою, доки отримувач її не заповнить — вам ніколи не потрібно вигадувати значення.",
+        "Could not reach the directory": "Не вдалося зв'язатися з каталогом"
     },
     "nplurals=2; plural=(n != 1);"
 )

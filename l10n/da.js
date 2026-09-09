@@ -1126,7 +1126,14 @@ OC.L10N.register(
         "Weak, reused and ageing passwords in your unlocked vault.": "Svage, genbrugte og gamle adgangskoder i din oplåste boks.",
         "Everything you did, from the audit trail.": "Alt hvad du gjorde, fra revisionssporet.",
         "Reports": "Rapporter",
-        "Vault unlocked. Opening your vault…": "Boks låst op. Åbner din boks…"
+        "Vault unlocked. Opening your vault…": "Boks låst op. Åbner din boks…",
+        "Deleted {ok} of {total} secrets": "Slettede {ok} af {total} hemmeligheder",
+        "Moved {ok} of {total} secrets": "Flyttede {ok} af {total} hemmeligheder",
+        "Shared {ok} of {total} secrets": "Delte {ok} af {total} hemmeligheder",
+        "Added {ok} of {total} secrets to the team folder": "Tilføjede {ok} af {total} hemmeligheder til teammappen",
+        "The Keepiq browser extension autofills your logins, provides passkeys, and shows TOTP codes — without your secrets ever leaving your device.": "Keepiq-browserudvidelsen udfylder dine logins automatisk, leverer adgangsnøgler og viser TOTP-koder — uden at dine hemmeligheder nogensinde forlader din enhed.",
+        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Der oprettes en pladsholder, som forbliver tom, indtil modtageren udfylder den — du skal aldrig opdigte en værdi.",
+        "Could not reach the directory": "Kataloget kunne ikke nås"
     },
     "nplurals=2; plural=(n != 1);"
 )
