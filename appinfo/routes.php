@@ -283,7 +283,10 @@ return \OCA\OpenRegister\AppHost\Routes::standard([
     // The `doriath` segment survives the doriath -> keepiq rename on purpose:
     // it is a published contract URL, not an app id. See the class docblock
     // on DiscoveryController for the full reasoning.
-    ['name' => 'discovery#document', 'url' => '/api/v1/app/.well-known/doriath', 'verb' => 'GET'],
+    // Canonical discovery path. The pre-rename path below is still served
+    // and is retired before the first stable release — see legacyDocument().
+    ['name' => 'discovery#document', 'url' => '/api/v1/app/.well-known/keepiq', 'verb' => 'GET'],
+    ['name' => 'discovery#legacyDocument', 'url' => '/api/v1/app/.well-known/doriath', 'verb' => 'GET'],
 
     // JWT-Bearer token exchange (public; signature-verified).
     ['name' => 'applicationToken#exchange', 'url' => '/api/v1/token', 'verb' => 'POST'],

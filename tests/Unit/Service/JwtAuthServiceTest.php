@@ -30,6 +30,7 @@ use OCA\Keepiq\Db\ApplicationMapper;
 use OCA\Keepiq\Db\EncryptionSuite;
 use OCA\Keepiq\Db\EncryptionSuiteMapper;
 use OCA\Keepiq\Service\ApplicationJwkResolver;
+use OCA\Keepiq\Service\AudiencePolicy;
 use OCA\Keepiq\Service\JwtAssertionVerifier;
 use OCA\Keepiq\Service\JwtAuthService;
 use OCP\AppFramework\Db\DoesNotExistException;
@@ -114,6 +115,7 @@ class JwtAuthServiceTest extends TestCase {
 			cacheFactory: $this->cacheFactory,
 			verifier: new JwtAssertionVerifier(logger: $this->logger),
 			keyResolver: new ApplicationJwkResolver(suiteMapper: $this->suiteMapper),
+			audiencePolicy: new AudiencePolicy(logger: $this->logger),
 		);
 	}//end setUp()
 
@@ -338,6 +340,292 @@ class JwtAuthServiceTest extends TestCase {
 		$this->expectExceptionMessage('Wrong audience');
 		$this->service->exchangeAssertion($assertion);
 	}//end testWrongAudienceRejected()
+
+	/**
+	 * The canonical audience is accepted and raises no deprecation warning.
+	 *
+	 * @return void
+	 */
+	public function testCanonicalAudienceAccepted(): void {
+		$this->stubActiveApp('app-1');
+
+		$warnings = [];
+		$this->logger->method('warning')->willReturnCallback(
+			static function (string $message) use (&$warnings): void {
+				$warnings[] = $message;
+			}
+		);
+
+		$now = time();
+		$assertion = $this->buildAssertion(
+			[
+				'iss' => 'app-1',
+				'aud' => 'keepiq',
+				'iat' => $now,
+				'exp' => ($now + 60),
+				'jti' => 'jti-aud-canonical',
+			]
+		);
+
+		$result = $this->service->exchangeAssertion($assertion);
+
+		$this->assertSame('Bearer', $result['token_type']);
+		$this->assertSame([], $warnings, 'the canonical audience must not be reported as deprecated');
+	}//end testCanonicalAudienceAccepted()
+
+	/**
+	 * The pre-rename audience still works, and is reported with its issuer.
+	 *
+	 * Rejecting it would be a fleet-wide credential outage; accepting it
+	 * silently would leave nobody knowing who still has to migrate before
+	 * the value is retired.
+	 *
+	 * @return void
+	 */
+	public function testDeprecatedAudienceAcceptedAndReported(): void {
+		$this->stubActiveApp('app-1');
+
+		$context = [];
+		$this->logger->method('warning')->willReturnCallback(
+			static function (string $message, array $ctx = []) use (&$context): void {
+				$context = $ctx;
+			}
+		);
+
+		$now = time();
+		$assertion = $this->buildAssertion(
+			[
+				'iss' => 'app-1',
+				'aud' => 'doriath',
+				'iat' => $now,
+				'exp' => ($now + 60),
+				'jti' => 'jti-aud-deprecated',
+			]
+		);
+
+		$result = $this->service->exchangeAssertion($assertion);
+
+		$this->assertSame('Bearer', $result['token_type'], 'the deprecated audience must still exchange');
+		$this->assertSame('app-1', $context['iss'] ?? null, 'the warning must name the issuer still to migrate');
+		$this->assertSame('doriath', $context['deprecated'] ?? null);
+		$this->assertSame('1.0.0', $context['version'] ?? null, 'the warning must name the removing app version');
+	}//end testDeprecatedAudienceAcceptedAndReported()
+
+	/**
+	 * An array-valued `aud` is accepted when any member names this instance.
+	 *
+	 * RFC 7519 §4.1.3 permits `aud` to be an array; a conformant client
+	 * sending one used to be rejected outright.
+	 *
+	 * @return void
+	 */
+	public function testArrayValuedAudienceAccepted(): void {
+		$this->stubActiveApp('app-1');
+
+		$now = time();
+		$assertion = $this->buildAssertion(
+			[
+				'iss' => 'app-1',
+				'aud' => ['someoneelse', 'keepiq'],
+				'iat' => $now,
+				'exp' => ($now + 60),
+				'jti' => 'jti-aud-array',
+			]
+		);
+
+		$result = $this->service->exchangeAssertion($assertion);
+
+		$this->assertSame('Bearer', $result['token_type']);
+	}//end testArrayValuedAudienceAccepted()
+
+	/**
+	 * An array-valued `aud` naming only foreign audiences is rejected.
+	 *
+	 * @return void
+	 */
+	public function testArrayValuedForeignAudienceRejected(): void {
+		$this->stubActiveApp('app-1');
+
+		$now = time();
+		$assertion = $this->buildAssertion(
+			[
+				'iss' => 'app-1',
+				'aud' => ['someoneelse', 'anotherapp'],
+				'iat' => $now,
+				'exp' => ($now + 60),
+				'jti' => 'jti-aud-array-foreign',
+			]
+		);
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('Wrong audience');
+		$this->service->exchangeAssertion($assertion);
+	}//end testArrayValuedForeignAudienceRejected()
+
+	/**
+	 * A non-string audience is malformed, not an audience written oddly.
+	 *
+	 * Casting would turn `123` into "123" and `true` into "1" before the
+	 * comparison. No accepted audience is numeric today, so nothing would have
+	 * slipped through — but that is a fact about configuration, not a property
+	 * of the check.
+	 *
+	 * @param mixed $aud The malformed claim value.
+	 *
+	 * @dataProvider malformedAudiences
+	 *
+	 * @return void
+	 */
+	public function testNonStringAudienceIsRejected(mixed $aud): void {
+		$this->stubActiveApp('app-1');
+
+		$now = time();
+		$assertion = $this->buildAssertion(
+			[
+				'iss' => 'app-1',
+				'aud' => $aud,
+				'iat' => $now,
+				'exp' => ($now + 60),
+				'jti' => 'jti-aud-' . md5(serialize($aud)),
+			]
+		);
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('Wrong audience');
+		$this->service->exchangeAssertion($assertion);
+	}//end testNonStringAudienceIsRejected()
+
+	/**
+	 * A rejected assertion never produces a migration warning.
+	 *
+	 * The deprecation log is the checklist for deciding when `doriath` can stop
+	 * being accepted, so it has to contain only issuers that actually
+	 * authenticated. Warning before signature, issuer and replay checks let any
+	 * unauthenticated caller manufacture traffic for any issuer it named.
+	 *
+	 * @return void
+	 */
+	public function testAReplayedDeprecatedAudienceAssertionIsNotReported(): void {
+		$this->stubActiveApp('app-1');
+
+		$warnings = [];
+		$this->logger->method('warning')->willReturnCallback(
+			static function (string $message) use (&$warnings): void {
+				$warnings[] = $message;
+			}
+		);
+
+		$now = time();
+		$claims = [
+			'iss' => 'app-1',
+			'aud' => 'doriath',
+			'iat' => $now,
+			'exp' => ($now + 60),
+			'jti' => 'jti-replay-deprecated',
+		];
+
+		// First exchange succeeds and legitimately reports.
+		$this->service->exchangeAssertion($this->buildAssertion($claims));
+		$this->assertCount(1, $warnings, 'an authenticated deprecated-audience exchange is reported');
+
+		$warnings = [];
+
+		try {
+			$this->service->exchangeAssertion($this->buildAssertion($claims));
+			$this->fail('the replayed assertion should have been rejected');
+		} catch (RuntimeException $e) {
+			$this->assertSame('Assertion jti replayed', $e->getMessage());
+		}
+
+		$this->assertSame([], $warnings, 'a replayed assertion must not be reported as a migration');
+	}//end testAReplayedDeprecatedAudienceAssertionIsNotReported()
+
+	/**
+	 * A badly signed assertion never produces a migration warning.
+	 *
+	 * Same reasoning as the replay case: the `iss` in a failed exchange is a
+	 * string the caller chose, not one this instance verified.
+	 *
+	 * @return void
+	 */
+	public function testABadlySignedDeprecatedAudienceAssertionIsNotReported(): void {
+		$this->stubActiveApp('app-1');
+
+		$warnings = [];
+		$this->logger->method('warning')->willReturnCallback(
+			static function (string $message) use (&$warnings): void {
+				$warnings[] = $message;
+			}
+		);
+
+		$now = time();
+		$assertion = $this->buildAssertionWithForeignKey(
+			[
+				'iss' => 'app-1',
+				'aud' => 'doriath',
+				'iat' => $now,
+				'exp' => ($now + 60),
+				'jti' => 'jti-badsig-deprecated',
+			]
+		);
+
+		try {
+			$this->service->exchangeAssertion($assertion);
+			$this->fail('the badly signed assertion should have been rejected');
+		} catch (RuntimeException) {
+			// Expected.
+		}
+
+		$this->assertSame([], $warnings, 'an unverified issuer must not appear in the migration log');
+	}//end testABadlySignedDeprecatedAudienceAssertionIsNotReported()
+
+	/**
+	 * Build an assertion signed with a key the application does not hold.
+	 *
+	 * Mirrors what testInvalidSignatureRejected() does inline, so a test that
+	 * needs a well-formed but unauthentic assertion does not have to restate
+	 * the whole builder.
+	 *
+	 * @param array<string,mixed> $claims The claim set to sign.
+	 *
+	 * @return string The compact serialization.
+	 */
+	private function buildAssertionWithForeignKey(array $claims): string {
+		$foreignPkey = openssl_pkey_new(
+			['private_key_type' => OPENSSL_KEYTYPE_RSA, 'private_key_bits' => 2048]
+		);
+		openssl_pkey_export($foreignPkey, $foreignPem);
+
+		$jws = (new JWSBuilder(new AlgorithmManager([new RS256()])))->create()
+			->withPayload((string)json_encode($claims))
+			->addSignature(JWKFactory::createFromKey($foreignPem), ['alg' => 'RS256', 'typ' => 'JWT'])
+			->build();
+
+		return (new CompactSerializer())->serialize($jws, 0);
+	}//end buildAssertionWithForeignKey()
+
+	/**
+	 * Claim shapes RFC 7519 section 4.1.3 does not permit.
+	 *
+	 * The mixed array is the one that matters: filtering it down to its string
+	 * members would authenticate on the part that happens to parse.
+	 *
+	 * @return array<string,array<int,mixed>>
+	 */
+	public static function malformedAudiences(): array {
+		return [
+			'integer' => [123],
+			'boolean' => [true],
+			'float' => [1.5],
+			'array with an integer member' => [['keepiq', 123]],
+			'array with a nested array' => [['keepiq', ['keepiq']]],
+			'array with an empty string' => [['keepiq', '']],
+			// Objects: json_decode(..., true) would flatten these into arrays
+			// whose VALUES contain an accepted audience.
+			'object naming the audience in a field' => [(object)['target' => 'keepiq']],
+			'object with a numeric key' => [(object)['0' => 'keepiq']],
+		];
+	}//end malformedAudiences()
 
 	/**
 	 * Replayed jti is rejected on second use.

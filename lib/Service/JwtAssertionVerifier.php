@@ -64,8 +64,9 @@ class JwtAssertionVerifier {
 	 * Deserialize an assertion and return its claim set, having asserted
 	 * that every required claim is present and acceptable.
 	 *
-	 * Required claims: iss (application id), aud="doriath", exp (>now),
-	 * iat (<=now+CLOCK_SKEW), jti.
+	 * Required claims: iss (application id), aud (PRESENCE only — which values
+	 * name this instance is AudiencePolicy's decision, asserted by
+	 * JwtAuthService), exp (>now), iat (<=now+CLOCK_SKEW), jti.
 	 *
 	 * @param string $assertion The JWS compact serialization
 	 *
@@ -145,10 +146,19 @@ class JwtAssertionVerifier {
 			throw new RuntimeException(message: 'Assertion has no payload');
 		}
 
-		$claims = json_decode($payloadRaw, true);
-		if (is_array($claims) === false) {
+		// Decoded WITHOUT assoc, then cast at the top level only. `json_decode`
+		// with $associative=true erases the difference between a JSON array and
+		// a JSON object, so `"aud": {"target": "keepiq"}` would arrive as a PHP
+		// array indistinguishable from `["keepiq"]` and match on its values.
+		// array_is_list() does not recover it either: `{"0": "keepiq"}` decodes
+		// to a list. Keeping nested objects as stdClass is what lets a claim
+		// check reject one.
+		$decoded = json_decode($payloadRaw);
+		if (is_object($decoded) === false) {
 			throw new RuntimeException(message: 'Assertion payload is not a JSON object');
 		}
+
+		$claims = (array)$decoded;
 
 		// Required claims.
 		foreach (['iss', 'aud', 'exp', 'iat', 'jti'] as $required) {
@@ -172,9 +182,9 @@ class JwtAssertionVerifier {
 	private function assertClaimsAcceptable(array $claims): void {
 		$now = time();
 
-		if ((string)$claims['aud'] !== JwtAuthService::EXPECTED_AUDIENCE) {
-			throw new RuntimeException(message: 'Wrong audience');
-		}
+		// The audience is asserted by AudiencePolicy, from JwtAuthService: which
+		// values this deployment answers to is a published contract decision,
+		// not a property of a well-formed JWS.
 
 		if ((int)$claims['exp'] <= $now) {
 			throw new RuntimeException(message: 'Assertion expired');
