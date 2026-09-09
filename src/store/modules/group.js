@@ -10,11 +10,16 @@
  * may call (`GroupsController::getGroups` is `#[NoAdminRequired]`) and which
  * answers `{ groups: [ '<gid>', ... ] }`.
  *
- * This is deliberately NOT the shape used for user candidates. A user has to
+ * This is deliberately NOT the source used for user candidates. A user has to
  * hold an encryption suite before a secret can be encrypted to them, so that
- * list comes from the suites table (encryptionSuite.fetchSuiteOwners). A group
- * carries no key of its own — its members are resolved, and key-checked, when
- * the fan-out runs — so there is nothing to filter it by here.
+ * list comes from `share.searchShareableRecipients` — Nextcloud's sharee search
+ * narrowed by the shareability probe. A group carries no key of its own — its
+ * members are resolved, and key-checked, when the fan-out runs — so there is
+ * nothing to filter it by here.
+ *
+ * The option shape IS shared with that list (`{ id, label }`), so one picker
+ * can render either without knowing which it is on. A group has no display
+ * name, so its label is its id.
  */
 
 import axios from '@nextcloud/axios'
@@ -34,10 +39,32 @@ export const GROUP_PAGE_SIZE = 100
 
 export const useGroupStore = defineStore('group', {
 	state: () => ({
-		/** @type {Array<string>} Group ids from the most recent search. */
+		/**
+		 * Groups from the most recent search, as picker options.
+		 *
+		 * @type {Array<{id: string, label: string}>}
+		 */
 		groups: [],
 		/** @type {boolean} Whether a search is in flight. */
 		loading: false,
+		/**
+		 * Why the last search produced nothing, when the reason was not
+		 * "nobody matches". An empty picker otherwise reads the same whether
+		 * the directory answered "none" or did not answer at all.
+		 *
+		 * @type {string|null}
+		 */
+		candidatesError: null,
+		/**
+		 * Sequence number of the most recently STARTED search.
+		 *
+		 * Two searches that both fire race, and the picker must show the
+		 * answer to the last term typed rather than the last one to arrive: a
+		 * slow "dev" landing after a fast "devops" would otherwise win.
+		 *
+		 * @type {number}
+		 */
+		searchSeq: 0,
 	}),
 
 	actions: {
@@ -46,11 +73,15 @@ export const useGroupStore = defineStore('group', {
 		 *
 		 * @param {string} [search] Substring to match; '' returns the first page.
 		 *
-		 * @return {Promise<Array<string>>} Group ids, sorted.
+		 * @return {Promise<Array<{id: string, label: string}>>} Options for
+		 *   this call's own answer, sorted by id — whether or not a newer
+		 *   search has since superseded it in the store.
 		 *
 		 * @spec openspec/specs/team-folder-sharing/spec.md#requirement-membership-propagation-with-group-membership
 		 */
 		async fetchGroups(search = '') {
+			const seq = ++this.searchSeq
+			this.candidatesError = null
 			this.loading = true
 			try {
 				const response = await axios.get(generateOcsUrl('cloud/groups'), {
@@ -66,10 +97,28 @@ export const useGroupStore = defineStore('group', {
 				})
 
 				const groups = response.data?.ocs?.data?.groups
-				this.groups = Array.isArray(groups) ? [...groups].sort() : []
-				return this.groups
+				const options = (Array.isArray(groups) ? [...groups] : [])
+					.sort()
+					.map((gid) => ({ id: gid, label: gid }))
+
+				if (seq === this.searchSeq) {
+					this.groups = options
+				}
+				return options
+			} catch (e) {
+				if (seq === this.searchSeq) {
+					this.candidatesError =
+						e?.response?.data?.ocs?.meta?.message
+						|| e?.message
+						|| 'Failed to search groups'
+				}
+				throw e
 			} finally {
-				this.loading = false
+				// A superseded search must not clear a flag the newer one set,
+				// or the spinner disappears while that one is still running.
+				if (seq === this.searchSeq) {
+					this.loading = false
+				}
 			}
 		},
 	},

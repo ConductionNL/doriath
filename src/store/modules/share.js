@@ -45,11 +45,33 @@ export const useShareStore = defineStore('share', {
 		 * Users from the last candidate search who can actually receive a
 		 * secret, in the order Nextcloud's sharee search returned them.
 		 *
-		 * @type {Array<string>}
+		 * `label` is the display name the sharee search reports, which is what
+		 * a picker has to show: on an LDAP or SSO instance the `id` is a GUID.
+		 *
+		 * @type {Array<{id: string, label: string}>}
 		 */
 		shareableRecipients: [],
 		/** @type {boolean} Whether a candidate search is in flight. */
 		candidatesLoading: false,
+		/**
+		 * Why the last candidate search produced nothing, when the reason was
+		 * not "nobody matches". Kept apart from `error`, which belongs to the
+		 * share list itself: a directory that cannot be reached must not read
+		 * as a failure of the shares on screen.
+		 *
+		 * @type {string|null}
+		 */
+		candidatesError: null,
+		/**
+		 * Sequence number of the most recently STARTED candidate search.
+		 *
+		 * Two searches that both fire race, and the picker must show the answer
+		 * to the last term typed rather than the last one to arrive: a slow
+		 * "car" landing after a fast "carol" would otherwise win.
+		 *
+		 * @type {number}
+		 */
+		candidatesSeq: 0,
 	}),
 
 	getters: {
@@ -88,39 +110,66 @@ export const useShareStore = defineStore('share', {
 		 *
 		 * @param {string} [search] Sharee search term; '' asks for the first page.
 		 *
-		 * @return {Promise<Array<string>>} User ids that can receive a secret.
+		 * @return {Promise<Array<{id: string, label: string}>>} Options for
+		 *   this call's own answer — whether or not a newer search has since
+		 *   superseded it in the store.
 		 *
 		 * @spec openspec/specs/user-sharing/spec.md#requirement-recipient-shareability-lookup
 		 */
 		async searchShareableRecipients(search = '') {
+			const seq = ++this.candidatesSeq
+			this.candidatesError = null
 			this.candidatesLoading = true
 			try {
-				const userIds = await this.searchSharees(search)
-				if (userIds.length === 0) {
-					this.shareableRecipients = []
-					return this.shareableRecipients
+				const sharees = await this.searchSharees(search)
+				if (sharees.length === 0) {
+					if (seq === this.candidatesSeq) {
+						this.shareableRecipients = []
+					}
+					return []
 				}
 
 				const response = await axios.post(
 					generateUrl('/apps/keepiq/api/v1/shares/recipient-certificates'),
-					{ userIds },
+					{ userIds: sharees.map((sharee) => sharee.id) },
 				)
 
+				// The probe answers ids only, so the display names come back
+				// off the search rows they were asked about.
+				const labels = new Map(
+					sharees.map((sharee) => [sharee.id, sharee.label]),
+				)
 				const recipients = response.data?.recipients
-				this.shareableRecipients = (
-					Array.isArray(recipients) ? recipients : []
-				)
+				const options = (Array.isArray(recipients) ? recipients : [])
 					.filter((recipient) => recipient?.shareable === true)
-					.map((recipient) => String(recipient.userId ?? ''))
+					.map((recipient) => {
+						const id = String(recipient.userId ?? '')
+						return { id, label: labels.get(id) || id }
+					})
 
-				return this.shareableRecipients
+				if (seq === this.candidatesSeq) {
+					this.shareableRecipients = options
+				}
+				return options
+			} catch (e) {
+				if (seq === this.candidatesSeq) {
+					this.candidatesError =
+						e?.response?.data?.message
+						|| e?.message
+						|| 'Failed to search recipients'
+				}
+				throw e
 			} finally {
-				this.candidatesLoading = false
+				// A superseded search must not clear a flag the newer one set,
+				// or the spinner disappears while that one is still running.
+				if (seq === this.candidatesSeq) {
+					this.candidatesLoading = false
+				}
 			}
 		},
 
 		/**
-		 * The user ids Nextcloud's own sharee search returns for a term.
+		 * The users Nextcloud's own sharee search returns for a term.
 		 *
 		 * `itemType=file` with `shareType=0` is the users-only form of the
 		 * autocomplete every NC share dialog uses, so the candidate set is
@@ -129,10 +178,14 @@ export const useShareStore = defineStore('share', {
 		 * own. Exact matches come first, which is the order the search itself
 		 * distinguishes them in.
 		 *
+		 * Every row carries the display name the server put in `label`, which
+		 * is the only place it is available: the shareability probe answers
+		 * about ids and knows nothing of names.
+		 *
 		 * @param {string} search The search term.
 		 *
-		 * @return {Promise<Array<string>>} Distinct user ids, capped at the
-		 *   probe's own bound.
+		 * @return {Promise<Array<{id: string, label: string}>>} Distinct
+		 *   users, capped at the probe's own bound.
 		 *
 		 * @spec openspec/specs/user-sharing/spec.md#requirement-recipient-shareability-lookup
 		 */
@@ -164,18 +217,18 @@ export const useShareStore = defineStore('share', {
 				...(Array.isArray(data.users) ? data.users : []),
 			]
 
-			const userIds = []
+			const users = []
 			const seen = new Set()
 			for (const row of rows) {
-				const userId = String(row?.value?.shareWith ?? '')
-				if (userId === '' || seen.has(userId)) {
+				const id = String(row?.value?.shareWith ?? '')
+				if (id === '' || seen.has(id)) {
 					continue
 				}
-				seen.add(userId)
-				userIds.push(userId)
+				seen.add(id)
+				users.push({ id, label: String(row?.label || id) })
 			}
 
-			return userIds.slice(0, MAX_RECIPIENT_PROBE)
+			return users.slice(0, MAX_RECIPIENT_PROBE)
 		},
 
 		/**

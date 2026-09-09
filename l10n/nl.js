@@ -1137,7 +1137,8 @@ OC.L10N.register(
         "Shared {ok} of {total} secrets": "{ok} van {total} geheimen gedeeld",
         "Added {ok} of {total} secrets to the team folder": "{ok} van {total} geheimen aan de teammap toegevoegd",
         "The Keepiq browser extension autofills your logins, provides passkeys, and shows TOTP codes — without your secrets ever leaving your device.": "De Keepiq-browserextensie vult je inloggegevens automatisch in, levert passkeys en toont TOTP-codes — zonder dat je geheimen ooit je apparaat verlaten.",
-        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Er wordt een placeholder aangemaakt die leeg blijft totdat de ontvanger hem invult — je hoeft nooit zelf een waarde te bedenken."
+        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Er wordt een placeholder aangemaakt die leeg blijft totdat de ontvanger hem invult — je hoeft nooit zelf een waarde te bedenken.",
+        "Could not reach the directory": "Kan de directory niet bereiken"
     },
     "nplurals=2; plural=(n != 1);"
 )

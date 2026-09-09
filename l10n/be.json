@@ -1131,7 +1131,8 @@
         "Shared {ok} of {total} secrets": "Дадзены доступ да {ok} з {total} сакрэтаў",
         "Added {ok} of {total} secrets to the team folder": "Дадана {ok} з {total} сакрэтаў у камандную папку",
         "The Keepiq browser extension autofills your logins, provides passkeys, and shows TOTP codes — without your secrets ever leaving your device.": "Пашырэнне Keepiq для браўзера аўтаматычна запаўняе вашы лагіны, дае ключы доступу і паказвае коды TOTP — і вашы сакрэты ніколі не пакідаюць вашу прыладу.",
-        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Ствараецца запаўняльнік, які застаецца пустым, пакуль атрымальнік яго не запоўніць — вам ніколі не трэба выдумляць значэнне."
+        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Ствараецца запаўняльнік, які застаецца пустым, пакуль атрымальнік яго не запоўніць — вам ніколі не трэба выдумляць значэнне.",
+        "Could not reach the directory": "Не ўдалося звязацца з каталогам"
     },
     "plurals": null
 }

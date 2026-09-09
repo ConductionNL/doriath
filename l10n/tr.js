@@ -1132,7 +1132,8 @@ OC.L10N.register(
         "Shared {ok} of {total} secrets": "{total} gizliden {ok} tanesi paylaşıldı",
         "Added {ok} of {total} secrets to the team folder": "{total} gizliden {ok} tanesi takım klasörüne eklendi",
         "The Keepiq browser extension autofills your logins, provides passkeys, and shows TOTP codes — without your secrets ever leaving your device.": "Keepiq tarayıcı eklentisi oturum bilgilerinizi kendiliğinden doldurur, geçiş anahtarları sağlar ve TOTP kodlarını gösterir — gizlileriniz aygıtınızdan asla ayrılmadan.",
-        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Bir yer tutucu oluşturulur ve alıcı doldurana kadar boş kalır — asla bir değer uydurmanız gerekmez."
+        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Bir yer tutucu oluşturulur ve alıcı doldurana kadar boş kalır — asla bir değer uydurmanız gerekmez.",
+        "Could not reach the directory": "Dizine ulaşılamadı"
     },
     "nplurals=2; plural=(n != 1);"
 )

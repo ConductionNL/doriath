@@ -1131,7 +1131,8 @@
         "Shared {ok} of {total} secrets": "{ok} av {total} hemligheter delade",
         "Added {ok} of {total} secrets to the team folder": "{ok} av {total} hemligheter tillagda i teammappen",
         "The Keepiq browser extension autofills your logins, provides passkeys, and shows TOTP codes — without your secrets ever leaving your device.": "Keepiqs webbläsartillägg fyller i dina inloggningar automatiskt, tillhandahåller åtkomstnycklar och visar TOTP-koder — utan att dina hemligheter någonsin lämnar din enhet.",
-        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "En platshållare skapas och förblir tom tills mottagaren fyller i den — du behöver aldrig hitta på ett värde."
+        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "En platshållare skapas och förblir tom tills mottagaren fyller i den — du behöver aldrig hitta på ett värde.",
+        "Could not reach the directory": "Katalogen kunde inte nås"
     },
     "plurals": null
 }

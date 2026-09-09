@@ -1132,7 +1132,8 @@ OC.L10N.register(
         "Shared {ok} of {total} secrets": "Comhroinneadh {ok} as {total} rún",
         "Added {ok} of {total} secrets to the team folder": "Cuireadh {ok} as {total} rún leis an bhfillteán foirne",
         "The Keepiq browser extension autofills your logins, provides passkeys, and shows TOTP codes — without your secrets ever leaving your device.": "Líonann breiseán brabhsálaí Keepiq do chuid logálacha isteach go huathoibríoch, soláthraíonn sé eochracha rochtana, agus taispeánann sé cóid TOTP — agus ní fhágann do rúin do ghléas riamh.",
-        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Cruthaítear coimeádán a fhanann folamh go dtí go líonann an faighteoir é — ní gá duit luach a cheapadh riamh."
+        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Cruthaítear coimeádán a fhanann folamh go dtí go líonann an faighteoir é — ní gá duit luach a cheapadh riamh.",
+        "Could not reach the directory": "Níorbh fhéidir teacht ar an eolaire"
     },
     "nplurals=2; plural=(n != 1);"
 )

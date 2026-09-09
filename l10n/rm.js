@@ -1132,7 +1132,8 @@ OC.L10N.register(
         "Shared {ok} of {total} secrets": "{ok} da {total} secrets cundividids",
         "Added {ok} of {total} secrets to the team folder": "{ok} da {total} secrets agiuntads a la cartella da team",
         "The Keepiq browser extension autofills your logins, provides passkeys, and shows TOTP codes — without your secrets ever leaving your device.": "L'extensiun da navigatur da Keepiq emplenescha automaticamain Voss logins, porscha clavs d'access e mussa codes TOTP — senza che Voss secrets bandunan mai Voss apparat.",
-        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "In tegnaplazza vegn creà e resta vid fin che il retschavider l'emplenescha — ti na stos mai inventar in valur."
+        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "In tegnaplazza vegn creà e resta vid fin che il retschavider l'emplenescha — ti na stos mai inventar in valur.",
+        "Could not reach the directory": "Impussibel da contactar il directori"
     },
     "nplurals=2; plural=(n != 1);"
 )

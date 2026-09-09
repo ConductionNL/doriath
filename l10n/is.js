@@ -1132,7 +1132,8 @@ OC.L10N.register(
         "Shared {ok} of {total} secrets": "Deilt {ok} af {total} leyndarmálum",
         "Added {ok} of {total} secrets to the team folder": "Bætt {ok} af {total} leyndarmálum í hópmöppuna",
         "The Keepiq browser extension autofills your logins, provides passkeys, and shows TOTP codes — without your secrets ever leaving your device.": "Keepiq-vafraviðbótin fyllir sjálfkrafa út innskráningar þínar, veitir aðgangslykla og birtir TOTP-kóða — án þess að leyndarmálin þín fari nokkurn tímann úr tækinu þínu.",
-        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Búinn er til frátekinn staður sem er tómur þar til viðtakandinn fyllir hann út — þú þarft aldrei að finna upp gildi."
+        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Búinn er til frátekinn staður sem er tómur þar til viðtakandinn fyllir hann út — þú þarft aldrei að finna upp gildi.",
+        "Could not reach the directory": "Ekki tókst að ná sambandi við nafnaskrána"
     },
     "nplurals=2; plural=(n != 1);"
 )

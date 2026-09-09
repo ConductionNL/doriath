@@ -101,13 +101,17 @@
 						:inputLabel="t('keepiq', 'Member type')"
 						:clearable="false" />
 					<!--
-					  Always a picker, empty included: an id typed by hand is
-					  either already in this list or cannot be a member at all
-					  (a user with no active suite has no public key to encrypt
-					  their copies to), so there is nothing for a text field to
-					  add — and swapping the control out from under the user
-					  when the last candidate is taken is worse than showing an
-					  empty list. NcSelect says "No results" for that itself.
+					  A picker with no free-text form, empty list included.
+					  This is DELIBERATELY narrower than the server: membership
+					  itself is not a file share, and assertMemberAddable asks
+					  only that the user exists and is not the owner. The point
+					  of the list is the narrowing — a member with no active
+					  suite has no public key to encrypt their copies to, so
+					  offering ids the instance's own sharee search does not
+					  vouch for would defeat what the picker is for. On a
+					  hardened instance (user enumeration off,
+					  share-with-group-members-only) that set is small, and
+					  small is the intent.
 
 					  Both lists come from the SERVER's own directory, one
 					  request per keystroke-burst, because neither is small
@@ -119,9 +123,13 @@
 						class="team-folder-dialog__member-input"
 						:modelValue="newMemberId === '' ? null : newMemberId"
 						:options="memberCandidates"
+						label="label"
+						:reduce="(option) => option.id"
 						:inputLabel="memberIdLabel"
 						:loading="candidatesLoading"
 						:disabled="busy"
+						:error="candidatesError !== null"
+						:helperText="candidatesError ?? ''"
 						data-testid="team-folder-member-select"
 						@update:modelValue="newMemberId = $event ?? ''"
 						@search="onCandidateSearch" />
@@ -314,9 +322,12 @@ export default {
 		},
 
 		/**
-		 * The ids the member control can offer, or `[]` when none can be
-		 * listed — which is what decides between the picker and the free-text
-		 * field in the template.
+		 * The members the control can offer, as `{ id, label }` options.
+		 *
+		 * The label is what a picker has to show and the id is what is
+		 * submitted: on an LDAP or SSO instance a user id is a GUID, so a list
+		 * of raw ids would be a list nobody can read. Groups have no display
+		 * name and carry their id as the label.
 		 *
 		 * The two kinds come from different places because they ARE different:
 		 * a user must hold an active encryption suite before a secret can be
@@ -328,7 +339,7 @@ export default {
 		 * Existing members are removed: re-adding one is at best a no-op, and
 		 * a list that offers it invites the attempt.
 		 *
-		 * @return {Array<string>} Selectable member ids.
+		 * @return {Array<{id: string, label: string}>} Selectable members.
 		 *
 		 * @spec openspec/specs/team-folder-sharing/spec.md#requirement-share-a-folder-as-a-team-folder
 		 * @spec openspec/specs/team-folder-sharing/spec.md#requirement-membership-propagation-with-group-membership
@@ -344,7 +355,7 @@ export default {
 				? useGroupStore().groups
 				: useShareStore().shareableRecipients
 
-			return candidates.filter((id) => !taken.has(id))
+			return candidates.filter((candidate) => !taken.has(candidate.id))
 		},
 
 		/**
@@ -359,6 +370,32 @@ export default {
 			return this.newMemberType === 'group'
 				? useGroupStore().loading
 				: useShareStore().candidatesLoading
+		},
+
+		/**
+		 * The text under the picker when the lookup itself failed, or `null`.
+		 *
+		 * An empty picker has three meanings — the directory said "nobody
+		 * matches", the request 500'd, or the OCS call was refused — and the
+		 * first is the only one the picker can say by itself. This is the
+		 * quiet channel for the other two: the membership list on screen is
+		 * still correct, so this must not become an error card that replaces
+		 * it. The store's own message is not shown; it is untranslated and
+		 * says nothing the user can act on.
+		 *
+		 * @return {string|null}
+		 * @spec exclude Presentation — a helper line read off the stores that
+		 *   own the lookups.
+		 */
+		candidatesError() {
+			const failed =
+				this.newMemberType === 'group'
+					? useGroupStore().candidatesError
+					: useShareStore().candidatesError
+
+			return failed === null
+				? null
+				: this.t('keepiq', 'Could not reach the directory')
 		},
 	},
 
@@ -396,6 +433,14 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Hand the dialog's own close back to the host that owns `open`.
+		 *
+		 * @param {boolean} value The requested open state.
+		 *
+		 * @spec exclude Presentation — re-emits one prop; what the dialog does
+		 *   while open is specified on refresh().
+		 */
 		onUpdateOpen(value) {
 			this.$emit('update:open', value)
 		},
@@ -409,7 +454,8 @@ export default {
 			// Best-effort and deliberately not awaited into the error path: who
 			// can be offered as a member is a convenience, while the team
 			// folder itself is the dialog's subject. A failure in either must
-			// not replace the membership list with an error.
+			// not replace the membership list with an error — the stores record
+			// it, and the picker's own helper line says so.
 			useShareStore()
 				.searchShareableRecipients()
 				.catch(() => {})
@@ -467,6 +513,14 @@ export default {
 		 */
 		onCandidateSearch(term) {
 			clearTimeout(this.candidateSearchTimer)
+
+			// vue-select clears its search text when an option is picked and
+			// re-emits `search` with '', so without this the list resets to
+			// page 1 about 300 ms after every member added.
+			if (term === '') {
+				return
+			}
+
 			const isGroup = this.newMemberType === 'group'
 
 			this.candidateSearchTimer = setTimeout(() => {
@@ -517,6 +571,8 @@ export default {
 		 * @param {object} member The membership row.
 		 * @param {string} grade The new grade ('read'|'write').
 		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/specs/folder-permission-grades/spec.md#requirement-team-folder-membership-carries-a-read-or-write-grade
 		 */
 		async onGradeChange(member, grade) {
 			this.busy = true
@@ -531,6 +587,13 @@ export default {
 			}
 		},
 
+		/**
+		 * Encrypt and share the copies the reconcile pass found missing.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/specs/team-folder-sharing/spec.md#requirement-inherited-access-on-add-revoked-on-removal
+		 */
 		async onRunFanOut() {
 			this.error = null
 			try {
@@ -541,6 +604,14 @@ export default {
 			}
 		},
 
+		/**
+		 * Stop sharing the folder, which revokes every derived copy with it.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/specs/team-folder-sharing/spec.md#requirement-share-a-folder-as-a-team-folder
+		 * @spec openspec/specs/team-folder-sharing/spec.md#requirement-inherited-access-on-add-revoked-on-removal
+		 */
 		async onUnshare() {
 			this.busy = true
 			this.error = null

@@ -25,19 +25,35 @@ import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useShareStore } from '../../src/store/modules/share.js'
 
-/** A sharee-search row, in the shape the OCS endpoint returns. */
-function sharee(userId) {
-	return { label: userId, value: { shareType: 0, shareWith: userId } }
+/**
+ * A sharee-search row, in the shape the OCS endpoint returns — `label` is the
+ * display name UserPlugin puts there, which on a real instance is not the id.
+ *
+ * @param {string} userId  The user id (`value.shareWith`).
+ * @param {string} [label] The display name; defaults to the id.
+ */
+function sharee(userId, label = userId) {
+	return { label, value: { shareType: 0, shareWith: userId } }
 }
 
-/** Answer the sharee search with `exact` + `wide` matches. */
+/**
+ * Answer the sharee search with `exact` + `wide` matches. An entry is either a
+ * user id or a `[userId, displayName]` pair.
+ *
+ * @param {object} options       Fixture options.
+ * @param {Array}  options.exact Exact matches.
+ * @param {Array}  options.users Wide matches.
+ */
 function mockSharees({ exact = [], users = [] }) {
+	const row = (entry) =>
+		Array.isArray(entry) ? sharee(entry[0], entry[1]) : sharee(entry)
+
 	return vi.spyOn(axios, 'get').mockResolvedValue({
 		data: {
 			ocs: {
 				data: {
-					exact: { users: exact.map(sharee) },
-					users: users.map(sharee),
+					exact: { users: exact.map(row) },
+					users: users.map(row),
 				},
 			},
 		},
@@ -51,7 +67,13 @@ describe('useShareStore — recipient candidates', () => {
 	})
 
 	it('probes exactly the ids the sharee search named, exact matches first', async () => {
-		const get = mockSharees({ exact: ['carol'], users: ['carolyn', 'carol'] })
+		const get = mockSharees({
+			exact: [['carol', 'Carol Danvers']],
+			users: [
+				['carolyn', 'Carolyn Lam'],
+				['carol', 'Carol Danvers'],
+			],
+		})
 		const post = vi.spyOn(axios, 'post').mockResolvedValue({
 			data: {
 				recipients: [
@@ -91,9 +113,35 @@ describe('useShareStore — recipient candidates', () => {
 		// and for one that does not exist — deliberately, so that it cannot be
 		// read as a user-existence oracle — so it can say nothing beyond "not
 		// this one".
-		expect(candidates).toEqual(['carol'])
+		// The display name is carried through, because it is the only thing a
+		// picker can render: on an LDAP or SSO instance the id is a GUID. The
+		// probe answers about ids alone, so the name has to survive the round
+		// trip on this side.
+		expect(candidates).toEqual([{ id: 'carol', label: 'Carol Danvers' }])
 		expect(store.shareableRecipients).toEqual(candidates)
 		expect(store.candidatesLoading).toBe(false)
+		expect(store.candidatesError).toBeNull()
+	})
+
+	it('falls back to the id when the search reports no display name', async () => {
+		// UserPlugin always sets `label`, but a plugin or a future shape need
+		// not — and an option with no label renders as blank.
+		vi.spyOn(axios, 'get').mockResolvedValue({
+			data: {
+				ocs: {
+					data: {
+						users: [{ value: { shareType: 0, shareWith: 'dave' } }],
+					},
+				},
+			},
+		})
+		vi.spyOn(axios, 'post').mockResolvedValue({
+			data: { recipients: [{ userId: 'dave', shareable: true }] },
+		})
+
+		await expect(
+			useShareStore().searchShareableRecipients('dave'),
+		).resolves.toEqual([{ id: 'dave', label: 'dave' }])
 	})
 
 	it('never probes more ids than the server accepts', async () => {
@@ -128,7 +176,7 @@ describe('useShareStore — recipient candidates', () => {
 		expect(post).not.toHaveBeenCalled()
 	})
 
-	it('clears the loading flag when either half fails', async () => {
+	it('clears the loading flag and records why either half failed', async () => {
 		mockSharees({ users: ['carol'] })
 		vi.spyOn(axios, 'post').mockRejectedValue(new Error('boom'))
 
@@ -136,7 +184,54 @@ describe('useShareStore — recipient candidates', () => {
 		await expect(store.searchShareableRecipients('c')).rejects.toThrow('boom')
 
 		// The dialog swallows this error; a stuck spinner would be the only
-		// trace left of it.
+		// trace left of it. The recorded reason is the other trace: a 500 from
+		// the probe and "nobody matches" reach the picker identically without
+		// it.
+		expect(store.candidatesLoading).toBe(false)
+		expect(store.candidatesError).toBe('boom')
+		// And it stays off the share list's own error, which is about the
+		// shares on screen rather than about who could receive one.
+		expect(store.error).toBeNull()
+	})
+
+	it('lets the last search typed win, not the last to answer', async () => {
+		// "car" is slow, "carol" is fast. Whoever answers last would otherwise
+		// own the picker, showing a wider page than the term now in the box.
+		mockSharees({ users: ['car-1', 'carol'] })
+		let releaseSlow
+		vi.spyOn(axios, 'post')
+			.mockImplementationOnce(
+				() =>
+					new Promise((resolve) => {
+						releaseSlow = () =>
+							resolve({
+								data: {
+									recipients: [
+										{ userId: 'car-1', shareable: true },
+										{ userId: 'carol', shareable: true },
+									],
+								},
+							})
+					}),
+			)
+			.mockResolvedValueOnce({
+				data: { recipients: [{ userId: 'carol', shareable: true }] },
+			})
+
+		const store = useShareStore()
+		const first = store.searchShareableRecipients('car')
+		await store.searchShareableRecipients('carol')
+		expect(store.shareableRecipients.map((option) => option.id)).toEqual([
+			'carol',
+		])
+
+		releaseSlow()
+		// The superseded call still reports its own answer to its own caller,
+		// but does not write it — nor un-set a flag the newer search owns.
+		await expect(first).resolves.toHaveLength(2)
+		expect(store.shareableRecipients.map((option) => option.id)).toEqual([
+			'carol',
+		])
 		expect(store.candidatesLoading).toBe(false)
 	})
 })

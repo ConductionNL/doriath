@@ -34,7 +34,12 @@ describe('useGroupStore', () => {
 		})
 
 		const store = useGroupStore()
-		await expect(store.fetchGroups('e')).resolves.toEqual(['dev', 'ops'])
+		// One option shape with the user candidates, which do have display
+		// names; a group has none, so its label is its id.
+		await expect(store.fetchGroups('e')).resolves.toEqual([
+			{ id: 'dev', label: 'dev' },
+			{ id: 'ops', label: 'ops' },
+		])
 
 		const [url, config] = get.mock.calls[0]
 		expect(url).toContain('cloud/groups')
@@ -46,8 +51,9 @@ describe('useGroupStore', () => {
 		})
 
 		// Sorted, so the picker's order does not depend on the server's.
-		expect(store.groups).toEqual(['dev', 'ops'])
+		expect(store.groups.map((option) => option.id)).toEqual(['dev', 'ops'])
 		expect(store.loading).toBe(false)
+		expect(store.candidatesError).toBeNull()
 	})
 
 	it('treats a payload without a group list as no groups', async () => {
@@ -58,14 +64,47 @@ describe('useGroupStore', () => {
 		await expect(useGroupStore().fetchGroups()).resolves.toEqual([])
 	})
 
-	it('clears the loading flag when the request fails', async () => {
+	it('clears the loading flag and records why the request failed', async () => {
 		vi.spyOn(axios, 'get').mockRejectedValue(new Error('network'))
 
 		const store = useGroupStore()
 		await expect(store.fetchGroups()).rejects.toThrow('network')
 
 		// The caller swallows this error; a stuck spinner would be the only
-		// trace left of it.
+		// trace left of it. The recorded reason is the other trace: without it
+		// a 401 and "no groups match" reach the picker identically.
+		expect(store.loading).toBe(false)
+		expect(store.candidatesError).toBe('network')
+	})
+
+	it('lets the last search typed win, not the last to answer', async () => {
+		// Two searches in flight: "dev" is slow, "devops" is fast. Whoever
+		// answers last would otherwise own the picker.
+		const slow = { data: { ocs: { data: { groups: ['dev', 'devops'] } } } }
+		const fast = { data: { ocs: { data: { groups: ['devops'] } } } }
+		let releaseSlow
+		vi.spyOn(axios, 'get')
+			.mockImplementationOnce(
+				() =>
+					new Promise((resolve) => {
+						releaseSlow = () => resolve(slow)
+					}),
+			)
+			.mockResolvedValueOnce(fast)
+
+		const store = useGroupStore()
+		const first = store.fetchGroups('dev')
+		await store.fetchGroups('devops')
+		expect(store.groups.map((option) => option.id)).toEqual(['devops'])
+
+		releaseSlow()
+		// The superseded call still reports its own answer to its own caller,
+		// but does not write it — nor un-set a flag the newer search owns.
+		await expect(first).resolves.toEqual([
+			{ id: 'dev', label: 'dev' },
+			{ id: 'devops', label: 'devops' },
+		])
+		expect(store.groups.map((option) => option.id)).toEqual(['devops'])
 		expect(store.loading).toBe(false)
 	})
 })

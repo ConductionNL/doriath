@@ -1131,7 +1131,8 @@
         "Shared {ok} of {total} secrets": "{ok} secret(s) partagé(s) sur {total}",
         "Added {ok} of {total} secrets to the team folder": "{ok} secret(s) sur {total} ajouté(s) au dossier d'équipe",
         "The Keepiq browser extension autofills your logins, provides passkeys, and shows TOTP codes — without your secrets ever leaving your device.": "L'extension de navigateur Keepiq remplit automatiquement vos identifiants, fournit des clés d'accès et affiche les codes TOTP — sans que vos secrets quittent jamais votre appareil.",
-        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Un espace réservé est créé et reste vide jusqu’à ce que le destinataire le remplisse — vous n’avez jamais à inventer de valeur."
+        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Un espace réservé est créé et reste vide jusqu’à ce que le destinataire le remplisse — vous n’avez jamais à inventer de valeur.",
+        "Could not reach the directory": "Impossible de joindre l'annuaire"
     },
     "plurals": null
 }

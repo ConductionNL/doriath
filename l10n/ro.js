@@ -1132,7 +1132,8 @@ OC.L10N.register(
         "Shared {ok} of {total} secrets": "Partajate {ok} din {total} secrete",
         "Added {ok} of {total} secrets to the team folder": "Adăugate {ok} din {total} secrete în dosarul de echipă",
         "The Keepiq browser extension autofills your logins, provides passkeys, and shows TOTP codes — without your secrets ever leaving your device.": "Extensia de navigator Keepiq completează automat datele dumneavoastră de conectare, furnizează chei de acces și afișează coduri TOTP — fără ca secretele dumneavoastră să vă părăsească vreodată dispozitivul.",
-        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Se creează un substituent care rămâne gol până când destinatarul îl completează — nu trebuie niciodată să inventați o valoare."
+        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Se creează un substituent care rămâne gol până când destinatarul îl completează — nu trebuie niciodată să inventați o valoare.",
+        "Could not reach the directory": "Directorul nu a putut fi contactat"
     },
     "nplurals=2; plural=(n != 1);"
 )

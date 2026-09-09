@@ -1132,7 +1132,8 @@ OC.L10N.register(
         "Shared {ok} of {total} secrets": "U ndanë {ok} nga {total} sekrete",
         "Added {ok} of {total} secrets to the team folder": "U shtuan {ok} nga {total} sekrete në dosjen e ekipit",
         "The Keepiq browser extension autofills your logins, provides passkeys, and shows TOTP codes — without your secrets ever leaving your device.": "Shtojca e shfletuesit e Keepiq plotëson automatikisht kredencialet tuaja të hyrjes, ofron çelësa hyrjeje dhe shfaq kode TOTP — dhe sekretet tuaja nuk e lënë kurrë pajisjen tuaj.",
-        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Krijohet një mbajtëse vendi që qëndron bosh derisa marrësi ta plotësojë — nuk duhet kurrë të shpikni një vlerë."
+        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Krijohet një mbajtëse vendi që qëndron bosh derisa marrësi ta plotësojë — nuk duhet kurrë të shpikni një vlerë.",
+        "Could not reach the directory": "Drejtoria nuk mund të arrihej"
     },
     "nplurals=2; plural=(n != 1);"
 )

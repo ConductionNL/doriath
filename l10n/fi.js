@@ -1132,7 +1132,8 @@ OC.L10N.register(
         "Shared {ok} of {total} secrets": "Jaettu {ok} / {total} salaisuutta",
         "Added {ok} of {total} secrets to the team folder": "Lisätty tiimikansioon {ok} / {total} salaisuutta",
         "The Keepiq browser extension autofills your logins, provides passkeys, and shows TOTP codes — without your secrets ever leaving your device.": "Keepiqin selainlaajennus täyttää kirjautumistietosi automaattisesti, tarjoaa pääsyavaimia ja näyttää TOTP-koodeja — eivätkä salaisuutesi koskaan poistu laitteeltasi.",
-        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Luodaan paikanvaraaja, joka pysyy tyhjänä kunnes vastaanottaja täyttää sen — sinun ei tarvitse koskaan keksiä arvoa."
+        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Luodaan paikanvaraaja, joka pysyy tyhjänä kunnes vastaanottaja täyttää sen — sinun ei tarvitse koskaan keksiä arvoa.",
+        "Could not reach the directory": "Hakemistoon ei voitu yhdistää"
     },
     "nplurals=2; plural=(n != 1);"
 )

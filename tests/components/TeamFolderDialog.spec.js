@@ -24,8 +24,11 @@ const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
  * @param {Array<object>} [options.owned]     Team folders the user owns.
  * @param {Array<object>} [options.missing]   Reconcile's missing pairs.
  * @param {Array<string>} [options.groups]    Group ids the server returns.
- * @param {Array<string>} [options.sharees]   User ids the sharee search returns.
+ * @param {Array}         [options.sharees]   Users the sharee search returns —
+ *   a user id, or a `[userId, displayName]` pair.
  * @param {Array<string>} [options.shareable] Which of those hold a suite.
+ * @param {string}        [options.failing]   A URL fragment whose request
+ *   rejects, for the paths where the lookup itself fails.
  */
 function mockApi({
 	owned = [],
@@ -33,8 +36,12 @@ function mockApi({
 	groups = [],
 	sharees = [],
 	shareable = [],
+	failing = null,
 } = {}) {
 	vi.spyOn(axios, 'get').mockImplementation((url) => {
+		if (failing !== null && url.includes(failing)) {
+			return Promise.reject(new Error('directory down'))
+		}
 		if (url.includes('/reconcile')) {
 			return Promise.resolve({
 				data: { secrets: [], recipients: [], missing },
@@ -50,10 +57,15 @@ function mockApi({
 					ocs: {
 						data: {
 							exact: { users: [] },
-							users: sharees.map((userId) => ({
-								label: userId,
-								value: { shareType: 0, shareWith: userId },
-							})),
+							users: sharees.map((entry) => {
+								const [userId, label] = Array.isArray(entry)
+									? entry
+									: [entry, entry]
+								return {
+									label,
+									value: { shareType: 0, shareWith: userId },
+								}
+							}),
 						},
 					},
 				},
@@ -167,7 +179,7 @@ describe('TeamFolderDialog', () => {
 		)
 	})
 
-	it('offers only the sharees who can receive a secret', async () => {
+	it('offers only the sharees who can receive a secret, by display name', async () => {
 		mockApi({
 			owned: [
 				{
@@ -176,7 +188,11 @@ describe('TeamFolderDialog', () => {
 					members: [{ id: 'm1', memberType: 'user', memberId: 'bob' }],
 				},
 			],
-			sharees: ['carol', 'bob', 'dave'],
+			sharees: [
+				['carol', 'Carol Danvers'],
+				['bob', 'Bob Vance'],
+				['dave', 'Dave Lister'],
+			],
 			shareable: ['carol', 'bob'],
 		})
 		const wrapper = mount(TeamFolderDialog, {
@@ -186,11 +202,45 @@ describe('TeamFolderDialog', () => {
 		await flush()
 
 		// dave holds no active suite, so there is no key to encrypt a copy to;
-		// bob holds one but is already a member.
-		expect(wrapper.vm.memberCandidates).toEqual(['carol'])
+		// bob holds one but is already a member. The option carries the name
+		// the picker shows and the id it submits — an SSO instance's ids are
+		// GUIDs, so a list of them would be a list nobody can read.
+		expect(wrapper.vm.memberCandidates).toEqual([
+			{ id: 'carol', label: 'Carol Danvers' },
+		])
 		expect(
 			wrapper.find('[data-testid="team-folder-member-select"]').exists(),
 		).toBe(true)
+	})
+
+	it('says so when the lookup itself failed, instead of an empty list', async () => {
+		// A 500 from the probe, an OCS 401, and "nobody matches your term" all
+		// render as the same empty picker. Only the last is something the
+		// picker can say by itself.
+		mockApi({
+			owned: [{ id: 'tf-1', folderId: 'folder-1', members: [] }],
+			failing: 'sharees',
+		})
+		const wrapper = mount(TeamFolderDialog, {
+			propsData: { open: true, folderId: 'folder-1', folderName: 'DevOps' },
+		})
+		wrapper.vm.refresh()
+		await flush()
+
+		expect(wrapper.vm.memberCandidates).toEqual([])
+		expect(wrapper.vm.candidatesError).toBe('Could not reach the directory')
+
+		// The membership list is still the dialog's subject and still correct,
+		// so the failure must not have become the dialog's error.
+		expect(wrapper.vm.error).toBeNull()
+		expect(
+			wrapper.find('[data-testid="team-folder-member-select"]').exists(),
+		).toBe(true)
+
+		// The group directory answered fine, so switching type clears the line.
+		wrapper.vm.newMemberType = 'group'
+		await flush()
+		expect(wrapper.vm.candidatesError).toBeNull()
 	})
 
 	it('offers a picker of the server groups, minus the ones already members', async () => {
@@ -219,7 +269,10 @@ describe('TeamFolderDialog', () => {
 		await flush()
 
 		// Groups hold no key of their own, so none of them is probed.
-		expect(wrapper.vm.memberCandidates).toEqual(['admin', 'support'])
+		expect(wrapper.vm.memberCandidates).toEqual([
+			{ id: 'admin', label: 'admin' },
+			{ id: 'support', label: 'support' },
+		])
 		expect(
 			wrapper.find('[data-testid="team-folder-member-select"]').exists(),
 		).toBe(true)
@@ -269,6 +322,34 @@ describe('TeamFolderDialog', () => {
 		)
 		expect(shareeSearches).toHaveLength(1)
 		expect(shareeSearches[0][1].params.search).toBe('ca')
+	})
+
+	it('ignores the empty term vue-select emits when an option is picked', async () => {
+		vi.useFakeTimers()
+		mockApi({
+			owned: [{ id: 'tf-1', folderId: 'folder-1', members: [] }],
+			groups: ['devops'],
+		})
+		const wrapper = mount(TeamFolderDialog, {
+			propsData: { open: true, folderId: 'folder-1', folderName: 'DevOps' },
+		})
+		wrapper.vm.newMemberType = 'group'
+
+		wrapper.vm.onCandidateSearch('devo')
+		vi.runAllTimers()
+		// vue-select clears its search text on select and re-emits `search`.
+		wrapper.vm.onCandidateSearch('')
+		vi.runAllTimers()
+		vi.useRealTimers()
+		await flush()
+
+		// Two searches would mean the list resets to page 1 under the user
+		// about 300 ms after every member added.
+		const groupSearches = axios.get.mock.calls.filter(([url]) =>
+			url.includes('cloud/groups'),
+		)
+		expect(groupSearches).toHaveLength(1)
+		expect(groupSearches[0][1].params.search).toBe('devo')
 	})
 
 	it('clears a picked id when the member type changes', async () => {

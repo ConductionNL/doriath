@@ -1132,7 +1132,8 @@ OC.L10N.register(
         "Shared {ok} of {total} secrets": "Κοινοποιήθηκαν {ok} από {total} μυστικά",
         "Added {ok} of {total} secrets to the team folder": "Προστέθηκαν {ok} από {total} μυστικά στον φάκελο ομάδας",
         "The Keepiq browser extension autofills your logins, provides passkeys, and shows TOTP codes — without your secrets ever leaving your device.": "Η επέκταση Keepiq για το πρόγραμμα περιήγησης συμπληρώνει αυτόματα τις συνδέσεις σας, παρέχει κλειδιά πρόσβασης και εμφανίζει κωδικούς TOTP — χωρίς τα μυστικά σας να φεύγουν ποτέ από τη συσκευή σας.",
-        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Δημιουργείται ένα σύμβολο κράτησης που παραμένει κενό μέχρι να το συμπληρώσει ο παραλήπτης — δεν χρειάζεται ποτέ να επινοήσετε τιμή."
+        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Δημιουργείται ένα σύμβολο κράτησης που παραμένει κενό μέχρι να το συμπληρώσει ο παραλήπτης — δεν χρειάζεται ποτέ να επινοήσετε τιμή.",
+        "Could not reach the directory": "Δεν ήταν δυνατή η σύνδεση με τον κατάλογο"
     },
     "nplurals=2; plural=(n != 1);"
 )

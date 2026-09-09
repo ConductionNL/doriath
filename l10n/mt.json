@@ -1131,7 +1131,8 @@
         "Shared {ok} of {total} secrets": "Inqasmu {ok} minn {total} sigrieti",
         "Added {ok} of {total} secrets to the team folder": "Żdiedu {ok} minn {total} sigrieti mal-folder tat-tim",
         "The Keepiq browser extension autofills your logins, provides passkeys, and shows TOTP codes — without your secrets ever leaving your device.": "L-estensjoni tal-browser ta' Keepiq timla awtomatikament il-logins tiegħek, tipprovdi passkeys u turi kodiċi TOTP — mingħajr ma s-sigrieti tiegħek joħorġu qatt mill-apparat tiegħek.",
-        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Jinħoloq post żammiem li jibqa' vojt sakemm ir-riċevitur jimlih — qatt ma trid tivvinta valur."
+        "A placeholder is created and stays empty until the recipient fills it in — you never have to invent a value.": "Jinħoloq post żammiem li jibqa' vojt sakemm ir-riċevitur jimlih — qatt ma trid tivvinta valur.",
+        "Could not reach the directory": "Id-direttorju ma setax jintlaħaq"
     },
     "plurals": null
 }
