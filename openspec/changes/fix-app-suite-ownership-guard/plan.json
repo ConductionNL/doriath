@@ -1,0 +1,101 @@
+{
+  "change": "fix-app-suite-ownership-guard",
+  "project": "keepiq",
+  "repo": "ConductionNL/keepiq",
+  "base_branch": "development",
+  "feature_branch": "feature/675/fix-app-suite-ownership-guard",
+  "created": "2026-09-10",
+  "tracking_issue": 675,
+  "tasks": [
+    {
+      "id": 1,
+      "num": "1.1",
+      "title": "`EncryptionSuiteController::validateOwnership()` refuses unless `ownerType === 'user' && ownerId === $userId`; message \"Access denied: suite belongs to another owner\". Comment records why the previous `=== 'user' && ownerId !==` form failed open for application suites, and points at `CertificateLifecycleService::reissueSuite` as the already-correct sibling",
+      "status": "done",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 2,
+      "num": "1.2",
+      "title": "Confirm no other caller relied on the old behaviour: `show`, `updatePrivateKey`, `revoke` are the only callers, all user self-service; the frontend calls `revoke` only on the caller's own current suite",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 3,
+      "num": "2.1",
+      "title": "`testRevokeRefusesAnApplicationSuiteAndNeverCallsTheService` \u2014 a non-admin revoking an application suite gets `403 Access denied` and `revokeSuite` is never called",
+      "status": "done",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 4,
+      "num": "2.2",
+      "title": "`testUpdatePrivateKeyRefusesAnApplicationSuite` \u2014 the same guard blocks the envelope overwrite; `updateSuite` is never called",
+      "status": "done",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 5,
+      "num": "2.3",
+      "title": "Both proven to FAIL against the old guard and PASS against the fix; existing `testRevokeRefusesAnotherUsersSuite\u2026` and the happy-path cases still pass (full class: 22 tests green)",
+      "status": "done",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 6,
+      "num": "3.1",
+      "title": "Run the hydra gates locally: no-admin-idor (this is the fix for one), route-auth, gate-16 spec-coverage (the new requirement backs the code change), gate-113 exclusion-evidence (each `@e2e exclude` carries a reason)",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 7,
+      "num": "3.2",
+      "title": "phpcs/phpstan/phpmd clean on the touched files",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 8,
+      "num": "3.3",
+      "title": "Commit carries `Assisted-by: ClaudeCode:claude-opus-5`; no `Signed-off-by` (only the human certifies the DCO)",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 9,
+      "num": "3.4",
+      "title": "PR description discloses AI tool use in the contributor's own words. Because this is a security fix, follow the project security policy on disclosure: consider whether it should go through HackerOne rather than a public PR/issue before the app is production \u2014 this is the contributor's call, not the agent's",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 10,
+      "num": "3.5",
+      "title": "Independent human verification of the vulnerability and the fix before submission, per AGENTS.md \u2014 the empirical reproduction in this session is the agent's reading, not a substitute",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    }
+  ]
+}
