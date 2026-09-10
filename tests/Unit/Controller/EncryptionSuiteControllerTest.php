@@ -26,6 +26,7 @@ use OCA\Keepiq\Db\SuiteMigration;
 use OCA\Keepiq\Exception\ConflictException;
 use OCA\Keepiq\Service\EncryptionSuiteService;
 use OCA\Keepiq\Service\MigrationService;
+use OCA\Keepiq\Service\VaultKeyProofService;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
 use OCP\IRequest;
@@ -62,6 +63,13 @@ class EncryptionSuiteControllerTest extends TestCase {
 	private MigrationService&MockObject $migrationService;
 
 	/**
+	 * The mocked vault-key-proof service.
+	 *
+	 * @var VaultKeyProofService&MockObject
+	 */
+	private VaultKeyProofService&MockObject $proofService;
+
+	/**
 	 * The mocked user session.
 	 *
 	 * @var IUserSession&MockObject
@@ -80,6 +88,7 @@ class EncryptionSuiteControllerTest extends TestCase {
 		$this->suiteService = $this->createMock(originalClassName: EncryptionSuiteService::class);
 		$this->migrationService = $this->createMock(originalClassName: MigrationService::class);
 		$this->userSession = $this->createMock(originalClassName: IUserSession::class);
+		$this->proofService = $this->createMock(originalClassName: VaultKeyProofService::class);
 
 		$user = $this->createMock(originalClassName: IUser::class);
 		$user->method('getUID')->willReturn('testuser');
@@ -90,6 +99,7 @@ class EncryptionSuiteControllerTest extends TestCase {
 			suiteService: $this->suiteService,
 			migrationService: $this->migrationService,
 			userSession: $this->userSession,
+			proofService: $this->proofService,
 		);
 	}//end setUp()
 

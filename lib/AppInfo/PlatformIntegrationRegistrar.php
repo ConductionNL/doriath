@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Keepiq\AppInfo;
 
 use OCA\Keepiq\Middleware\JwtAuthMiddleware;
+use OCA\Keepiq\Middleware\VaultKeyProofMiddleware;
 use OCA\Keepiq\Notification\KeepiqNotifier;
 use OCA\Keepiq\Search\SecretSearchProvider;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
@@ -62,6 +63,11 @@ final class PlatformIntegrationRegistrar {
 		// Fires only on ApplicationApiController subclasses; session
 		// controllers pass through untouched.
 		$context->registerMiddleware(JwtAuthMiddleware::class);
+
+		// The vault-key-proof middleware. Runs for every controller but acts
+		// only on methods carrying #[VaultKeyProofRequired]; every other method
+		// passes through untouched.
+		$context->registerMiddleware(VaultKeyProofMiddleware::class);
 
 	}//end register()
 }//end class

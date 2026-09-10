@@ -25,8 +25,10 @@ use Exception;
 use InvalidArgumentException;
 use OCA\Keepiq\AppInfo\Application;
 use OCA\Keepiq\Exception\ConflictException;
+use OCA\Keepiq\Attribute\VaultKeyProofRequired;
 use OCA\Keepiq\Service\EncryptionSuiteService;
 use OCA\Keepiq\Service\MigrationService;
+use OCA\Keepiq\Service\VaultKeyProofService;
 use OCA\Keepiq\Settings\AdminSettings;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
@@ -57,6 +59,7 @@ class EncryptionSuiteController extends OCSController {
 		private EncryptionSuiteService $suiteService,
 		private MigrationService $migrationService,
 		private IUserSession $userSession,
+		private VaultKeyProofService $proofService,
 		private ?\OCA\Keepiq\Service\PasskeyService $passkeyService = null,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
@@ -230,6 +233,11 @@ class EncryptionSuiteController extends OCSController {
 	 * @spec openspec/changes/retrofit-2026-05-25-doriath-coverage/tasks.md#task-2
 	 */
 	#[NoAdminRequired]
+	#[VaultKeyProofRequired(
+		binds: ['encryptedPrivateKey'],
+		subject: 'routeParam:id',
+		purpose: VaultKeyProofService::PURPOSE_UPDATE_PRIVATE_KEY
+	)]
 	public function updatePrivateKey(string $id, string $encryptedPrivateKey): JSONResponse {
 		try {
 			$suite = $this->suiteService->getSuite($id);
@@ -342,6 +350,11 @@ class EncryptionSuiteController extends OCSController {
 	 * @spec openspec/changes/implement-link-sharing/tasks.md#5.2
 	 */
 	#[NoAdminRequired]
+	#[VaultKeyProofRequired(
+		binds: ['publicKey', 'encryptedPrivateKey'],
+		subject: 'active',
+		purpose: VaultKeyProofService::PURPOSE_COMPROMISE_RECOVERY
+	)]
 	public function compromiseRecovery(
 		string $publicKey,
 		string $encryptedPrivateKey,
@@ -441,6 +454,52 @@ class EncryptionSuiteController extends OCSController {
 			);
 		}//end try
 	}//end compromiseRecovery()
+
+	/**
+	 * Issue a vault-key-proof challenge for one of the guarded operations.
+	 *
+	 * Returns a stateless, expiring nonce the client signs with its suite
+	 * private key to authorise a destructive operation. Requires only a session
+	 * and that the caller own the named suite; it is NOT itself guarded, since a
+	 * challenge grants nothing on its own.
+	 *
+	 * @param string $id The caller's suite the proof will be made with
+	 * @param string|null $purpose The operation the challenge authorises
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @return JSONResponse
+	 *
+	 * @spec openspec/changes/harden-vault-key-material-guards/specs/vault-key-proof/spec.md#requirement-challenges-are-stateless-and-expiring
+	 */
+	#[NoAdminRequired]
+	public function proofChallenge(string $id, ?string $purpose = null): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(data: ['message' => 'Unauthorized'], statusCode: Http::STATUS_UNAUTHORIZED);
+		}
+
+		if ($purpose === null || in_array($purpose, VaultKeyProofService::ALLOWED_PURPOSES, true) === false) {
+			return new JSONResponse(
+				data: ['message' => 'Unknown or missing proof purpose'],
+				statusCode: Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		try {
+			$suite = $this->suiteService->getSuite($id);
+			$this->validateOwnership(suite: $suite);
+		} catch (Exception $e) {
+			return new JSONResponse(
+				data: ['message' => $e->getMessage()],
+				statusCode: Http::STATUS_NOT_FOUND
+			);
+		}
+
+		return new JSONResponse(
+			data: $this->proofService->issueChallenge(userId: $user->getUID(), purpose: $purpose)
+		);
+	}//end proofChallenge()
 
 	/**
 	 * Validate that the current user owns the suite (or is admin).

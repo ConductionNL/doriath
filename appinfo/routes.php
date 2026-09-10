@@ -39,6 +39,7 @@ return \OCA\OpenRegister\AppHost\Routes::standard([
     ['name' => 'encryptionSuite#revoke',            'url' => '/api/v1/suites/{id}/revoke',              'verb' => 'POST'],
     ['name' => 'encryptionSuite#reinstate',         'url' => '/api/v1/suites/{id}/reinstate',           'verb' => 'POST'],
     ['name' => 'encryptionSuite#compromiseRecovery','url' => '/api/v1/suites/compromise-recovery',      'verb' => 'POST'],
+    ['name' => 'encryptionSuite#proofChallenge',    'url' => '/api/v1/suites/{id}/proof-challenge',     'verb' => 'GET'],
 
     // CA management (admin-only).
     ['name' => 'cACertificate#getStatus',          'url' => '/api/v1/ca/status',                      'verb' => 'GET'],

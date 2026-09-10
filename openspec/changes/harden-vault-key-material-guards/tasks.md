@@ -8,22 +8,22 @@ Section 3 (abort) is independently useful and can be split into its own PR if th
 
 ## 1. Backend — The Guard Primitive
 
-- [ ] 1.1 Create `lib/Attribute/VaultKeyProofRequired.php`: `#[Attribute(Attribute::TARGET_METHOD)]`, constructor `array $binds = []`, `string $subject = 'active'`; SPDX header per `contribute/HowToApplyALicense.md`
-- [ ] 1.2 Create `lib/Service/VaultKeyProofService.php` with `issueChallenge(string $userId, string $purpose): array` returning `{nonce, expiresAt}` — nonce is `base64(ISecureRandom bytes) . '.' . HMAC(instance secret, random|uid|purpose|exp)`; no storage
-- [ ] 1.3 Implement `VaultKeyProofService::verify(string $nonce, string $signature, string $publicKeyPem, string $userId, string $purpose, array $boundValues): void` — validate the HMAC, validate the expiry, rebuild the payload as `nonce || sha256(v1) || … || sha256(vn)` in declared order, verify with `openssl_verify` against the stored public key; throw a typed exception on every failure path with no distinction leaked to the caller
-- [ ] 1.4 Do NOT use `ICacheFactory` for challenge state (design D5 — a null cache on a default install would make the guarded flows unusable). Assert this in review
-- [ ] 1.5 Create `lib/Middleware/VaultKeyProofMiddleware.php` following `JwtAuthMiddleware`: `beforeController` reads the attribute via `new ReflectionMethod($controller, $methodName)`, resolves the subject suite (`'active'` → the session user's active suite via `EncryptionSuiteService::getActiveSuite`; `'routeParam:<name>'` → `IRequest::getParam`), collects the bound values via `IRequest::getParam`, reads `X-Keepiq-Key-Proof`, and delegates to the service
-- [ ] 1.6 Implement `afterException` returning `403` with `['error' => 'key_proof_required', 'message' => …]`; re-throw anything that is not the guard's own exception, as `JwtAuthMiddleware` does
-- [ ] 1.7 Middleware MUST NOT consult `IUserSession` backends, token scopes or `IPasswordConfirmationBackend` — no SSO/app-password carve-out (spec: *the guard is not waived*). Add an explanatory comment citing the NC `PasswordConfirmationMiddleware` bypasses this deliberately does not copy
-- [ ] 1.8 Register in `lib/AppInfo/PlatformIntegrationRegistrar.php` alongside `JwtAuthMiddleware::class`
-- [ ] 1.9 Run phpcs/phpstan/phpmd — watch `CouplingBetweenObjects` on the middleware; keep crypto in the service, which is also what makes it unit-testable
+- [x] 1.1 Create `lib/Attribute/VaultKeyProofRequired.php`: `#[Attribute(Attribute::TARGET_METHOD)]`, constructor `array $binds = []`, `string $subject = 'active'`; SPDX header per `contribute/HowToApplyALicense.md`
+- [x] 1.2 Create `lib/Service/VaultKeyProofService.php` with `issueChallenge(string $userId, string $purpose): array` returning `{nonce, expiresAt}` — nonce is `base64(ISecureRandom bytes) . '.' . HMAC(instance secret, random|uid|purpose|exp)`; no storage
+- [x] 1.3 Implement `VaultKeyProofService::verify(string $nonce, string $signature, string $publicKeyPem, string $userId, string $purpose, array $boundValues): void` — validate the HMAC, validate the expiry, rebuild the payload as `nonce || sha256(v1) || … || sha256(vn)` in declared order, verify with `openssl_verify` against the stored public key; throw a typed exception on every failure path with no distinction leaked to the caller
+- [x] 1.4 Do NOT use `ICacheFactory` for challenge state (design D5 — a null cache on a default install would make the guarded flows unusable). Assert this in review
+- [x] 1.5 Create `lib/Middleware/VaultKeyProofMiddleware.php` following `JwtAuthMiddleware`: `beforeController` reads the attribute via `new ReflectionMethod($controller, $methodName)`, resolves the subject suite (`'active'` → the session user's active suite via `EncryptionSuiteService::getActiveSuite`; `'routeParam:<name>'` → `IRequest::getParam`), collects the bound values via `IRequest::getParam`, reads `X-Keepiq-Key-Proof`, and delegates to the service
+- [x] 1.6 Implement `afterException` returning `403` with `['error' => 'key_proof_required', 'message' => …]`; re-throw anything that is not the guard's own exception, as `JwtAuthMiddleware` does
+- [x] 1.7 Middleware MUST NOT consult `IUserSession` backends, token scopes or `IPasswordConfirmationBackend` — no SSO/app-password carve-out (spec: *the guard is not waived*). Add an explanatory comment citing the NC `PasswordConfirmationMiddleware` bypasses this deliberately does not copy
+- [x] 1.8 Register in `lib/AppInfo/PlatformIntegrationRegistrar.php` alongside `JwtAuthMiddleware::class`
+- [x] 1.9 Run phpcs/phpstan/phpmd — watch `CouplingBetweenObjects` on the middleware; keep crypto in the service, which is also what makes it unit-testable
 
 ## 2. Backend — Challenge Endpoint
 
-- [ ] 2.1 Add `proofChallenge(string $id)` to `EncryptionSuiteController` (`#[NoAdminRequired]`), returning `{nonce, expiresAt}` for the calling user and the requested purpose; validate suite ownership
-- [ ] 2.2 Accept the purpose as a request parameter constrained to a known set (one per guarded operation); reject an unknown purpose
-- [ ] 2.3 Register `['name' => 'encryptionSuite#proofChallenge', 'url' => '/api/v1/suites/{id}/proof-challenge', 'verb' => 'GET']` in `appinfo/routes.php`, before the SPA catch-all wildcard
-- [ ] 2.4 The challenge endpoint itself MUST NOT carry `#[VaultKeyProofRequired]` — assert in the coverage test that it is on the deliberate-exclusion list
+- [x] 2.1 Add `proofChallenge(string $id)` to `EncryptionSuiteController` (`#[NoAdminRequired]`), returning `{nonce, expiresAt}` for the calling user and the requested purpose; validate suite ownership
+- [x] 2.2 Accept the purpose as a request parameter constrained to a known set (one per guarded operation); reject an unknown purpose
+- [x] 2.3 Register `['name' => 'encryptionSuite#proofChallenge', 'url' => '/api/v1/suites/{id}/proof-challenge', 'verb' => 'GET']` in `appinfo/routes.php`, before the SPA catch-all wildcard
+- [x] 2.4 The challenge endpoint itself MUST NOT carry `#[VaultKeyProofRequired]` — assert in the coverage test that it is on the deliberate-exclusion list
 
 ## 3. Backend — Abort (independently mergeable) — IMPLEMENTED
 
@@ -49,16 +49,16 @@ Section 3 (abort) is independently useful and can be split into its own PR if th
 
 ## 5. Apply The Guard (must not precede section 4)
 
-- [ ] 5.1 `EncryptionSuiteController::compromiseRecovery` → `#[VaultKeyProofRequired(binds: ['publicKey', 'encryptedPrivateKey'])]`
-- [ ] 5.2 `EncryptionSuiteController::updatePrivateKey` → `#[VaultKeyProofRequired(binds: ['encryptedPrivateKey'], subject: 'routeParam:id')]`
-- [ ] 5.3 `MigrationController::complete` → `#[VaultKeyProofRequired]` (defence in depth; the acknowledgement stays — they answer different questions)
-- [ ] 5.4 `EmergencyAccessController::destroy` → `#[VaultKeyProofRequired]`
-- [ ] 5.5 Create `tests/Unit/Controller/VaultKeyProofAttributesTest.php` in the shape of `RateLimitAttributesTest`: a provider enumerating the four methods with their expected `binds` and `subject`, asserting each by reflection; plus a deliberate-exclusion list (abort, proof-challenge) with the reason recorded per entry
+- [x] 5.1 `EncryptionSuiteController::compromiseRecovery` → `#[VaultKeyProofRequired(binds: ['publicKey', 'encryptedPrivateKey'])]`
+- [x] 5.2 `EncryptionSuiteController::updatePrivateKey` → `#[VaultKeyProofRequired(binds: ['encryptedPrivateKey'], subject: 'routeParam:id')]`
+- [x] 5.3 `MigrationController::complete` → `#[VaultKeyProofRequired]` (defence in depth; the acknowledgement stays — they answer different questions)
+- [x] 5.4 `EmergencyAccessController::destroy` → `#[VaultKeyProofRequired]`
+- [x] 5.5 Create `tests/Unit/Controller/VaultKeyProofAttributesTest.php` in the shape of `RateLimitAttributesTest`: a provider enumerating the four methods with their expected `binds` and `subject`, asserting each by reflection; plus a deliberate-exclusion list (abort, proof-challenge) with the reason recorded per entry
 
 ## 6. Tests
 
-- [ ] 6.1 `tests/Unit/Service/VaultKeyProofServiceTest.php`: valid proof passes; wrong key fails; altered bound value fails; altered nonce fails; expired nonce fails (injected `ITimeFactory`); wrong purpose fails; proof for one parameter set rejected against another
-- [ ] 6.2 `tests/Unit/Middleware/VaultKeyProofMiddlewareTest.php`: attribute absent → pass-through; attribute present without header → 403 `key_proof_required`; `subject: 'active'` and `'routeParam:id'` both resolve; `afterException` re-throws foreign exceptions
+- [x] 6.1 `tests/Unit/Service/VaultKeyProofServiceTest.php`: valid proof passes; wrong key fails; altered bound value fails; altered nonce fails; expired nonce fails (injected `ITimeFactory`); wrong purpose fails; proof for one parameter set rejected against another
+- [x] 6.2 `tests/Unit/Middleware/VaultKeyProofMiddlewareTest.php`: attribute absent → pass-through; attribute present without header → 403 `key_proof_required`; `subject: 'active'` and `'routeParam:id'` both resolve; `afterException` re-throws foreign exceptions
 - [ ] 6.3 Cross-implementation round-trip: sign with WebCrypto in a JS test, verify with `openssl_verify` in PHPUnit (config rule: *test cross-implementation encryption round-trips*)
 - [ ] 6.4 `MigrationServiceTest`: abort on an untouched migration; abort refused after a commit with the count reported; abort idempotent by status; emergency-access envelopes unchanged after abort; completed event NOT dispatched
 - [ ] 6.5 `EncryptionSuiteControllerTest` / `MigrationControllerTest` / `EmergencyAccessControllerTest`: the four guarded routes refuse without a proof and proceed with one

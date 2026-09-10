@@ -30,9 +30,11 @@ namespace OCA\Keepiq\Controller;
 
 use InvalidArgumentException;
 use OCA\Keepiq\AppInfo\Application;
+use OCA\Keepiq\Attribute\VaultKeyProofRequired;
 use OCA\Keepiq\Exception\ForbiddenException;
 use OCA\Keepiq\Exception\NotFoundException;
 use OCA\Keepiq\Service\EmergencyAccessService;
+use OCA\Keepiq\Service\VaultKeyProofService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
@@ -192,6 +194,11 @@ class EmergencyAccessController extends OCSController {
 	 * @spec openspec/changes/add-emergency-access/specs/emergency-access/spec.md#requirement-revoke-emergency-contact
 	 */
 	#[NoAdminRequired]
+	#[VaultKeyProofRequired(
+		binds: ['id'],
+		subject: 'active',
+		purpose: VaultKeyProofService::PURPOSE_EMERGENCY_DESTROY
+	)]
 	public function destroy(string $id): JSONResponse {
 		$userId = $this->requireUserId();
 		if ($userId === null) {

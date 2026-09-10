@@ -23,6 +23,7 @@ namespace OCA\Keepiq\Controller;
 
 use Exception;
 use OCA\Keepiq\AppInfo\Application;
+use OCA\Keepiq\Attribute\VaultKeyProofRequired;
 use OCA\Keepiq\Db\SuiteMigration;
 use OCA\Keepiq\Exception\ForbiddenException;
 use OCA\Keepiq\Exception\MigrationAbortRefusedException;
@@ -31,6 +32,7 @@ use OCA\Keepiq\Exception\NotFoundException;
 use OCA\Keepiq\Service\EncryptionSuiteService;
 use OCA\Keepiq\Service\MigrationService;
 use OCA\Keepiq\Service\MigrationWorkService;
+use OCA\Keepiq\Service\VaultKeyProofService;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -115,6 +117,11 @@ class MigrationController extends OCSController {
 	 * @spec openspec/changes/retrofit-2026-05-25-doriath-coverage/tasks.md#task-4
 	 */
 	#[NoAdminRequired]
+	#[VaultKeyProofRequired(
+		binds: ['id'],
+		subject: 'active',
+		purpose: VaultKeyProofService::PURPOSE_COMPLETE_MIGRATION
+	)]
 	public function complete(string $id, bool $hasErrors = false, ?int $acceptUnrecoverable = null): JSONResponse {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
