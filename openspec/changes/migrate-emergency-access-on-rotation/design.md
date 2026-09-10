@@ -42,6 +42,12 @@ Today the loss is silent. With this change the completion response reports which
 
 The new envelope seals to whatever certificate `getGranteeCertificate()` returns now, which may differ from the one the old envelope used if the grantee has since rotated. This is correct: an envelope sealed to a grantee's stale key would be unopenable by that grantee anyway. Re-enveloping on the grantor's rotation therefore also repairs staleness introduced by the grantee's own rotation, for free.
 
+### D5: Revocation still clears emergency access — but never silently
+
+Rotation migrates emergency access (D1); revocation cannot, because it produces no new key to seal to. So revocation keeps clearing the envelopes — but clearing is destructive and irreversible, and revocation is the last-resort route for an owner who lost their master password, i.e. the owner most likely to still need their contact. The safeguard makes the clear a knowing choice: warn plainly, refuse while a usable contact exists unless an explicit override is given, and surface the *count* of usable contacts (never identities — those stay grantor-private) so the administrator can decide. The retrieve-first ordering (accessor pulls the secrets while the suite is still `active`) is the whole point, and it is enforceable rather than merely documented.
+
+This is folded in here rather than in `harden-vault-key-material-guards` because it is emergency-access-lifecycle behaviour on a suite key-state transition — the same surface D1 already touches — and because the guard change is what makes revocation the only forgotten-password route, so the safeguard is its natural companion.
+
 ## Risks / Trade-offs
 
 - **A grantee reachable at migration time but not later.** No worse than today: the envelope is valid when built, and any later grantee-side change is handled by the existing grantee-revocation invalidation. Not this change's concern

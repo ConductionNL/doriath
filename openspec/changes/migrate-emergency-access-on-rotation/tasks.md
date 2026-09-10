@@ -40,9 +40,16 @@ Design fork still open (see design.md): the client may read the contacts to migr
 - [ ] 4.5 Regression: a rotation with all grantees reachable prompts no re-designation and leaves no contact invalidated (the behaviour this change fixes)
 - [ ] 4.6 Two-rotations-in-succession: a contact migrated A→B is then migrated B→C, found each time via `grantor_suite_id`
 
+## 4b. Destructive-Revocation Safeguard (lost-password route)
+
+- [ ] 4b.1 On the user-suite revoke path, before clearing, count the owner's usable (non-invalidated) emergency contacts via `EmergencyContactMapper::findByGrantorSuite` / grantor lookup; refuse the revocation when the count is > 0 and no override is supplied, returning that count (never identities)
+- [ ] 4b.2 Add an explicit `override`/`acceptEmergencyAccessLoss` parameter to the revoke endpoint; with it, revocation proceeds and `clearForGrantorRevocation` runs as today
+- [ ] 4b.3 Surface the destruction warning in the revoke UI: secrets permanently unreadable + vault rebuilt from scratch; emergency access deleted; if an accessor exists they MUST retrieve secrets first while the suite is still `active`. Use `@conduction/nextcloud-vue` + NL Design System double-fallback CSS
+- [ ] 4b.4 Tests: revoke refused with the usable-contact count when a contact exists and no override; revoke proceeds and clears with the override; count is returned without identities; no-contact case revokes unchanged
+
 ## 5. Gates and Documentation
 
-- [ ] 5.1 Run the hydra gates locally: route-auth (one new route), no-admin-idor (the re-point endpoint is owner-scoped by construction), gate-16 spec-coverage, gate-113 exclusion-evidence (every `@e2e exclude` carries a reason)
+- [ ] 5.1 Run the hydra gates locally: route-auth (the re-point route, plus the revoke override param), no-admin-idor (the re-point endpoint is owner-scoped by construction), gate-16 spec-coverage, gate-113 exclusion-evidence (every `@e2e exclude` carries a reason)
 - [ ] 5.2 Confirm gate-110 does not apply (no migration). If a schema change is introduced after all, bump `appinfo/info.xml` `<version>` from `0.3.1`
 - [ ] 5.3 Update `docs/ARCHITECTURE.md` where it describes suite migration: emergency contacts are a migrated store, and `invalidateForGrantorRotation` is a residual sweep
 - [ ] 5.4 Every commit carries `Assisted-by: ClaudeCode:claude-opus-5`; no `Signed-off-by` (only the human certifies the DCO)

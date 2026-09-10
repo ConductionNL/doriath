@@ -189,8 +189,8 @@
     },
     {
       "id": 21,
-      "num": "5.1",
-      "title": "Run the hydra gates locally: route-auth (one new route), no-admin-idor (the re-point endpoint is owner-scoped by construction), gate-16 spec-coverage, gate-113 exclusion-evidence (every `@e2e exclude` carries a reason)",
+      "num": "4b.1",
+      "title": "On the user-suite revoke path, before clearing, count the owner's usable (non-invalidated) emergency contacts via `EmergencyContactMapper::findByGrantorSuite` / grantor lookup; refuse the revocation when the count is > 0 and no override is supplied, returning that count (never identities)",
       "status": "pending",
       "spec_ref": null,
       "acceptance_criteria": [],
@@ -198,6 +198,42 @@
     },
     {
       "id": 22,
+      "num": "4b.2",
+      "title": "Add an explicit `override`/`acceptEmergencyAccessLoss` parameter to the revoke endpoint; with it, revocation proceeds and `clearForGrantorRevocation` runs as today",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 23,
+      "num": "4b.3",
+      "title": "Surface the destruction warning in the revoke UI: secrets permanently unreadable + vault rebuilt from scratch; emergency access deleted; if an accessor exists they MUST retrieve secrets first while the suite is still `active`. Use `@conduction/nextcloud-vue` + NL Design System double-fallback CSS",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 24,
+      "num": "4b.4",
+      "title": "Tests: revoke refused with the usable-contact count when a contact exists and no override; revoke proceeds and clears with the override; count is returned without identities; no-contact case revokes unchanged",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 25,
+      "num": "5.1",
+      "title": "Run the hydra gates locally: route-auth (the re-point route, plus the revoke override param), no-admin-idor (the re-point endpoint is owner-scoped by construction), gate-16 spec-coverage, gate-113 exclusion-evidence (every `@e2e exclude` carries a reason)",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 26,
       "num": "5.2",
       "title": "Confirm gate-110 does not apply (no migration). If a schema change is introduced after all, bump `appinfo/info.xml` `<version>` from `0.3.1`",
       "status": "pending",
@@ -206,7 +242,7 @@
       "files_likely_affected": []
     },
     {
-      "id": 23,
+      "id": 27,
       "num": "5.3",
       "title": "Update `docs/ARCHITECTURE.md` where it describes suite migration: emergency contacts are a migrated store, and `invalidateForGrantorRotation` is a residual sweep",
       "status": "pending",
@@ -215,7 +251,7 @@
       "files_likely_affected": []
     },
     {
-      "id": 24,
+      "id": 28,
       "num": "5.4",
       "title": "Every commit carries `Assisted-by: ClaudeCode:claude-opus-5`; no `Signed-off-by` (only the human certifies the DCO)",
       "status": "pending",
@@ -224,7 +260,7 @@
       "files_likely_affected": []
     },
     {
-      "id": 25,
+      "id": 29,
       "num": "5.5",
       "title": "PR description discloses AI tool use in the contributor's own words and links the `harden-vault-key-material-guards` change whose open question this resolves",
       "status": "pending",
