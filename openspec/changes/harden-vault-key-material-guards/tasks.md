@@ -38,14 +38,14 @@ Section 3 (abort) is independently useful and can be split into its own PR if th
 
 ## 4. Frontend — Producing the Proof
 
-- [ ] 4.1 Add `proveMasterPassword(encryptedPrivateKey, masterPassword, nonce, boundValues)` to `src/crypto/reauth.js`: decrypt the envelope via `decryptPrivateKey` (`src/crypto/aes.js:79`), re-import the PKCS#8 bytes with `['sign']` usage, sign `nonce || sha256(v1) || …`, return the signature
-- [ ] 4.2 Discard the derived AES key, the raw PKCS#8 bytes and the signing key immediately after signing; never return, store or cache them (spec: *the signing key does not outlive the proof*). Keep `verifyMasterPassword` as-is for the three existing advisory call sites — they are out of scope for this change
-- [ ] 4.3 Confirm the signing key is imported with `['sign']` only and is NOT the session `CryptoKey`; add a unit test asserting the session key (`src/crypto/rsa.js:61-66`) remains non-extractable and `['decrypt']`-only
-- [ ] 4.4 Add a shared client helper that fetches a challenge, prompts for the master password, produces the proof, and sets the `X-Keepiq-Key-Proof` header — so the four call sites do not each re-implement it
-- [ ] 4.5 Wire `src/components/CompromiseRecoveryForm.vue` (recovery start, and the completion call) through the helper
-- [ ] 4.6 Wire the routine master-password change flow through the helper; verify the old private key is materialised at that point (design "Risks" — if it is not, stop and raise before proceeding)
-- [ ] 4.7 Wire the emergency-contact delete action in `src/views/EmergencyAccessView.vue` / `src/store/modules/emergencyAccess.js` through the helper
-- [ ] 4.8 Handle `403 key_proof_required` as "re-enter your master password and retry", not as a terminal error
+- [x] 4.1 Add `proveMasterPassword(encryptedPrivateKey, masterPassword, nonce, boundValues)` to `src/crypto/reauth.js`: decrypt the envelope via `decryptPrivateKey` (`src/crypto/aes.js:79`), re-import the PKCS#8 bytes with `['sign']` usage, sign `nonce || sha256(v1) || …`, return the signature
+- [x] 4.2 Discard the derived AES key, the raw PKCS#8 bytes and the signing key immediately after signing; never return, store or cache them (spec: *the signing key does not outlive the proof*). Keep `verifyMasterPassword` as-is for the three existing advisory call sites — they are out of scope for this change
+- [x] 4.3 Confirm the signing key is imported with `['sign']` only and is NOT the session `CryptoKey`; add a unit test asserting the session key (`src/crypto/rsa.js:61-66`) remains non-extractable and `['decrypt']`-only
+- [x] 4.4 Add a shared client helper that fetches a challenge, prompts for the master password, produces the proof, and sets the `X-Keepiq-Key-Proof` header — so the four call sites do not each re-implement it
+- [x] 4.5 Wire `src/components/CompromiseRecoveryForm.vue` (recovery start, and the completion call) through the helper
+- [x] 4.6 Wire the routine master-password change flow through the helper; verify the old private key is materialised at that point (design "Risks" — if it is not, stop and raise before proceeding)
+- [ ] 4.7 REMAINING — wire the emergency-contact delete through the helper. Needs a master-password prompt at the delete point (the delete action has no password in hand), so it is a UI change, not just a store change
+- [ ] 4.8 REMAINING — handle `403 key_proof_required` as a re-enter-and-retry prompt. Also covers the resume path's completion: resume asks only for the OLD password, but completion's proof is over the NEW suite key, so a current-password prompt is needed there too
 
 ## 5. Apply The Guard (must not precede section 4)
 

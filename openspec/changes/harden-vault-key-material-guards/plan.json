@@ -200,7 +200,7 @@
       "id": 22,
       "num": "4.1",
       "title": "Add `proveMasterPassword(encryptedPrivateKey, masterPassword, nonce, boundValues)` to `src/crypto/reauth.js`: decrypt the envelope via `decryptPrivateKey` (`src/crypto/aes.js:79`), re-import the PKCS#8 bytes with `['sign']` usage, sign `nonce || sha256(v1) || \u2026`, return the signature",
-      "status": "pending",
+      "status": "done",
       "spec_ref": null,
       "acceptance_criteria": [],
       "files_likely_affected": []
@@ -209,7 +209,7 @@
       "id": 23,
       "num": "4.2",
       "title": "Discard the derived AES key, the raw PKCS#8 bytes and the signing key immediately after signing; never return, store or cache them (spec: *the signing key does not outlive the proof*). Keep `verifyMasterPassword` as-is for the three existing advisory call sites \u2014 they are out of scope for this change",
-      "status": "pending",
+      "status": "done",
       "spec_ref": null,
       "acceptance_criteria": [],
       "files_likely_affected": []
@@ -218,7 +218,7 @@
       "id": 24,
       "num": "4.3",
       "title": "Confirm the signing key is imported with `['sign']` only and is NOT the session `CryptoKey`; add a unit test asserting the session key (`src/crypto/rsa.js:61-66`) remains non-extractable and `['decrypt']`-only",
-      "status": "pending",
+      "status": "done",
       "spec_ref": null,
       "acceptance_criteria": [],
       "files_likely_affected": []
@@ -227,7 +227,7 @@
       "id": 25,
       "num": "4.4",
       "title": "Add a shared client helper that fetches a challenge, prompts for the master password, produces the proof, and sets the `X-Keepiq-Key-Proof` header \u2014 so the four call sites do not each re-implement it",
-      "status": "pending",
+      "status": "done",
       "spec_ref": null,
       "acceptance_criteria": [],
       "files_likely_affected": []
@@ -236,7 +236,7 @@
       "id": 26,
       "num": "4.5",
       "title": "Wire `src/components/CompromiseRecoveryForm.vue` (recovery start, and the completion call) through the helper",
-      "status": "pending",
+      "status": "done",
       "spec_ref": null,
       "acceptance_criteria": [],
       "files_likely_affected": []
@@ -245,7 +245,7 @@
       "id": 27,
       "num": "4.6",
       "title": "Wire the routine master-password change flow through the helper; verify the old private key is materialised at that point (design \"Risks\" \u2014 if it is not, stop and raise before proceeding)",
-      "status": "pending",
+      "status": "done",
       "spec_ref": null,
       "acceptance_criteria": [],
       "files_likely_affected": []
@@ -253,7 +253,7 @@
     {
       "id": 28,
       "num": "4.7",
-      "title": "Wire the emergency-contact delete action in `src/views/EmergencyAccessView.vue` / `src/store/modules/emergencyAccess.js` through the helper",
+      "title": "REMAINING \u2014 wire the emergency-contact delete through the helper. Needs a master-password prompt at the delete point (the delete action has no password in hand), so it is a UI change, not just a store change",
       "status": "pending",
       "spec_ref": null,
       "acceptance_criteria": [],
@@ -262,7 +262,7 @@
     {
       "id": 29,
       "num": "4.8",
-      "title": "Handle `403 key_proof_required` as \"re-enter your master password and retry\", not as a terminal error",
+      "title": "REMAINING \u2014 handle `403 key_proof_required` as a re-enter-and-retry prompt. Also covers the resume path's completion: resume asks only for the OLD password, but completion's proof is over the NEW suite key, so a current-password prompt is needed there too",
       "status": "pending",
       "spec_ref": null,
       "acceptance_criteria": [],

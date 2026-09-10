@@ -8,6 +8,7 @@ import {
 	importPrivateKey,
 	importPublicKey,
 } from '../../crypto/index.js'
+import { buildKeyProofHeaders, PROOF_PURPOSE } from '../../crypto/keyProof.js'
 import { createMigrationRunner } from '../../migration/driver.js'
 import { MIGRATION_STORES } from '../../migration/pipeline.js'
 import { onVaultLock, useSessionStore } from './session.js'
@@ -151,12 +152,24 @@ export const useEncryptionSuiteStore = defineStore('encryptionSuite', {
 				newPassword,
 			)
 
+			// Replacing the envelope is guarded: prove possession of the current
+			// key (the old master password) over the new envelope. The old key is
+			// already materialised above, so this adds no extra prompt.
+			const proof = await buildKeyProofHeaders({
+				suiteId: session.suiteId,
+				purpose: PROOF_PURPOSE.UPDATE_PRIVATE_KEY,
+				encryptedPrivateKey: session.encryptedPrivateKey,
+				masterPassword: oldPassword,
+				boundValues: [newEncryptedPk],
+			})
+
 			// Update on server.
 			await axios.put(
 				generateUrl(
 					`/apps/keepiq/api/v1/suites/${session.suiteId}/private-key`,
 				),
 				{ encryptedPrivateKey: newEncryptedPk },
+				{ headers: proof },
 			)
 
 			session.encryptedPrivateKey = newEncryptedPk
@@ -203,12 +216,25 @@ export const useEncryptionSuiteStore = defineStore('encryptionSuite', {
 			this.migrationFailures = []
 			this.migrationDroppedVersions = 0
 
+			// Starting a rotation is guarded: prove possession of the OLD suite
+			// key (i.e. the old master password) over the submitted new key
+			// material, so a stolen session cannot begin a hostile rotation.
+			const session = useSessionStore()
+			const startProof = await buildKeyProofHeaders({
+				suiteId: session.suiteId,
+				purpose: PROOF_PURPOSE.COMPROMISE_RECOVERY,
+				encryptedPrivateKey: session.encryptedPrivateKey,
+				masterPassword: oldPassword,
+				boundValues: [publicKeyPem, newEncryptedPk],
+			})
+
 			const response = await axios.post(
 				generateUrl('/apps/keepiq/api/v1/suites/compromise-recovery'),
 				{
 					publicKey: publicKeyPem,
 					encryptedPrivateKey: newEncryptedPk,
 				},
+				{ headers: startProof },
 			)
 
 			this.migrationStatus = response.data.migration
@@ -224,7 +250,6 @@ export const useEncryptionSuiteStore = defineStore('encryptionSuite', {
 			// The key material is the pair generated above, so this is the same
 			// binding createSuite performs on first-time setup, not a
 			// re-derivation from anything the server sent.
-			const session = useSessionStore()
 			session.cryptoKey = await importPrivateKey(newPrivateKeyPem)
 			session.encryptedPrivateKey = newEncryptedPk
 			session.certificate = response.data.newSuite?.certificate ?? null
@@ -255,7 +280,21 @@ export const useEncryptionSuiteStore = defineStore('encryptionSuite', {
 			// for the terminal step. The premature complete() that used to sit
 			// here reported success five lines after initiating, before a single
 			// record had been touched.
-			await this.finaliseMigration(response.data.migration.id, outcome)
+			// Completion is guarded too. The session is now bound to the NEW
+			// suite, so the proof is made with the new key and the new master
+			// password (both in hand here), bound to the migration id.
+			const completeProof = await buildKeyProofHeaders({
+				suiteId: session.suiteId,
+				purpose: PROOF_PURPOSE.COMPLETE_MIGRATION,
+				encryptedPrivateKey: newEncryptedPk,
+				masterPassword: newPassword,
+				boundValues: [response.data.migration.id],
+			})
+			await this.finaliseMigration(
+				response.data.migration.id,
+				outcome,
+				completeProof,
+			)
 
 			return outcome
 		},
@@ -651,16 +690,22 @@ export const useEncryptionSuiteStore = defineStore('encryptionSuite', {
 		 *
 		 * @param {string} migrationId The migration ID.
 		 * @param {object} outcome The run outcome from runMigration.
+		 * @param {Record<string,string>|null} proofHeaders Vault-key-proof headers for completion.
 		 * @return {Promise<{finalised: boolean, needsAcknowledgement: boolean, message: string|null}>}
 		 *   Whether the migration terminated, and why not if it did not.
 		 * @spec openspec/changes/restore-suite-migration-loop/specs/encryption-suites/spec.md#requirement-migration-covers-every-suite-bound-store
 		 */
-		async finaliseMigration(migrationId, outcome) {
+		async finaliseMigration(migrationId, outcome, proofHeaders = null) {
 			this.migrationNeedsAcknowledgement = false
 			this.migrationBlockedMessage = null
 
 			try {
-				await this.completeMigration(migrationId, outcome.failed > 0)
+				await this.completeMigration(
+					migrationId,
+					outcome.failed > 0,
+					null,
+					proofHeaders,
+				)
 				return {
 					finalised: true,
 					needsAcknowledgement: false,
@@ -741,10 +786,16 @@ export const useEncryptionSuiteStore = defineStore('encryptionSuite', {
 		 * @param {string} migrationId The migration ID.
 		 * @param {boolean} hasErrors Whether any record failed.
 		 * @param {number|null} acceptUnrecoverable Losses the user has accepted.
+		 * @param {Record<string,string>|null} proofHeaders Vault-key-proof headers for completion.
 		 * @return {Promise<object>} The completion response body.
 		 * @spec openspec/changes/restore-suite-migration-loop/specs/encryption-suites/spec.md#requirement-a-migration-always-has-a-way-to-terminate
 		 */
-		async completeMigration(migrationId, hasErrors, acceptUnrecoverable = null) {
+		async completeMigration(
+			migrationId,
+			hasErrors,
+			acceptUnrecoverable = null,
+			proofHeaders = null,
+		) {
 			try {
 				const body = { hasErrors }
 				// The server refuses to finalise a migration that would cost the
@@ -755,11 +806,15 @@ export const useEncryptionSuiteStore = defineStore('encryptionSuite', {
 					body.acceptUnrecoverable = acceptUnrecoverable
 				}
 
+				// Completing marks the old suite compromised, so it carries a
+				// vault-key proof (defence in depth alongside the acknowledgement).
+				const config = proofHeaders ? { headers: proofHeaders } : {}
 				const { data } = await axios.post(
 					generateUrl(
 						`/apps/keepiq/api/v1/migrations/${migrationId}/complete`,
 					),
 					body,
+					config,
 				)
 				this.migrationDroppedVersions =
 					data.droppedVersions ?? this.migrationDroppedVersions
