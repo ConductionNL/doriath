@@ -108,7 +108,7 @@ On abort the system MUST:
 
 - set the migration to the terminal status `aborted`
 - leave the old EncryptionSuite `active`, and leave every record bound to it untouched
-- revoke the successor suite, which by definition holds nothing
+- discard the successor suite by **deleting** it — created moments ago, it holds no ciphertext and has no shares or emergency contacts, so it is removed outright. It MUST NOT be revoked through the ordinary suite-revocation path: that path treats a revoked *user* suite as a lost identity and cascades a share-target sweep and delegation promotion, which would destroy the owner's incoming shares over a migration the abort exists to undo
 - release the write lock and unlock the SecretRequests locked when the migration started
 - clear the migration's failure accounting, so a later migration does not inherit a stale acknowledgement threshold
 
@@ -123,7 +123,7 @@ Abort MUST NOT require a key proof. It is restorative — it returns the vault t
 - **WHEN** abort is requested by the owner
 - **THEN** the migration MUST become `aborted`
 - **AND** the old suite MUST remain `active` with every record still bound to it
-- **AND** the successor suite MUST be revoked
+- **AND** the successor suite MUST be deleted (not revoked, which would cascade the user-suite revocation side effects)
 - **AND** the write lock MUST be released and locked SecretRequests MUST be unlocked
 
 #### Scenario: Aborting after records have moved is refused
