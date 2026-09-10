@@ -19,8 +19,8 @@
     {
       "id": 2,
       "num": "1.2",
-      "title": "Confirm no other caller relied on the old behaviour: `show`, `updatePrivateKey`, `revoke` are the only callers, all user self-service; the frontend calls `revoke` only on the caller's own current suite",
-      "status": "pending",
+      "title": "Confirmed no other caller relied on the old behaviour: the only callers are `show` (L111), `updatePrivateKey` (L236), `revoke` (L288) \u2014 all user self-service; the frontend calls `revoke` only on the caller's own current suite",
+      "status": "done",
       "spec_ref": null,
       "acceptance_criteria": [],
       "files_likely_affected": []
@@ -54,26 +54,26 @@
     },
     {
       "id": 6,
-      "num": "3.1",
-      "title": "Run the hydra gates locally: no-admin-idor (this is the fix for one), route-auth, gate-16 spec-coverage (the new requirement backs the code change), gate-113 exclusion-evidence (each `@e2e exclude` carries a reason)",
-      "status": "pending",
+      "num": "3.2",
+      "title": "phpmd clean on the touched files; `validateOwnership` introduces no finding. phpcs/phpstan carry the file's pre-existing, contradictory named-argument debt (phpcs *requires* named params for internal calls; phpstan's `@no-named-arguments` *forbids* them on PHPUnit asserts) \u2014 present identically on `development`; the new lines follow the file's established style and add no meaningful new violation. Not fixing the baseline here (unrelated scope)",
+      "status": "done",
       "spec_ref": null,
       "acceptance_criteria": [],
       "files_likely_affected": []
     },
     {
       "id": 7,
-      "num": "3.2",
-      "title": "phpcs/phpstan/phpmd clean on the touched files",
-      "status": "pending",
+      "num": "3.4",
+      "title": "PR #676 discloses AI tool use; the public-disclosure path was chosen deliberately by the contributor (consistent with the public #395 filing), so a public PR rather than HackerOne is the contributor's call on record",
+      "status": "done",
       "spec_ref": null,
       "acceptance_criteria": [],
       "files_likely_affected": []
     },
     {
       "id": 8,
-      "num": "3.3",
-      "title": "Commit carries `Assisted-by: ClaudeCode:claude-opus-5`; no `Signed-off-by` (only the human certifies the DCO)",
+      "num": "3.1",
+      "title": "hydra gates \u2014 run in CI on PR #676, not locally (Hydra infra, not a repo composer script). no-admin-idor is the gate this fix *reduces* surface for; route-auth, gate-16 spec-coverage (new requirement backs the change), gate-113 exclusion-evidence apply",
       "status": "pending",
       "spec_ref": null,
       "acceptance_criteria": [],
@@ -81,8 +81,8 @@
     },
     {
       "id": 9,
-      "num": "3.4",
-      "title": "PR description discloses AI tool use in the contributor's own words. Because this is a security fix, follow the project security policy on disclosure: consider whether it should go through HackerOne rather than a public PR/issue before the app is production \u2014 this is the contributor's call, not the agent's",
+      "num": "3.3",
+      "title": "DCO \u2014 the contributor adds `Signed-off-by` at merge; the commits already carry `Assisted-by: ClaudeCode:claude-opus-5` and no sign-off, since only the human certifies the DCO",
       "status": "pending",
       "spec_ref": null,
       "acceptance_criteria": [],
@@ -91,7 +91,7 @@
     {
       "id": 10,
       "num": "3.5",
-      "title": "Independent human verification of the vulnerability and the fix before submission, per AGENTS.md \u2014 the empirical reproduction in this session is the agent's reading, not a substitute",
+      "title": "Independent human verification of the vulnerability and the fix \u2014 the contributor's review/merge is that verification; the empirical reproduction in this session is the agent's reading, not a substitute",
       "status": "pending",
       "spec_ref": null,
       "acceptance_criteria": [],
