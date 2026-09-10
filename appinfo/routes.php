@@ -49,6 +49,7 @@ return \OCA\OpenRegister\AppHost\Routes::standard([
     // Migration tracking.
     ['name' => 'migration#getStatus',                'url' => '/api/v1/migrations/status',               'verb' => 'GET'],
     ['name' => 'migration#complete',                 'url' => '/api/v1/migrations/{id}/complete',        'verb' => 'POST'],
+    ['name' => 'migration#abort',                    'url' => '/api/v1/migrations/{id}/abort',           'verb' => 'POST'],
 
     // Compromise-recovery migration work loop. One record per request: the
     // browser decrypts with the old private key, re-encrypts under the new one,

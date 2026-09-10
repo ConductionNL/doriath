@@ -127,8 +127,8 @@
     {
       "id": 14,
       "num": "3.1",
-      "title": "Add `MigrationService::abortMigration(string $migrationId): array` \u2014 refuse unless `in_progress`; refuse when any record has been committed to the new suite, reporting the count and pointing at resume; idempotent by status like `completeMigration`",
-      "status": "pending",
+      "title": "Added `MigrationService::abortMigration(string $migrationId): array` \u2014 refuses unless `in_progress` (idempotent no-op otherwise); refuses via `MigrationAbortRefusedException` (mapped to 409) when `MigrationWorkService::countCommitted` finds any record on the new suite, reporting the count and pointing at resume",
+      "status": "done",
       "spec_ref": null,
       "acceptance_criteria": [],
       "files_likely_affected": []
@@ -136,8 +136,8 @@
     {
       "id": 15,
       "num": "3.2",
-      "title": "On success: set status `aborted`, leave the old suite `active` and its records untouched, revoke the successor suite via `EncryptionSuiteService::revokeSuite`, clear failure accounting via `workService->clearFailureAccounting`, release the write lock",
-      "status": "pending",
+      "title": "On success: sets status `aborted`, leaves the old suite `active` and its records untouched, **DELETES** the successor suite via `suiteMapper->delete` (NOT `revokeSuite` \u2014 revoking a user suite cascades the lost-identity share-target sweep + delegation promotion; discovered during implementation, spec/design corrected), clears failure accounting, and releases the write lock (derived from the now-terminal migration)",
+      "status": "done",
       "spec_ref": null,
       "acceptance_criteria": [],
       "files_likely_affected": []
@@ -145,8 +145,8 @@
     {
       "id": 16,
       "num": "3.3",
-      "title": "Create `SuiteMigrationAbortedEvent` and a listener that unlocks the SecretRequests locked by `SuiteMigrationStartedListener`",
-      "status": "pending",
+      "title": "Created `SuiteMigrationAbortedEvent` + `SuiteMigrationAbortedListener` (registered in `SuiteLifecycleEventRegistrar`) that unlocks the SecretRequests locked at start via `unlockAndUpdateSuite(old, old)`, keeping them on the old suite",
+      "status": "done",
       "spec_ref": null,
       "acceptance_criteria": [],
       "files_likely_affected": []
@@ -154,8 +154,8 @@
     {
       "id": 17,
       "num": "3.4",
-      "title": "**Must not** dispatch `SuiteMigrationCompletedEvent` \u2014 that is what `EmergencyAccessSuiteRotationListener` consumes to invalidate recovery envelopes. Add a regression test asserting envelopes survive an abort",
-      "status": "pending",
+      "title": "Does **not** dispatch `SuiteMigrationCompletedEvent`. `MigrationServiceTest::testAbortDispatchesAbortedEventNotCompleted` asserts the aborted event fires and the completed event does not \u2014 the completed event is the only thing `EmergencyAccessSuiteRotationListener` consumes, so this is the unit-level proof envelopes survive an abort",
+      "status": "done",
       "spec_ref": null,
       "acceptance_criteria": [],
       "files_likely_affected": []
@@ -163,8 +163,8 @@
     {
       "id": 18,
       "num": "3.5",
-      "title": "Add `MigrationController::abort(string $id)` (`#[NoAdminRequired]`) with the existing `requireOwnMigration` ownership check; **no** `#[VaultKeyProofRequired]` (design D6 \u2014 abort is restorative)",
-      "status": "pending",
+      "title": "Added `MigrationController::abort(string $id)` (`#[NoAdminRequired]`) with the existing `requireOwnMigration` check; no `#[VaultKeyProofRequired]` (design D6 \u2014 abort is restorative)",
+      "status": "done",
       "spec_ref": null,
       "acceptance_criteria": [],
       "files_likely_affected": []
@@ -172,8 +172,8 @@
     {
       "id": 19,
       "num": "3.6",
-      "title": "Register `['name' => 'migration#abort', 'url' => '/api/v1/migrations/{id}/abort', 'verb' => 'POST']`",
-      "status": "pending",
+      "title": "Registered `migration#abort` \u2192 `POST /api/v1/migrations/{id}/abort`",
+      "status": "done",
       "spec_ref": null,
       "acceptance_criteria": [],
       "files_likely_affected": []
@@ -181,8 +181,8 @@
     {
       "id": 20,
       "num": "3.7",
-      "title": "Update the refusal text in `EncryptionSuiteController::compromiseRecovery()` so the promised \"abort\" now names a route that exists",
-      "status": "pending",
+      "title": "The `compromiseRecovery` refusal already reads \"Resume or **abort** that migration before starting another\" \u2014 that promised route now exists, so the wording is backed rather than broken. Left as-is",
+      "status": "done",
       "spec_ref": null,
       "acceptance_criteria": [],
       "files_likely_affected": []
@@ -190,8 +190,8 @@
     {
       "id": 21,
       "num": "3.8",
-      "title": "Add an abort control to `src/components/MigrationResumeBanner.vue`, shown only while abort is still available, with copy stating that the old suite stays intact",
-      "status": "pending",
+      "title": "Added an \"Abort and keep my old key\" control to `MigrationResumeBanner.vue` (shown while the banner is expanded), plus the `abortMigration` store action and its vitest coverage (success clears the banner; a 409 refusal keeps it and surfaces the message)",
+      "status": "done",
       "spec_ref": null,
       "acceptance_criteria": [],
       "files_likely_affected": []

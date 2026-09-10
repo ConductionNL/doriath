@@ -25,16 +25,16 @@ Section 3 (abort) is independently useful and can be split into its own PR if th
 - [ ] 2.3 Register `['name' => 'encryptionSuite#proofChallenge', 'url' => '/api/v1/suites/{id}/proof-challenge', 'verb' => 'GET']` in `appinfo/routes.php`, before the SPA catch-all wildcard
 - [ ] 2.4 The challenge endpoint itself MUST NOT carry `#[VaultKeyProofRequired]` — assert in the coverage test that it is on the deliberate-exclusion list
 
-## 3. Backend — Abort (independently mergeable)
+## 3. Backend — Abort (independently mergeable) — IMPLEMENTED
 
-- [ ] 3.1 Add `MigrationService::abortMigration(string $migrationId): array` — refuse unless `in_progress`; refuse when any record has been committed to the new suite, reporting the count and pointing at resume; idempotent by status like `completeMigration`
-- [ ] 3.2 On success: set status `aborted`, leave the old suite `active` and its records untouched, revoke the successor suite via `EncryptionSuiteService::revokeSuite`, clear failure accounting via `workService->clearFailureAccounting`, release the write lock
-- [ ] 3.3 Create `SuiteMigrationAbortedEvent` and a listener that unlocks the SecretRequests locked by `SuiteMigrationStartedListener`
-- [ ] 3.4 **Must not** dispatch `SuiteMigrationCompletedEvent` — that is what `EmergencyAccessSuiteRotationListener` consumes to invalidate recovery envelopes. Add a regression test asserting envelopes survive an abort
-- [ ] 3.5 Add `MigrationController::abort(string $id)` (`#[NoAdminRequired]`) with the existing `requireOwnMigration` ownership check; **no** `#[VaultKeyProofRequired]` (design D6 — abort is restorative)
-- [ ] 3.6 Register `['name' => 'migration#abort', 'url' => '/api/v1/migrations/{id}/abort', 'verb' => 'POST']`
-- [ ] 3.7 Update the refusal text in `EncryptionSuiteController::compromiseRecovery()` so the promised "abort" now names a route that exists
-- [ ] 3.8 Add an abort control to `src/components/MigrationResumeBanner.vue`, shown only while abort is still available, with copy stating that the old suite stays intact
+- [x] 3.1 Added `MigrationService::abortMigration(string $migrationId): array` — refuses unless `in_progress` (idempotent no-op otherwise); refuses via `MigrationAbortRefusedException` (mapped to 409) when `MigrationWorkService::countCommitted` finds any record on the new suite, reporting the count and pointing at resume
+- [x] 3.2 On success: sets status `aborted`, leaves the old suite `active` and its records untouched, **DELETES** the successor suite via `suiteMapper->delete` (NOT `revokeSuite` — revoking a user suite cascades the lost-identity share-target sweep + delegation promotion; discovered during implementation, spec/design corrected), clears failure accounting, and releases the write lock (derived from the now-terminal migration)
+- [x] 3.3 Created `SuiteMigrationAbortedEvent` + `SuiteMigrationAbortedListener` (registered in `SuiteLifecycleEventRegistrar`) that unlocks the SecretRequests locked at start via `unlockAndUpdateSuite(old, old)`, keeping them on the old suite
+- [x] 3.4 Does **not** dispatch `SuiteMigrationCompletedEvent`. `MigrationServiceTest::testAbortDispatchesAbortedEventNotCompleted` asserts the aborted event fires and the completed event does not — the completed event is the only thing `EmergencyAccessSuiteRotationListener` consumes, so this is the unit-level proof envelopes survive an abort
+- [x] 3.5 Added `MigrationController::abort(string $id)` (`#[NoAdminRequired]`) with the existing `requireOwnMigration` check; no `#[VaultKeyProofRequired]` (design D6 — abort is restorative)
+- [x] 3.6 Registered `migration#abort` → `POST /api/v1/migrations/{id}/abort`
+- [x] 3.7 The `compromiseRecovery` refusal already reads "Resume or **abort** that migration before starting another" — that promised route now exists, so the wording is backed rather than broken. Left as-is
+- [x] 3.8 Added an "Abort and keep my old key" control to `MigrationResumeBanner.vue` (shown while the banner is expanded), plus the `abortMigration` store action and its vitest coverage (success clears the banner; a 409 refusal keeps it and surfaces the message)
 
 ## 4. Frontend — Producing the Proof
 

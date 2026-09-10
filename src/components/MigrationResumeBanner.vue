@@ -54,6 +54,32 @@
 			{{ t('keepiq', 'Unlock your vault first, then resume.') }}
 		</p>
 
+		<!-- Abort is the non-destructive escape: it discards the unused new key
+		     and returns the vault to the old key, which is still valid. The
+		     server refuses if any secret has already been re-encrypted, so this
+		     is only ever offered, never forced. -->
+		<div v-if="expanded" class="keepiq-migration-banner__abort">
+			<NcButton
+				variant="tertiary"
+				data-testid="migration-abort"
+				:disabled="busy"
+				@click="onAbort">
+				{{
+					busy
+						? t('keepiq', 'Aborting…')
+						: t('keepiq', 'Abort and keep my old key')
+				}}
+			</NcButton>
+			<span class="keepiq-migration-banner__hint">
+				{{
+					t(
+						'keepiq',
+						'Discards the new key and unlocks your vault under the old one. Only possible while nothing has been re-encrypted yet.',
+					)
+				}}
+			</span>
+		</div>
+
 		<p v-if="progressLabel" class="keepiq-migration-banner__hint">
 			{{ progressLabel }}
 		</p>
@@ -218,6 +244,31 @@ export default {
 					e?.response?.data?.message
 					|| e?.message
 					|| this.t('keepiq', 'Could not resume the rotation.')
+			} finally {
+				this.busy = false
+			}
+		},
+
+		/**
+		 * Abort the migration, returning the vault to the old key.
+		 *
+		 * On a server refusal (records already moved) the message says so and
+		 * the banner stays, pointing the user at resuming instead.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/encryption-suites/spec.md#requirement-a-migration-can-be-aborted-before-any-record-moves
+		 */
+		async onAbort() {
+			this.busy = true
+			this.error = null
+
+			try {
+				await useEncryptionSuiteStore().abortMigration()
+			} catch (e) {
+				this.error =
+					e?.response?.data?.message
+					|| e?.message
+					|| this.t('keepiq', 'Could not abort the rotation.')
 			} finally {
 				this.busy = false
 			}

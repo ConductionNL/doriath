@@ -957,5 +957,41 @@ export const useEncryptionSuiteStore = defineStore('encryptionSuite', {
 				this.migrationStatus = null
 			}
 		},
+
+		/**
+		 * Abort an interrupted migration, returning the vault to the old suite.
+		 *
+		 * The non-destructive escape from a rotation the user does not want to
+		 * finish: it discards the unused new key and unlocks the vault under the
+		 * old key, which never stopped being valid. The server refuses (409) if
+		 * any record has already moved to the new suite — at that point resuming
+		 * is the only safe route — so this surfaces that as an error for the
+		 * banner rather than pretending it succeeded.
+		 *
+		 * @return {Promise<object>} The server's terminal result.
+		 * @spec openspec/specs/encryption-suites/spec.md#requirement-a-migration-can-be-aborted-before-any-record-moves
+		 */
+		async abortMigration() {
+			await this.fetchMigrationStatus()
+			if (this.migrationStatus === null) {
+				throw new Error('There is no migration to abort')
+			}
+
+			const migrationId = this.migrationStatus.id
+			try {
+				const { data } = await axios.post(
+					generateUrl(
+						`/apps/keepiq/api/v1/migrations/${migrationId}/abort`,
+					),
+				)
+				return data
+			} finally {
+				// Whether it aborted or was refused, re-read the authoritative
+				// state so the banner reflects reality (cleared on success, still
+				// present with its remaining count on a refusal).
+				await this.fetchMigrationStatus()
+				await this.fetchMigrationRemaining()
+			}
+		},
 	},
 })
