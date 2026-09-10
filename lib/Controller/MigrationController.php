@@ -119,7 +119,7 @@ class MigrationController extends OCSController {
 	#[NoAdminRequired]
 	#[VaultKeyProofRequired(
 		binds: ['id'],
-		subject: 'active',
+		subject: 'migrationOldSuite',
 		purpose: VaultKeyProofService::PURPOSE_COMPLETE_MIGRATION
 	)]
 	public function complete(string $id, bool $hasErrors = false, ?int $acceptUnrecoverable = null): JSONResponse {

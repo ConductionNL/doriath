@@ -34,6 +34,7 @@ namespace OCA\Keepiq\Middleware;
 
 use OCA\Keepiq\Attribute\VaultKeyProofRequired;
 use OCA\Keepiq\Db\EncryptionSuite;
+use OCA\Keepiq\Db\SuiteMigrationMapper;
 use OCA\Keepiq\Exception\KeyProofRequiredException;
 use OCA\Keepiq\Service\EncryptionSuiteService;
 use OCA\Keepiq\Service\VaultKeyProofService;
@@ -67,6 +68,7 @@ class VaultKeyProofMiddleware extends Middleware {
 	 * @param IUserSession $userSession The session, for the acting user
 	 * @param EncryptionSuiteService $suiteService Resolves the subject suite
 	 * @param VaultKeyProofService $proofService Verifies the proof
+	 * @param SuiteMigrationMapper $migrationMapper Resolves a migration's old suite
 	 *
 	 * @return void
 	 */
@@ -75,6 +77,7 @@ class VaultKeyProofMiddleware extends Middleware {
 		private IUserSession $userSession,
 		private EncryptionSuiteService $suiteService,
 		private VaultKeyProofService $proofService,
+		private SuiteMigrationMapper $migrationMapper,
 	) {
 	}//end __construct()
 
@@ -203,20 +206,48 @@ class VaultKeyProofMiddleware extends Middleware {
 	 * @throws KeyProofRequiredException When a named suite is not the caller's own
 	 */
 	private function resolveSubjectSuite(string $subject, string $userId): EncryptionSuite {
-		if (str_starts_with($subject, 'routeParam:') === false) {
-			return $this->suiteService->getActiveSuite(ownerType: 'user', ownerId: $userId);
+		if ($subject === 'migrationOldSuite') {
+			// Completion proves the OLD key, not the new one: at completion both
+			// suites are active so 'active' is ambiguous, and the old key is the
+			// one both the initiate and resume clients already hold the password
+			// for. Resolve it from the migration named by the route's `id`.
+			$migration = $this->migrationMapper->findById((string)$this->request->getParam('id', ''));
+			return $this->assertOwned(
+				suite: $this->suiteService->getSuite($migration->getOldSuiteId()),
+				userId: $userId
+			);
 		}
 
-		$paramName = substr($subject, strlen('routeParam:'));
-		$suite = $this->suiteService->getSuite((string)$this->request->getParam($paramName, ''));
+		if (str_starts_with($subject, 'routeParam:') === true) {
+			$paramName = substr($subject, strlen('routeParam:'));
+			return $this->assertOwned(
+				suite: $this->suiteService->getSuite((string)$this->request->getParam($paramName, '')),
+				userId: $userId
+			);
+		}
 
-		// The proof must be over the OWNER's own key; a suite belonging to
-		// someone else (or to an application) can never be the subject of a
-		// user's self-service proof.
+		return $this->assertOwned(
+			suite: $this->suiteService->getActiveSuite(ownerType: 'user', ownerId: $userId),
+			userId: $userId
+		);
+	}//end resolveSubjectSuite()
+
+	/**
+	 * Assert the resolved suite is the caller's own; a proof is always over the
+	 * owner's key, never another user's or an application's.
+	 *
+	 * @param EncryptionSuite $suite The resolved suite
+	 * @param string $userId The acting user
+	 *
+	 * @return EncryptionSuite
+	 *
+	 * @throws KeyProofRequiredException When the suite is not the caller's
+	 */
+	private function assertOwned(EncryptionSuite $suite, string $userId): EncryptionSuite {
 		if ($suite->getOwnerType() !== 'user' || $suite->getOwnerId() !== $userId) {
 			throw new KeyProofRequiredException(message: 'Subject suite is not yours');
 		}
 
 		return $suite;
-	}//end resolveSubjectSuite()
+	}//end assertOwned()
 }//end class

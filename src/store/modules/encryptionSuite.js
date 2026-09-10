@@ -280,14 +280,15 @@ export const useEncryptionSuiteStore = defineStore('encryptionSuite', {
 			// for the terminal step. The premature complete() that used to sit
 			// here reported success five lines after initiating, before a single
 			// record had been touched.
-			// Completion is guarded too. The session is now bound to the NEW
-			// suite, so the proof is made with the new key and the new master
-			// password (both in hand here), bound to the migration id.
+			// Completion is guarded too, and its proof is over the OLD key —
+			// the suite being retired — not the new one. That is the key both
+			// this initiate path and the resume path already hold the password
+			// for (oldPassword), so completion needs no extra prompt on either.
 			const completeProof = await buildKeyProofHeaders({
-				suiteId: session.suiteId,
+				suiteId: response.data.migration.oldSuiteId,
 				purpose: PROOF_PURPOSE.COMPLETE_MIGRATION,
-				encryptedPrivateKey: newEncryptedPk,
-				masterPassword: newPassword,
+				encryptedPrivateKey: response.data.oldEncryptedPrivateKey,
+				masterPassword: oldPassword,
 				boundValues: [response.data.migration.id],
 			})
 			await this.finaliseMigration(
@@ -751,11 +752,16 @@ export const useEncryptionSuiteStore = defineStore('encryptionSuite', {
 		 * called from an affirmative user action.
 		 *
 		 * @param {string} migrationId The migration ID.
+		 * @param {string} oldPassword The old master password, to prove the retiring key.
 		 * @param {number} acceptUnrecoverable How many losses the user accepted.
 		 * @return {Promise<object>} The completion response.
 		 * @spec openspec/changes/restore-suite-migration-loop/specs/secrets/spec.md#requirement-possibly-compromised-flag-lifecycle
 		 */
-		async acceptMigrationLosses(migrationId, acceptUnrecoverable = null) {
+		async acceptMigrationLosses(
+			migrationId,
+			oldPassword,
+			acceptUnrecoverable = null,
+		) {
 			// Defaults to the server's own number. A caller may still pass one
 			// explicitly, but the stored value is what the server asked for and
 			// is therefore what it will accept.
@@ -768,7 +774,35 @@ export const useEncryptionSuiteStore = defineStore('encryptionSuite', {
 				)
 			}
 
-			const data = await this.completeMigration(migrationId, true, accepted)
+			// Completing is guarded, and the proof is over the OLD (retiring)
+			// key. Without the old password we cannot build it, so ask for it
+			// rather than sending a request the server will refuse.
+			if (!oldPassword) {
+				const err = new Error(
+					'Re-enter your master password to finish the rotation.',
+				)
+				err.code = 'key_proof_required'
+				throw err
+			}
+			const { data: oldSuite } = await axios.get(
+				generateUrl(
+					`/apps/keepiq/api/v1/suites/${this.migrationStatus.oldSuiteId}`,
+				),
+			)
+			const proof = await buildKeyProofHeaders({
+				suiteId: this.migrationStatus.oldSuiteId,
+				purpose: PROOF_PURPOSE.COMPLETE_MIGRATION,
+				encryptedPrivateKey: oldSuite.privateKey,
+				masterPassword: oldPassword,
+				boundValues: [migrationId],
+			})
+
+			const data = await this.completeMigration(
+				migrationId,
+				true,
+				accepted,
+				proof,
+			)
 			this.migrationNeedsAcknowledgement = false
 			this.migrationRequiredAcknowledgement = null
 			this.migrationBlockedMessage = null
@@ -931,7 +965,17 @@ export const useEncryptionSuiteStore = defineStore('encryptionSuite', {
 				newPrivateKey: session.cryptoKey,
 			})
 
-			await this.finaliseMigration(migrationId, outcome)
+			// Completion's proof is over the OLD key, which resume already holds
+			// the password for — so a resumed run finalises without any extra
+			// prompt, exactly like the initiate path.
+			const completeProof = await buildKeyProofHeaders({
+				suiteId: this.migrationStatus.oldSuiteId,
+				purpose: PROOF_PURPOSE.COMPLETE_MIGRATION,
+				encryptedPrivateKey: oldSuite.privateKey,
+				masterPassword: oldPassword,
+				boundValues: [migrationId],
+			})
+			await this.finaliseMigration(migrationId, outcome, completeProof)
 
 			return outcome
 		},

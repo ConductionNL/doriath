@@ -27,6 +27,8 @@ namespace OCA\Keepiq\Tests\Unit\Middleware;
 
 use OCA\Keepiq\Attribute\VaultKeyProofRequired;
 use OCA\Keepiq\Db\EncryptionSuite;
+use OCA\Keepiq\Db\SuiteMigration;
+use OCA\Keepiq\Db\SuiteMigrationMapper;
 use OCA\Keepiq\Exception\KeyProofRequiredException;
 use OCA\Keepiq\Middleware\VaultKeyProofMiddleware;
 use OCA\Keepiq\Service\EncryptionSuiteService;
@@ -51,6 +53,10 @@ class GuardFixtureController extends Controller {
 	public function guardedRouteParam(): void {
 	}
 
+	#[VaultKeyProofRequired(binds: ['id'], subject: 'migrationOldSuite', purpose: 'complete-migration')]
+	public function guardedMigrationOldSuite(): void {
+	}
+
 	public function unguarded(): void {
 	}
 }//end class
@@ -63,6 +69,7 @@ class VaultKeyProofMiddlewareTest extends TestCase {
 	private IUserSession $userSession;
 	private EncryptionSuiteService $suiteService;
 	private VaultKeyProofService $proofService;
+	private SuiteMigrationMapper $migrationMapper;
 	private VaultKeyProofMiddleware $middleware;
 	private GuardFixtureController $controller;
 
@@ -76,6 +83,7 @@ class VaultKeyProofMiddlewareTest extends TestCase {
 		$this->userSession = $this->createMock(IUserSession::class);
 		$this->suiteService = $this->createMock(EncryptionSuiteService::class);
 		$this->proofService = $this->createMock(VaultKeyProofService::class);
+		$this->migrationMapper = $this->createMock(SuiteMigrationMapper::class);
 
 		$user = $this->createMock(IUser::class);
 		$user->method('getUID')->willReturn('alice');
@@ -86,6 +94,7 @@ class VaultKeyProofMiddlewareTest extends TestCase {
 			userSession: $this->userSession,
 			suiteService: $this->suiteService,
 			proofService: $this->proofService,
+			migrationMapper: $this->migrationMapper,
 		);
 
 		$this->controller = new GuardFixtureController('keepiq', $this->request);
@@ -122,6 +131,26 @@ class VaultKeyProofMiddlewareTest extends TestCase {
 
 		$this->middleware->beforeController($this->controller, 'guardedActive');
 	}//end testActiveSubjectResolvesAndTheProofIsVerifiedWithTheBoundValues()
+
+	public function testMigrationOldSuiteSubjectVerifiesAgainstTheOldSuiteKey(): void {
+		$migration = new SuiteMigration();
+		$migration->setOldSuiteId('old-suite');
+		$this->migrationMapper->method('findById')->with('migr-1')->willReturn($migration);
+		$this->suiteService->method('getSuite')
+			->with('old-suite')
+			->willReturn($this->suiteWithCertificate('OLD-CERT'));
+
+		$this->request->method('getHeader')->willReturnMap([
+			['X-Keepiq-Key-Proof-Nonce', 'the-nonce'],
+			['X-Keepiq-Key-Proof', 'the-sig'],
+		]);
+		$this->request->method('getParam')->willReturnMap([['id', '', 'migr-1']]);
+
+		$this->proofService->expects($this->once())->method('verify')
+			->with('the-nonce', 'the-sig', 'OLD-CERT', 'alice', 'complete-migration', ['migr-1']);
+
+		$this->middleware->beforeController($this->controller, 'guardedMigrationOldSuite');
+	}//end testMigrationOldSuiteSubjectVerifiesAgainstTheOldSuiteKey()
 
 	public function testRouteParamSubjectRefusesAForeignSuite(): void {
 		$foreign = $this->suiteWithCertificate('CERT-PEM');

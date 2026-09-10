@@ -44,8 +44,8 @@ Section 3 (abort) is independently useful and can be split into its own PR if th
 - [x] 4.4 Add a shared client helper that fetches a challenge, prompts for the master password, produces the proof, and sets the `X-Keepiq-Key-Proof` header — so the four call sites do not each re-implement it
 - [x] 4.5 Wire `src/components/CompromiseRecoveryForm.vue` (recovery start, and the completion call) through the helper
 - [x] 4.6 Wire the routine master-password change flow through the helper; verify the old private key is materialised at that point (design "Risks" — if it is not, stop and raise before proceeding)
-- [ ] 4.7 REMAINING — wire the emergency-contact delete through the helper. Needs a master-password prompt at the delete point (the delete action has no password in hand), so it is a UI change, not just a store change
-- [ ] 4.8 REMAINING — handle `403 key_proof_required` as a re-enter-and-retry prompt. Also covers the resume path's completion: resume asks only for the OLD password, but completion's proof is over the NEW suite key, so a current-password prompt is needed there too
+- [x] 4.7 Wired the emergency-contact delete through the helper: `emergencyAccess.revoke(id, masterPassword)` builds a proof (subject active, bound to the contact id) and `EmergencyAccessView` gained a master-password confirm dialog before it
+- [x] 4.8 Completion's proof is now over the OLD key (new middleware subject `migrationOldSuite`), which both the initiate and resume paths already hold the password for — so resume-completion needs no new prompt. The acknowledgement ("Finish anyway") path builds the proof from the retained/re-entered old password, and the form re-shows the password field on a `key_proof_required` refusal
 
 ## 5. Apply The Guard (must not precede section 4)
 
