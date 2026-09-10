@@ -419,6 +419,65 @@ class EncryptionSuiteControllerTest extends TestCase {
 	}//end testRevokeRefusesAnotherUsersSuiteAndNeverCallsTheService()
 
 	/**
+	 * Test revoke refuses an APPLICATION-owned suite and never calls the service.
+	 *
+	 * These are user self-service endpoints, so the only suite a session may act
+	 * on is its own. The previous ownership guard only compared ids when
+	 * `ownerType === 'user'`, so an application suite fell straight through it and
+	 * any authenticated non-admin could revoke it by id — locking that
+	 * application out of its own vault, since a revoked suite blocks every read.
+	 * This is the same class of hole `testRevokeRefusesAnotherUsersSuiteAnd...`
+	 * closes for user suites, one owner type over.
+	 *
+	 * @return void
+	 */
+	public function testRevokeRefusesAnApplicationSuiteAndNeverCallsTheService(): void {
+		$appSuite = new EncryptionSuite();
+		$appSuite->setId('suite-app-1');
+		$appSuite->setOwnerType('application');
+		$appSuite->setOwnerId('some-application');
+		$appSuite->setStatus('active');
+
+		$this->suiteService->method('getSuite')
+			->with('suite-app-1')
+			->willReturn($appSuite);
+		$this->suiteService->expects($this->never())->method('revokeSuite');
+
+		$response = $this->controller->revoke('suite-app-1', 'attacker revokes an app they do not own');
+
+		$this->assertSame(expected: Http::STATUS_FORBIDDEN, actual: $response->getStatus());
+		$this->assertStringContainsString(
+			needle: 'Access denied',
+			haystack: $response->getData()['message']
+		);
+	}//end testRevokeRefusesAnApplicationSuiteAndNeverCallsTheService()
+
+	/**
+	 * Test updatePrivateKey refuses an APPLICATION-owned suite.
+	 *
+	 * The same guard protects the in-place envelope overwrite: without the fix a
+	 * non-admin could write to an application suite's row through this endpoint.
+	 *
+	 * @return void
+	 */
+	public function testUpdatePrivateKeyRefusesAnApplicationSuite(): void {
+		$appSuite = new EncryptionSuite();
+		$appSuite->setId('suite-app-2');
+		$appSuite->setOwnerType('application');
+		$appSuite->setOwnerId('some-application');
+		$appSuite->setStatus('active');
+
+		$this->suiteService->method('getSuite')
+			->with('suite-app-2')
+			->willReturn($appSuite);
+		$this->suiteService->expects($this->never())->method('updateSuite');
+
+		$response = $this->controller->updatePrivateKey('suite-app-2', 'AAAA');
+
+		$this->assertSame(expected: Http::STATUS_FORBIDDEN, actual: $response->getStatus());
+	}//end testUpdatePrivateKeyRefusesAnApplicationSuite()
+
+	/**
 	 * Test reinstate returns reinstated suite.
 	 *
 	 * @return void
