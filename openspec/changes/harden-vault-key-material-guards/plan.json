@@ -1,0 +1,434 @@
+{
+  "change": "harden-vault-key-material-guards",
+  "project": "keepiq",
+  "repo": "ConductionNL/keepiq",
+  "base_branch": "development",
+  "feature_branch": "feature/673/harden-vault-key-material-guards",
+  "created": "2026-09-10",
+  "tracking_issue": 673,
+  "tasks": [
+    {
+      "id": 1,
+      "num": "1.1",
+      "title": "Create `lib/Attribute/VaultKeyProofRequired.php`: `#[Attribute(Attribute::TARGET_METHOD)]`, constructor `array $binds = []`, `string $subject = 'active'`; SPDX header per `contribute/HowToApplyALicense.md`",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 2,
+      "num": "1.2",
+      "title": "Create `lib/Service/VaultKeyProofService.php` with `issueChallenge(string $userId, string $purpose): array` returning `{nonce, expiresAt}` \u2014 nonce is `base64(ISecureRandom bytes) . '.' . HMAC(instance secret, random|uid|purpose|exp)`; no storage",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 3,
+      "num": "1.3",
+      "title": "Implement `VaultKeyProofService::verify(string $nonce, string $signature, string $publicKeyPem, string $userId, string $purpose, array $boundValues): void` \u2014 validate the HMAC, validate the expiry, rebuild the payload as `nonce || sha256(v1) || \u2026 || sha256(vn)` in declared order, verify with `openssl_verify` against the stored public key; throw a typed exception on every failure path with no distinction leaked to the caller",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 4,
+      "num": "1.4",
+      "title": "Do NOT use `ICacheFactory` for challenge state (design D5 \u2014 a null cache on a default install would make the guarded flows unusable). Assert this in review",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 5,
+      "num": "1.5",
+      "title": "Create `lib/Middleware/VaultKeyProofMiddleware.php` following `JwtAuthMiddleware`: `beforeController` reads the attribute via `new ReflectionMethod($controller, $methodName)`, resolves the subject suite (`'active'` \u2192 the session user's active suite via `EncryptionSuiteService::getActiveSuite`; `'routeParam:<name>'` \u2192 `IRequest::getParam`), collects the bound values via `IRequest::getParam`, reads `X-Keepiq-Key-Proof`, and delegates to the service",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 6,
+      "num": "1.6",
+      "title": "Implement `afterException` returning `403` with `['error' => 'key_proof_required', 'message' => \u2026]`; re-throw anything that is not the guard's own exception, as `JwtAuthMiddleware` does",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 7,
+      "num": "1.7",
+      "title": "Middleware MUST NOT consult `IUserSession` backends, token scopes or `IPasswordConfirmationBackend` \u2014 no SSO/app-password carve-out (spec: *the guard is not waived*). Add an explanatory comment citing the NC `PasswordConfirmationMiddleware` bypasses this deliberately does not copy",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 8,
+      "num": "1.8",
+      "title": "Register in `lib/AppInfo/PlatformIntegrationRegistrar.php` alongside `JwtAuthMiddleware::class`",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 9,
+      "num": "1.9",
+      "title": "Run phpcs/phpstan/phpmd \u2014 watch `CouplingBetweenObjects` on the middleware; keep crypto in the service, which is also what makes it unit-testable",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 10,
+      "num": "2.1",
+      "title": "Add `proofChallenge(string $id)` to `EncryptionSuiteController` (`#[NoAdminRequired]`), returning `{nonce, expiresAt}` for the calling user and the requested purpose; validate suite ownership",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 11,
+      "num": "2.2",
+      "title": "Accept the purpose as a request parameter constrained to a known set (one per guarded operation); reject an unknown purpose",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 12,
+      "num": "2.3",
+      "title": "Register `['name' => 'encryptionSuite#proofChallenge', 'url' => '/api/v1/suites/{id}/proof-challenge', 'verb' => 'GET']` in `appinfo/routes.php`, before the SPA catch-all wildcard",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 13,
+      "num": "2.4",
+      "title": "The challenge endpoint itself MUST NOT carry `#[VaultKeyProofRequired]` \u2014 assert in the coverage test that it is on the deliberate-exclusion list",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 14,
+      "num": "3.1",
+      "title": "Add `MigrationService::abortMigration(string $migrationId): array` \u2014 refuse unless `in_progress`; refuse when any record has been committed to the new suite, reporting the count and pointing at resume; idempotent by status like `completeMigration`",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 15,
+      "num": "3.2",
+      "title": "On success: set status `aborted`, leave the old suite `active` and its records untouched, revoke the successor suite via `EncryptionSuiteService::revokeSuite`, clear failure accounting via `workService->clearFailureAccounting`, release the write lock",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 16,
+      "num": "3.3",
+      "title": "Create `SuiteMigrationAbortedEvent` and a listener that unlocks the SecretRequests locked by `SuiteMigrationStartedListener`",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 17,
+      "num": "3.4",
+      "title": "**Must not** dispatch `SuiteMigrationCompletedEvent` \u2014 that is what `EmergencyAccessSuiteRotationListener` consumes to invalidate recovery envelopes. Add a regression test asserting envelopes survive an abort",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 18,
+      "num": "3.5",
+      "title": "Add `MigrationController::abort(string $id)` (`#[NoAdminRequired]`) with the existing `requireOwnMigration` ownership check; **no** `#[VaultKeyProofRequired]` (design D6 \u2014 abort is restorative)",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 19,
+      "num": "3.6",
+      "title": "Register `['name' => 'migration#abort', 'url' => '/api/v1/migrations/{id}/abort', 'verb' => 'POST']`",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 20,
+      "num": "3.7",
+      "title": "Update the refusal text in `EncryptionSuiteController::compromiseRecovery()` so the promised \"abort\" now names a route that exists",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 21,
+      "num": "3.8",
+      "title": "Add an abort control to `src/components/MigrationResumeBanner.vue`, shown only while abort is still available, with copy stating that the old suite stays intact",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 22,
+      "num": "4.1",
+      "title": "Add `proveMasterPassword(encryptedPrivateKey, masterPassword, nonce, boundValues)` to `src/crypto/reauth.js`: decrypt the envelope via `decryptPrivateKey` (`src/crypto/aes.js:79`), re-import the PKCS#8 bytes with `['sign']` usage, sign `nonce || sha256(v1) || \u2026`, return the signature",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 23,
+      "num": "4.2",
+      "title": "Discard the derived AES key, the raw PKCS#8 bytes and the signing key immediately after signing; never return, store or cache them (spec: *the signing key does not outlive the proof*). Keep `verifyMasterPassword` as-is for the three existing advisory call sites \u2014 they are out of scope for this change",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 24,
+      "num": "4.3",
+      "title": "Confirm the signing key is imported with `['sign']` only and is NOT the session `CryptoKey`; add a unit test asserting the session key (`src/crypto/rsa.js:61-66`) remains non-extractable and `['decrypt']`-only",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 25,
+      "num": "4.4",
+      "title": "Add a shared client helper that fetches a challenge, prompts for the master password, produces the proof, and sets the `X-Keepiq-Key-Proof` header \u2014 so the four call sites do not each re-implement it",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 26,
+      "num": "4.5",
+      "title": "Wire `src/components/CompromiseRecoveryForm.vue` (recovery start, and the completion call) through the helper",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 27,
+      "num": "4.6",
+      "title": "Wire the routine master-password change flow through the helper; verify the old private key is materialised at that point (design \"Risks\" \u2014 if it is not, stop and raise before proceeding)",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 28,
+      "num": "4.7",
+      "title": "Wire the emergency-contact delete action in `src/views/EmergencyAccessView.vue` / `src/store/modules/emergencyAccess.js` through the helper",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 29,
+      "num": "4.8",
+      "title": "Handle `403 key_proof_required` as \"re-enter your master password and retry\", not as a terminal error",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 30,
+      "num": "5.1",
+      "title": "`EncryptionSuiteController::compromiseRecovery` \u2192 `#[VaultKeyProofRequired(binds: ['publicKey', 'encryptedPrivateKey'])]`",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 31,
+      "num": "5.2",
+      "title": "`EncryptionSuiteController::updatePrivateKey` \u2192 `#[VaultKeyProofRequired(binds: ['encryptedPrivateKey'], subject: 'routeParam:id')]`",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 32,
+      "num": "5.3",
+      "title": "`MigrationController::complete` \u2192 `#[VaultKeyProofRequired]` (defence in depth; the acknowledgement stays \u2014 they answer different questions)",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 33,
+      "num": "5.4",
+      "title": "`EmergencyAccessController::destroy` \u2192 `#[VaultKeyProofRequired]`",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 34,
+      "num": "5.5",
+      "title": "Create `tests/Unit/Controller/VaultKeyProofAttributesTest.php` in the shape of `RateLimitAttributesTest`: a provider enumerating the four methods with their expected `binds` and `subject`, asserting each by reflection; plus a deliberate-exclusion list (abort, proof-challenge) with the reason recorded per entry",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 35,
+      "num": "6.1",
+      "title": "`tests/Unit/Service/VaultKeyProofServiceTest.php`: valid proof passes; wrong key fails; altered bound value fails; altered nonce fails; expired nonce fails (injected `ITimeFactory`); wrong purpose fails; proof for one parameter set rejected against another",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 36,
+      "num": "6.2",
+      "title": "`tests/Unit/Middleware/VaultKeyProofMiddlewareTest.php`: attribute absent \u2192 pass-through; attribute present without header \u2192 403 `key_proof_required`; `subject: 'active'` and `'routeParam:id'` both resolve; `afterException` re-throws foreign exceptions",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 37,
+      "num": "6.3",
+      "title": "Cross-implementation round-trip: sign with WebCrypto in a JS test, verify with `openssl_verify` in PHPUnit (config rule: *test cross-implementation encryption round-trips*)",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 38,
+      "num": "6.4",
+      "title": "`MigrationServiceTest`: abort on an untouched migration; abort refused after a commit with the count reported; abort idempotent by status; emergency-access envelopes unchanged after abort; completed event NOT dispatched",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 39,
+      "num": "6.5",
+      "title": "`EncryptionSuiteControllerTest` / `MigrationControllerTest` / `EmergencyAccessControllerTest`: the four guarded routes refuse without a proof and proceed with one",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 40,
+      "num": "6.6",
+      "title": "Regression test for the bypass in proposal finding 2: committing ciphertext for every record and completing MUST now be refused at the recovery entry point without a proof",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 41,
+      "num": "6.7",
+      "title": "Frontend unit tests for `proveMasterPassword` (signature verifies against the suite public key; keys discarded) and for the 403 retry path",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 42,
+      "num": "7.1",
+      "title": "Run the hydra gates locally: route-auth (two new routes), no-admin-idor, gate-16 spec-coverage, gate-113 exclusion-evidence (every `@e2e exclude` in this change carries a reason). Note the known pre-existing `no-admin-idor` debt on `development` is not introduced here",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 43,
+      "num": "7.2",
+      "title": "Confirm gate-110 does not apply (no migration added) \u2014 if a migration is introduced after all, bump `appinfo/info.xml` `<version>` from `0.3.1`",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 44,
+      "num": "7.3",
+      "title": "Document the guard in `docs/ARCHITECTURE.md`: the attribute contract, the sign-not-decrypt rationale (design D2), and the rule that a new destructive route must be added to `VaultKeyProofAttributesTest`",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 45,
+      "num": "7.4",
+      "title": "Every commit carries `Assisted-by: ClaudeCode:claude-opus-5`. Do NOT add `Signed-off-by` \u2014 only the human contributor certifies the DCO",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 46,
+      "num": "7.5",
+      "title": "The PR description discloses AI tool use, in the contributor's own words, and links issue #395",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 47,
+      "num": "7.6",
+      "title": "Before opening: re-read #395's \"Verification status\" \u2014 the chain was never executed end to end. Reproduce the lockout on a throwaway account against pre-fix code, then confirm the same steps are refused post-fix. This is the issue's own first task and it is still outstanding",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    }
+  ]
+}
