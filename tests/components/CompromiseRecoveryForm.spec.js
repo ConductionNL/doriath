@@ -138,9 +138,9 @@ describe('CompromiseRecoveryForm', () => {
 		}
 		await wrapper.vm.$nextTick()
 
-		expect(wrapper.find('[data-testid="compromise-recovery-residual"]').exists()).toBe(
-			false,
-		)
+		expect(
+			wrapper.find('[data-testid="compromise-recovery-residual"]').exists(),
+		).toBe(false)
 		expect(wrapper.text()).not.toContain('could not be carried across')
 	})
 

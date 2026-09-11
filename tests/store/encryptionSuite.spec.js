@@ -99,7 +99,10 @@ describe('useEncryptionSuiteStore — revocation', () => {
 		vi.spyOn(axios, 'post').mockRejectedValue({
 			response: {
 				status: 409,
-				data: { error: 'emergency_access_present', usableEmergencyContacts: 3 },
+				data: {
+					error: 'emergency_access_present',
+					usableEmergencyContacts: 3,
+				},
 			},
 		})
 		const store = useEncryptionSuiteStore()

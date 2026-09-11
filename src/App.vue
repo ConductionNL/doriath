@@ -834,12 +834,6 @@ export default {
 		},
 
 		/**
-		 * Revoke the current user's encryption suite from the app shell,
-		 * surfacing success/error state to the UI.
-		 *
-		 * @spec openspec/changes/retrofit-2026-05-25-doriath-coverage/tasks.md#task-7
-		 */
-		/**
 		 * Dismiss the revoke confirmation, clearing any emergency-loss prompt.
 		 *
 		 * @return {void}
@@ -850,6 +844,12 @@ export default {
 			this.revokeEmergencyCount = 0
 		},
 
+		/**
+		 * Revoke the current user's encryption suite from the app shell,
+		 * surfacing success/error state to the UI.
+		 *
+		 * @spec openspec/changes/retrofit-2026-05-25-doriath-coverage/tasks.md#task-7
+		 */
 		async handleRevoke(acceptEmergencyLoss = false) {
 			this.revoking = true
 			this.revokeError = null
