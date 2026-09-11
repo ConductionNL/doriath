@@ -585,6 +585,66 @@ All limits are keyed anonymously (per-IP) by Nextcloud's rate-limiter
 middleware, which is available since NC 24; Keepiq's `info.xml` floor
 (NC 31) already satisfies this.
 
+### 4.2 Vault-key proofs on destructive operations
+
+The always-E2E model (ADR-003) makes *reading* the vault cryptographically
+gated on the master password, but leaves *writing* gated only by the Nextcloud
+session, because writing a secret needs only the owner's public key. For the
+operations that can render vault contents or key material **permanently
+unreadable**, a session is not enough: those carry a **vault-key proof** — a
+signature, made with the owner's suite private key, over a server-issued
+challenge bound to the operation's own parameters. Because that private key is
+recoverable only by decrypting its envelope with the master password, a verified
+proof is a server-verifiable proof of the master password. This closes the
+session-only lockout (issue #395): a stolen cookie, leaked app password, or XSS
+in an unlocked tab can no longer destroy a vault.
+
+Enforced declaratively by `#[VaultKeyProofRequired(binds, subject, purpose)]`
+(`lib/Attribute/`) + `VaultKeyProofMiddleware`, with the crypto in
+`VaultKeyProofService`. The guarded routes:
+
+| Controller::method | `subject` | `binds` | `purpose` |
+|---|---|---|---|
+| `EncryptionSuiteController::compromiseRecovery` | `active` (old suite) | `publicKey`, `encryptedPrivateKey` | `compromise-recovery` |
+| `EncryptionSuiteController::updatePrivateKey` | `routeParam:id` | `encryptedPrivateKey` | `update-private-key` |
+| `MigrationController::complete` | `migrationOldSuite` | `id` | `complete-migration` |
+| `EmergencyAccessController::destroy` | `active` | `id` | `emergency-access-destroy` |
+
+Load-bearing design points — change these only deliberately:
+
+- **Sign, never decrypt.** The proof is a *signature*. A decrypt challenge would
+  be satisfiable by the session `CryptoKey`, which is imported non-extractable
+  and `['decrypt']`-only — so an unlocked tab (and thus injected script) could
+  answer it. Signing needs the raw private key, re-imported with `['sign']` from
+  bytes that exist only while the freshly entered master password is in hand.
+- **The attribute carries the binding.** The middleware cannot read the request
+  body (the framework decodes JSON and drops the raw bytes), so the proof
+  commits to *named* request parameters, each hashed and concatenated in
+  declared order. No JSON-canonicalisation agreement between JS and PHP is
+  needed; cross-language interop is pinned by `VaultKeyProofCrossImplTest`.
+- **Stateless, expiring challenges.** The nonce is HMAC-authenticated with the
+  instance secret over its random part, the caller, the purpose and an expiry —
+  no server-side store. Deliberately **not** `ICacheFactory`: a null cache on a
+  default install would break the flow. Single-use enforcement is unnecessary
+  because the signature commits to the operation's parameters, so a replay only
+  ever re-authorises the byte-identical operation.
+- **Not waived for any session type.** The middleware consults no auth backend
+  and no token scope, so it behaves identically on SSO, app-password and
+  ordinary sessions — its authority is key material, not the login method.
+- **`complete` proves the OLD key** (`migrationOldSuite`), not the new one: at
+  completion both suites are active so `active` is ambiguous, and the old key is
+  the one both the initiate and resume clients already hold the password for.
+- **Abort is deliberately unguarded.** `MigrationController::abort` is
+  restorative (it returns the vault to the still-active old suite), so requiring
+  a proof would leave a vault wedged by an unauthorised rotation wedged.
+
+**A new route that can irreversibly destroy vault data MUST be added to
+`tests/Unit/Controller/VaultKeyProofAttributesTest.php`.** A declarative guard
+fails *open* when it is omitted — nothing errors, the attribute is just absent —
+so that reflection test enumerates the guarded routes and fails the build if one
+loses its attribute or has its binding/subject/purpose loosened. The test also
+carries a documented exclusion list (`proofChallenge`, `abort`).
+
 ## 5. Open Research Questions
 
 1. **Application API authentication** — RFC 7523 (JWT Bearer / Private Key JWT) is the lean for how approved applications authenticate to retrieve secrets. Uses existing RSA key infrastructure, short-lived tokens, no new credential. Needs team discussion before finalizing. See [application-mgmt spec](../openspec/specs/application-mgmt/spec.md).

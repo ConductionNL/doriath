@@ -693,4 +693,46 @@ class MigrationWorkServiceTest extends TestCase {
 			array_keys($record)
 		);
 	}//end testListWorkCarriesCiphertextOnly()
+
+	/**
+	 * countCommitted sums the owner's rows now on the NEW suite across the three
+	 * suite-bound stores — the count the abort gate uses to decide whether any
+	 * record has already moved.
+	 *
+	 * @return void
+	 */
+	public function testCountCommittedSumsNewSuiteRowsAcrossStores(): void {
+		$migration = new SuiteMigration();
+		$migration->setId('migration-1');
+		$migration->setOldSuiteId('old-suite');
+		$migration->setNewSuiteId('new-suite');
+
+		$this->secretMapper->method('countBySuiteForOwner')
+			->with('new-suite', 'user', 'alice')->willReturn(2);
+		$this->versionMapper->method('countBySuiteForOwner')
+			->with('new-suite', 'user', 'alice')->willReturn(1);
+		$this->grantMapper->method('countBySuiteForRecipient')
+			->with('new-suite', 'user', 'alice')->willReturn(3);
+
+		$this->assertSame(6, $this->service->countCommitted($migration, 'alice'));
+	}//end testCountCommittedSumsNewSuiteRowsAcrossStores()
+
+	/**
+	 * Nothing on the new suite means nothing has been committed — the state in
+	 * which abort is allowed.
+	 *
+	 * @return void
+	 */
+	public function testCountCommittedIsZeroWhenNothingMoved(): void {
+		$migration = new SuiteMigration();
+		$migration->setId('migration-1');
+		$migration->setOldSuiteId('old-suite');
+		$migration->setNewSuiteId('new-suite');
+
+		$this->secretMapper->method('countBySuiteForOwner')->willReturn(0);
+		$this->versionMapper->method('countBySuiteForOwner')->willReturn(0);
+		$this->grantMapper->method('countBySuiteForRecipient')->willReturn(0);
+
+		$this->assertSame(0, $this->service->countCommitted($migration, 'alice'));
+	}//end testCountCommittedIsZeroWhenNothingMoved()
 }//end class

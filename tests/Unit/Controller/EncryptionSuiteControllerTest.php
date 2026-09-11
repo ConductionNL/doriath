@@ -26,6 +26,7 @@ use OCA\Keepiq\Db\SuiteMigration;
 use OCA\Keepiq\Exception\ConflictException;
 use OCA\Keepiq\Service\EncryptionSuiteService;
 use OCA\Keepiq\Service\MigrationService;
+use OCA\Keepiq\Service\VaultKeyProofService;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
 use OCP\IRequest;
@@ -62,6 +63,13 @@ class EncryptionSuiteControllerTest extends TestCase {
 	private MigrationService&MockObject $migrationService;
 
 	/**
+	 * The mocked vault-key-proof service.
+	 *
+	 * @var VaultKeyProofService&MockObject
+	 */
+	private VaultKeyProofService&MockObject $proofService;
+
+	/**
 	 * The mocked user session.
 	 *
 	 * @var IUserSession&MockObject
@@ -80,6 +88,7 @@ class EncryptionSuiteControllerTest extends TestCase {
 		$this->suiteService = $this->createMock(originalClassName: EncryptionSuiteService::class);
 		$this->migrationService = $this->createMock(originalClassName: MigrationService::class);
 		$this->userSession = $this->createMock(originalClassName: IUserSession::class);
+		$this->proofService = $this->createMock(originalClassName: VaultKeyProofService::class);
 
 		$user = $this->createMock(originalClassName: IUser::class);
 		$user->method('getUID')->willReturn('testuser');
@@ -90,6 +99,7 @@ class EncryptionSuiteControllerTest extends TestCase {
 			suiteService: $this->suiteService,
 			migrationService: $this->migrationService,
 			userSession: $this->userSession,
+			proofService: $this->proofService,
 		);
 	}//end setUp()
 
@@ -626,4 +636,58 @@ class EncryptionSuiteControllerTest extends TestCase {
 
 		$this->assertSame(expected: Http::STATUS_CREATED, actual: $response->getStatus());
 	}//end testCompromiseRecoveryLeavesTerminalWorkToCompletion()
+
+	/**
+	 * proofChallenge issues a challenge for a valid purpose on an owned suite.
+	 *
+	 * @return void
+	 */
+	public function testProofChallengeIssuesForAValidPurpose(): void {
+		$suite = new EncryptionSuite();
+		$suite->setId('suite-1');
+		$suite->setOwnerType('user');
+		$suite->setOwnerId('testuser');
+		$this->suiteService->method('getSuite')->with('suite-1')->willReturn($suite);
+
+		$this->proofService->method('issueChallenge')
+			->with('testuser', VaultKeyProofService::PURPOSE_COMPROMISE_RECOVERY)
+			->willReturn(['nonce' => 'n.mac', 'expiresAt' => 123]);
+
+		$response = $this->controller->proofChallenge('suite-1', VaultKeyProofService::PURPOSE_COMPROMISE_RECOVERY);
+
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$this->assertSame(expected: 'n.mac', actual: $response->getData()['nonce']);
+	}//end testProofChallengeIssuesForAValidPurpose()
+
+	/**
+	 * proofChallenge rejects a missing or unknown purpose with 400 and never
+	 * issues a challenge.
+	 *
+	 * @return void
+	 */
+	public function testProofChallengeRejectsAnUnknownPurpose(): void {
+		$this->proofService->expects($this->never())->method('issueChallenge');
+
+		$response = $this->controller->proofChallenge('suite-1', 'not-a-real-purpose');
+
+		$this->assertSame(expected: Http::STATUS_BAD_REQUEST, actual: $response->getStatus());
+	}//end testProofChallengeRejectsAnUnknownPurpose()
+
+	/**
+	 * proofChallenge refuses to issue against a suite the caller does not own.
+	 *
+	 * @return void
+	 */
+	public function testProofChallengeRefusesAForeignSuite(): void {
+		$foreign = new EncryptionSuite();
+		$foreign->setId('suite-1');
+		$foreign->setOwnerType('user');
+		$foreign->setOwnerId('someoneelse');
+		$this->suiteService->method('getSuite')->with('suite-1')->willReturn($foreign);
+		$this->proofService->expects($this->never())->method('issueChallenge');
+
+		$response = $this->controller->proofChallenge('suite-1', VaultKeyProofService::PURPOSE_UPDATE_PRIVATE_KEY);
+
+		$this->assertSame(expected: Http::STATUS_NOT_FOUND, actual: $response->getStatus());
+	}//end testProofChallengeRefusesAForeignSuite()
 }//end class

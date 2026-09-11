@@ -8,12 +8,16 @@ use OCA\Keepiq\Db\EncryptionSuite;
 use OCA\Keepiq\Db\EncryptionSuiteMapper;
 use OCA\Keepiq\Db\SuiteMigration;
 use OCA\Keepiq\Db\SuiteMigrationMapper;
+use OCA\Keepiq\Event\SuiteMigrationAbortedEvent;
+use OCA\Keepiq\Event\SuiteMigrationCompletedEvent;
+use OCA\Keepiq\Exception\MigrationAbortRefusedException;
 use OCA\Keepiq\Exception\MigrationIncompleteException;
 use OCA\Keepiq\Service\EncryptionSuiteService;
 use OCA\Keepiq\Service\LinkShareService;
 use OCA\Keepiq\Service\MigrationService;
 use OCA\Keepiq\Service\MigrationWorkService;
 use OCA\Keepiq\Service\WriteLockService;
+use OCP\EventDispatcher\IEventDispatcher;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -184,6 +188,144 @@ class MigrationServiceTest extends TestCase {
 
 		$this->assertFalse($this->service->isWriteLocked('user', 'testuser'));
 	}//end testIsNotWriteLockedWhenNoMigration()
+
+	/**
+	 * Aborting an untouched migration restores the old suite and discards the
+	 * successor by DELETING it (never revoking, which would cascade the
+	 * user-suite revocation side effects).
+	 *
+	 * @return void
+	 */
+	public function testAbortRestoresOldSuiteAndDeletesTheSuccessor(): void {
+		$migration = $this->arrangeAbortableMigration(committed: 0);
+
+		$this->migrationMapper->expects($this->once())->method('update');
+		// The successor is DELETED, not revoked — revokeSuite must never run.
+		$this->suiteMapper->expects($this->once())->method('delete');
+		$this->suiteService->expects($this->never())->method('revokeSuite');
+		$this->workService->expects($this->once())->method('clearFailureAccounting');
+
+		$result = $this->service->abortMigration('migration-1');
+
+		$this->assertTrue($result['aborted']);
+		$this->assertSame('aborted', $migration->getStatus());
+	}//end testAbortRestoresOldSuiteAndDeletesTheSuccessor()
+
+	/**
+	 * Once a record has been committed to the new suite, abort is refused and
+	 * reports the committed count; nothing is torn down.
+	 *
+	 * @return void
+	 */
+	public function testAbortRefusedAfterARecordHasBeenCommitted(): void {
+		$this->arrangeAbortableMigration(committed: 3);
+
+		$this->migrationMapper->expects($this->never())->method('update');
+		$this->suiteMapper->expects($this->never())->method('delete');
+
+		try {
+			$this->service->abortMigration('migration-1');
+			$this->fail('Expected MigrationAbortRefusedException');
+		} catch (MigrationAbortRefusedException $e) {
+			$this->assertSame(3, $e->getCommitted());
+		}
+	}//end testAbortRefusedAfterARecordHasBeenCommitted()
+
+	/**
+	 * Aborting an already-terminated migration is a no-op, not a second
+	 * teardown — mirrors completeMigration's idempotency guard.
+	 *
+	 * @return void
+	 */
+	public function testAbortingAnAlreadyTerminatedMigrationIsANoOp(): void {
+		$migration = new SuiteMigration();
+		$migration->setId('migration-1');
+		$migration->setOldSuiteId('old-suite');
+		$migration->setNewSuiteId('new-suite');
+		$migration->setStatus('completed');
+		$this->migrationMapper->method('findById')->willReturn($migration);
+
+		$this->migrationMapper->expects($this->never())->method('update');
+		$this->suiteMapper->expects($this->never())->method('delete');
+
+		$result = $this->service->abortMigration('migration-1');
+
+		$this->assertFalse($result['aborted']);
+		$this->assertTrue($result['alreadyTerminated']);
+	}//end testAbortingAnAlreadyTerminatedMigrationIsANoOp()
+
+	/**
+	 * Abort dispatches SuiteMigrationAbortedEvent and NEVER
+	 * SuiteMigrationCompletedEvent — the latter runs the terminal cascade
+	 * (compromise-flagging, link-share revocation, emergency-access
+	 * invalidation) that must not fire when nothing migrated.
+	 *
+	 * @return void
+	 */
+	public function testAbortDispatchesAbortedEventNotCompleted(): void {
+		$dispatcher = $this->createMock(IEventDispatcher::class);
+		$service = new MigrationService(
+			mapper: $this->migrationMapper,
+			suiteMapper: $this->suiteMapper,
+			suiteService: $this->suiteService,
+			linkShareService: $this->linkShareService,
+			workService: $this->workService,
+			writeLockService: $this->writeLockService,
+			logger: $this->createMock(LoggerInterface::class),
+			eventDispatcher: $dispatcher,
+		);
+		$this->arrangeAbortableMigration(committed: 0);
+
+		$dispatched = [];
+		$dispatcher->method('dispatchTyped')->willReturnCallback(
+			static function (object $event) use (&$dispatched): void {
+				$dispatched[] = $event::class;
+			}
+		);
+
+		$service->abortMigration('migration-1');
+
+		$this->assertContains(SuiteMigrationAbortedEvent::class, $dispatched);
+		$this->assertNotContains(SuiteMigrationCompletedEvent::class, $dispatched);
+	}//end testAbortDispatchesAbortedEventNotCompleted()
+
+	/**
+	 * Wire an in-progress, abortable migration: the old suite resolves to an
+	 * owner and the successor is a distinct suite so the delete path is
+	 * exercised. `committed` sets what countCommitted reports.
+	 *
+	 * @param int $committed How many records countCommitted should report
+	 *
+	 * @return SuiteMigration
+	 */
+	private function arrangeAbortableMigration(int $committed): SuiteMigration {
+		$migration = new SuiteMigration();
+		$migration->setId('migration-1');
+		$migration->setOldSuiteId('old-suite');
+		$migration->setNewSuiteId('new-suite');
+		$migration->setStatus('in_progress');
+		$this->migrationMapper->method('findById')->willReturn($migration);
+
+		$old = new EncryptionSuite();
+		$old->setId('old-suite');
+		$old->setOwnerType('user');
+		$old->setOwnerId('alice');
+
+		$successor = new EncryptionSuite();
+		$successor->setId('new-suite');
+		$successor->setOwnerType('user');
+		$successor->setOwnerId('alice');
+
+		$this->suiteMapper->method('findById')->willReturnCallback(
+			static function (string $id) use ($old, $successor): EncryptionSuite {
+				return ($id === 'new-suite') ? $successor : $old;
+			}
+		);
+
+		$this->workService->method('countCommitted')->willReturn($committed);
+
+		return $migration;
+	}//end arrangeAbortableMigration()
 
 	/**
 	 * Wire an in-progress migration whose old suite resolves to an owner, so

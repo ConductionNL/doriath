@@ -1,6 +1,14 @@
 OC.L10N.register(
     "keepiq",
     {
+        "Abort and keep my old key": "Abort and keep my old key",
+        "Aborting…": "Aborting…",
+        "Could not abort the rotation.": "Could not abort the rotation.",
+        "Could not revoke. Check your master password.": "Could not revoke. Check your master password.",
+        "Discards the new key and unlocks your vault under the old one. Only possible while nothing has been re-encrypted yet.": "Discards the new key and unlocks your vault under the old one. Only possible while nothing has been re-encrypted yet.",
+        "Re-enter your previous master password to finish": "Re-enter your previous master password to finish",
+        "Revoke emergency access": "Revoke emergency access",
+        "This deletes the recovery envelope for this contact. They will no longer be able to break glass unless you re-establish them.": "This deletes the recovery envelope for this contact. They will no longer be able to break glass unless you re-establish them.",
         "Getting started": "Aan de slag",
         "A short tour of the main screens. It takes under a minute, and you can close it at any point and pick it up again from the help menu.": "Een korte rondleiding langs de belangrijkste schermen. Het duurt minder dan een minuut en je kunt op elk moment stoppen en later verder gaan via het helpmenu.",
         "Open Dashboard from the menu.": "Open Dashboard via het menu.",

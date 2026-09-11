@@ -90,7 +90,7 @@
 					<NcButton
 						variant="error"
 						data-testid="emergency-revoke"
-						@click="revoke(c.id)">
+						@click="promptRevoke(c.id)">
 						{{ t('keepiq', 'Revoke') }}
 					</NcButton>
 				</li>
@@ -145,6 +145,18 @@
 				}}
 			</p>
 		</section>
+
+		<!-- Revoking deletes the recovery envelope, so it is guarded: confirm
+		     with the master password, which signs the proof and is never sent.
+		     The dialog lives in src/dialogs/ per ADR-004; the guard state it acts
+		     on stays here. -->
+		<EmergencyRevokeDialog
+			v-model:password="revokePassword"
+			:open="revokeTarget !== null"
+			:revoking="revoking"
+			:error="revokeError"
+			@close="cancelRevoke"
+			@confirm="confirmRevoke" />
 	</div>
 </template>
 
@@ -156,6 +168,7 @@ import {
 	NcSelect,
 	NcTextField,
 } from '@nextcloud/vue'
+import EmergencyRevokeDialog from '../dialogs/EmergencyRevokeDialog.vue'
 import { useEmergencyAccessStore } from '../store/modules/emergencyAccess.js'
 
 /**
@@ -176,6 +189,7 @@ export default {
 		NcPasswordField,
 		NcSelect,
 		NcEmptyContent,
+		EmergencyRevokeDialog,
 	},
 
 	data() {
@@ -187,6 +201,11 @@ export default {
 			busy: false,
 			error: '',
 			recovered: false,
+			/** @type {string|null} The contact id awaiting a revoke confirmation. */
+			revokeTarget: null,
+			revokePassword: '',
+			revoking: false,
+			revokeError: '',
 		}
 	},
 
@@ -270,14 +289,53 @@ export default {
 		},
 
 		/**
-		 * Revoke a designated contact.
+		 * Open the master-password confirmation for revoking a contact.
 		 *
 		 * @param {string} id The relationship ID.
-		 * @return {Promise<void>}
-		 * @spec openspec/changes/add-emergency-access/specs/emergency-access/spec.md#requirement-revoke-emergency-contact
+		 * @return {void}
+		 * @spec openspec/changes/harden-vault-key-material-guards/specs/emergency-access/spec.md#requirement-revoke-emergency-contact
 		 */
-		async revoke(id) {
-			await this.store.revoke(id)
+		promptRevoke(id) {
+			this.revokeTarget = id
+			this.revokePassword = ''
+			this.revokeError = ''
+		},
+
+		/**
+		 * Dismiss the revoke confirmation without acting.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/harden-vault-key-material-guards/specs/emergency-access/spec.md#requirement-revoke-emergency-contact
+		 */
+		cancelRevoke() {
+			this.revokeTarget = null
+			this.revokePassword = ''
+			this.revokeError = ''
+		},
+
+		/**
+		 * Revoke the pending contact, proving the master password.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/harden-vault-key-material-guards/specs/emergency-access/spec.md#requirement-revoke-emergency-contact
+		 */
+		async confirmRevoke() {
+			this.revoking = true
+			this.revokeError = ''
+			try {
+				await this.store.revoke(this.revokeTarget, this.revokePassword)
+				this.cancelRevoke()
+			} catch (e) {
+				this.revokeError =
+					e?.response?.data?.message
+					|| e?.message
+					|| this.t(
+						'keepiq',
+						'Could not revoke. Check your master password.',
+					)
+			} finally {
+				this.revoking = false
+			}
 		},
 
 		/**

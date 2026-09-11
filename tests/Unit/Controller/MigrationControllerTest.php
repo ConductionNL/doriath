@@ -25,6 +25,7 @@ use OCA\Keepiq\Db\EncryptionSuite;
 use OCA\Keepiq\Db\Secret;
 use OCA\Keepiq\Db\SuiteMigration;
 use OCA\Keepiq\Exception\ForbiddenException;
+use OCA\Keepiq\Exception\MigrationAbortRefusedException;
 use OCA\Keepiq\Exception\MigrationIncompleteException;
 use OCA\Keepiq\Exception\NotFoundException;
 use OCA\Keepiq\Service\EncryptionSuiteService;
@@ -244,6 +245,61 @@ class MigrationControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
 		$this->assertSame('completed_with_errors', $response->getData()['status']);
 	}//end testCompleteWithErrors()
+
+	/**
+	 * Abort delegates and returns the terminal result.
+	 *
+	 * @return void
+	 */
+	public function testAbortReturnsResult(): void {
+		$this->arrangeOwnMigration();
+
+		$aborted = new SuiteMigration();
+		$aborted->setId('migr-1');
+		$aborted->setStatus('aborted');
+		$this->migrationService->method('abortMigration')
+			->with('migr-1')
+			->willReturn($aborted->jsonSerialize() + ['aborted' => true]);
+
+		$response = $this->controller->abort('migr-1');
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertTrue($response->getData()['aborted']);
+		$this->assertSame('aborted', $response->getData()['status']);
+	}//end testAbortReturnsResult()
+
+	/**
+	 * Abort after a record has moved is a 409 that reports the committed count
+	 * and points at resuming, not a generic fault.
+	 *
+	 * @return void
+	 */
+	public function testAbortRefusedReturns409WithCommittedCount(): void {
+		$this->arrangeOwnMigration();
+
+		$this->migrationService->method('abortMigration')
+			->willThrowException((new MigrationAbortRefusedException('records moved'))->withCommitted(2));
+
+		$response = $this->controller->abort('migr-1');
+
+		$this->assertSame(Http::STATUS_CONFLICT, $response->getStatus());
+		$this->assertSame('migration_abort_refused', $response->getData()['error']);
+		$this->assertSame(2, $response->getData()['committed']);
+	}//end testAbortRefusedReturns409WithCommittedCount()
+
+	/**
+	 * Abort refuses another user's migration and never reaches the service.
+	 *
+	 * @return void
+	 */
+	public function testAbortForbiddenForAnotherUsersMigration(): void {
+		$this->arrangeForeignMigration();
+		$this->migrationService->expects($this->never())->method('abortMigration');
+
+		$response = $this->controller->abort('migr-1');
+
+		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
+	}//end testAbortForbiddenForAnotherUsersMigration()
 
 	/**
 	 * A missing migration is 404 on complete, as on every sibling endpoint.

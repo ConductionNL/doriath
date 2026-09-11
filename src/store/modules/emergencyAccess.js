@@ -23,6 +23,7 @@ import {
 	openRecoveryEnvelope,
 } from '../../crypto/emergencyEnvelope.js'
 import { decryptPrivateKey } from '../../crypto/index.js'
+import { buildKeyProofHeaders, PROOF_PURPOSE } from '../../crypto/keyProof.js'
 import { useSessionStore } from './session.js'
 
 export const useEmergencyAccessStore = defineStore('emergencyAccess', {
@@ -151,13 +152,29 @@ export const useEmergencyAccessStore = defineStore('emergencyAccess', {
 		/**
 		 * Revoke an emergency contact (grantor).
 		 *
+		 * Deleting a contact destroys its recovery envelope — the only break-glass
+		 * path that survives a private-key overwrite — so it carries a vault-key
+		 * proof: the caller must prove the master password. The password is used
+		 * only to sign and is never sent.
+		 *
 		 * @param {string} id The relationship ID.
+		 * @param {string} masterPassword The current master password, for the proof.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/add-emergency-access/specs/emergency-access/spec.md#requirement-revoke-emergency-contact
+		 * @spec openspec/changes/harden-vault-key-material-guards/specs/emergency-access/spec.md#requirement-revoke-emergency-contact
 		 */
-		async revoke(id) {
+		async revoke(id, masterPassword) {
+			const session = useSessionStore()
+			const headers = await buildKeyProofHeaders({
+				suiteId: session.suiteId,
+				purpose: PROOF_PURPOSE.EMERGENCY_DESTROY,
+				encryptedPrivateKey: session.encryptedPrivateKey,
+				masterPassword,
+				boundValues: [id],
+			})
+
 			await axios.delete(
 				generateUrl(`/apps/keepiq/api/v1/emergency-access/contacts/${id}`),
+				{ headers },
 			)
 			await this.fetchContacts()
 		},
