@@ -198,6 +198,35 @@
 					</li>
 				</ul>
 			</template>
+
+			<!-- Emergency contacts that could not be re-enveloped (the grantee
+			     had no reachable certificate) were invalidated by the completion
+			     sweep. Name them so the owner re-establishes exactly those; a
+			     rotation where every contact migrated shows nothing here. -->
+			<template v-if="residualContacts.length > 0">
+				<NcNoteCard
+					type="warning"
+					data-testid="compromise-recovery-residual">
+					{{
+						n(
+							'keepiq',
+							'Emergency access for %n contact could not be carried across and was removed. Re-establish it so they can still recover your vault.',
+							'Emergency access for %n contacts could not be carried across and was removed. Re-establish them so they can still recover your vault.',
+							residualContacts.length,
+						)
+					}}
+				</NcNoteCard>
+				<ul class="compromise-recovery-form__list">
+					<li
+						v-for="grantee in residualContacts"
+						:key="grantee"
+						data-testid="compromise-recovery-residual-item">
+						<span class="compromise-recovery-form__list-name">{{
+							grantee
+						}}</span>
+					</li>
+				</ul>
+			</template>
 		</template>
 
 		<NcButton
@@ -249,6 +278,19 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * Emergency contacts that could not be carried across the rotation and
+		 * were invalidated — the owner is prompted to re-establish exactly these.
+		 * Empty (so the block is hidden) when every contact migrated, on a resumed
+		 * run that cannot re-envelope, or before a run has terminated.
+		 *
+		 * @return {string[]} The residual grantee ids.
+		 * @spec openspec/changes/migrate-emergency-access-on-rotation/specs/emergency-access/spec.md#requirement-envelope-invalidation-on-key-change
+		 */
+		residualContacts() {
+			return this.result?.residualContacts ?? []
+		},
+
 		/**
 		 * Gate the compromise-recovery submit on matching, strength-valid input.
 		 *

@@ -109,6 +109,41 @@ describe('CompromiseRecoveryForm', () => {
 		expect(wrapper.text()).toContain('7 older versions were dropped')
 	})
 
+	it('prompts to re-establish exactly the emergency contacts that were lost', async () => {
+		const wrapper = mountForm()
+		wrapper.vm.phase = 'terminal'
+		wrapper.vm.result = {
+			migrated: 3,
+			droppedVersions: 0,
+			failures: [],
+			residualContacts: ['bob', 'carol'],
+		}
+		await wrapper.vm.$nextTick()
+
+		const text = wrapper.text()
+		expect(text).toContain('2 contacts could not be carried across')
+		expect(text).toContain('Re-establish')
+		expect(text).toContain('bob')
+		expect(text).toContain('carol')
+	})
+
+	it('says nothing about emergency access when every contact migrated', async () => {
+		const wrapper = mountForm()
+		wrapper.vm.phase = 'terminal'
+		wrapper.vm.result = {
+			migrated: 3,
+			droppedVersions: 0,
+			failures: [],
+			residualContacts: [],
+		}
+		await wrapper.vm.$nextTick()
+
+		expect(wrapper.find('[data-testid="compromise-recovery-residual"]').exists()).toBe(
+			false,
+		)
+		expect(wrapper.text()).not.toContain('could not be carried across')
+	})
+
 	it('shows live progress across all stores while running', async () => {
 		const store = useEncryptionSuiteStore()
 		store.migrationProgress = { done: 4, total: 10, phase: 'migrating' }

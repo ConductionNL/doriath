@@ -344,6 +344,32 @@ Tracks compromise recovery migrations.
 | `started_at` | datetime | — |
 | `completed_at` | datetime | Null while in progress |
 
+**Emergency-access recovery envelopes are a migrated store, not a casualty.**
+A compromise-recovery rotation re-encrypts every suite-bound store under the new
+key; emergency contacts are the one store not produced by decrypt-then-re-encrypt.
+The rotating owner holds the new private key and can fetch each grantee's current
+certificate, so the browser mints a *fresh* recovery envelope escrowing the new
+key (`buildRecoveryEnvelope` — a build, never a re-wrap of the old envelope) and
+re-points the contact to the new suite, keeping it `granted`
+(`MigrationController::reEnvelopeEmergencyContact` →
+`EmergencyEnvelopeInvalidationService::reEnvelopeForRotation`). The server cannot
+open the envelope (only the grantee can), so it shape-checks it and asserts the
+declared grantee suite is the grantee's *current* active suite rather than
+round-tripping it. Emergency contacts are deliberately **outside** the completion
+gate: a grantee with no reachable certificate can never be re-enveloped, and
+gating on one would wedge the vault, so such a contact is left on the old suite.
+
+`EmergencyEnvelopeInvalidationService::invalidateForGrantorRotation`, fired by
+`EmergencyAccessSuiteRotationListener` on `SuiteMigrationCompletedEvent`, is now a
+**residual sweep**, not a blanket invalidation: the re-enveloped contacts have
+already left the old suite, so the sweep finds only the residual (unreachable
+grantees), invalidates exactly those, and the client surfaces them for the owner
+to re-establish. Revocation still clears the envelopes outright — it produces no
+new key to migrate to — but `EncryptionSuiteController::revoke` now refuses while
+a usable emergency contact exists unless `acceptEmergencyLoss` is given, and the
+refusal surfaces the count (never the identities) so the destruction is a knowing
+choice.
+
 ### 3.3 Encryption Flow Summary
 
 ```

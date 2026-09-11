@@ -204,6 +204,25 @@
 											)
 										" />
 								</div>
+
+								<!-- The server refuses to silently delete a usable
+								     break-glass path; once it has, name the loss and
+								     the retrieve-first ordering before letting the
+								     user proceed with the deletion acknowledged. -->
+								<NcNoteCard
+									v-if="revokeEmergencyCount > 0"
+									type="error"
+									data-testid="revoke-emergency-warning">
+									{{
+										n(
+											'keepiq',
+											'This also permanently deletes emergency access for %n contact. If an emergency accessor exists, they must retrieve the secrets first, while this suite is still active.',
+											'This also permanently deletes emergency access for %n contacts. If an emergency accessor exists, they must retrieve the secrets first, while this suite is still active.',
+											revokeEmergencyCount,
+										)
+									}}
+								</NcNoteCard>
+
 								<div
 									style="
 										display: flex;
@@ -213,16 +232,27 @@
 									<NcButton
 										variant="error"
 										:disabled="!revokeReason || revoking"
-										@click="handleRevoke">
+										data-testid="revoke-confirm"
+										@click="
+											handleRevoke(revokeEmergencyCount > 0)
+										">
 										{{
 											revoking
 												? t('keepiq', 'Revoking…')
-												: t('keepiq', 'Confirm revocation')
+												: revokeEmergencyCount > 0
+													? t(
+															'keepiq',
+															'Revoke and delete emergency access',
+														)
+													: t(
+															'keepiq',
+															'Confirm revocation',
+														)
 										}}
 									</NcButton>
 									<NcButton
 										variant="secondary"
-										@click="revokeConfirm = false">
+										@click="cancelRevoke">
 										{{ t('keepiq', 'Cancel') }}
 									</NcButton>
 								</div>
@@ -454,6 +484,8 @@ export default {
 			revoking: false,
 			revokeSuccess: false,
 			revokeError: null,
+			/** @type {number} Usable emergency contacts the server refused to silently delete (0 = none seen). */
+			revokeEmergencyCount: 0,
 			timeoutOptions: [
 				{ value: 'session', label: ncT('keepiq', 'Nextcloud session') },
 				{ value: '10min', label: ncT('keepiq', '10 minutes') },
@@ -807,21 +839,47 @@ export default {
 		 *
 		 * @spec openspec/changes/retrofit-2026-05-25-doriath-coverage/tasks.md#task-7
 		 */
-		async handleRevoke() {
+		/**
+		 * Dismiss the revoke confirmation, clearing any emergency-loss prompt.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/migrate-emergency-access-on-rotation/specs/emergency-access/spec.md#requirement-envelope-invalidation-on-key-change
+		 */
+		cancelRevoke() {
+			this.revokeConfirm = false
+			this.revokeEmergencyCount = 0
+		},
+
+		async handleRevoke(acceptEmergencyLoss = false) {
 			this.revoking = true
 			this.revokeError = null
 			this.revokeSuccess = false
 
 			try {
-				await this.suiteStore.revokeSuite(this.revokeReason)
+				await this.suiteStore.revokeSuite(
+					this.revokeReason,
+					acceptEmergencyLoss,
+				)
 				this.revokeSuccess = true
 				this.revokeConfirm = false
 				this.revokeReason = ''
+				this.revokeEmergencyCount = 0
 			} catch (e) {
-				this.revokeError =
-					e.response?.data?.message
-					|| e.message
-					|| ncT('keepiq', 'Failed to revoke suite')
+				// The server refuses to silently delete a usable break-glass path.
+				// Surface the count (never identities) and let the user re-confirm
+				// with the loss acknowledged, rather than showing a generic error.
+				if (
+					e.response?.status === 409
+					&& e.response?.data?.error === 'emergency_access_present'
+				) {
+					this.revokeEmergencyCount =
+						e.response.data.usableEmergencyContacts || 1
+				} else {
+					this.revokeError =
+						e.response?.data?.message
+						|| e.message
+						|| ncT('keepiq', 'Failed to revoke suite')
+				}
 			} finally {
 				this.revoking = false
 			}

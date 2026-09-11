@@ -74,7 +74,44 @@ describe('useEncryptionSuiteStore — revocation', () => {
 		// revoked_at, revoked_reason and revoked_by. Dropping it here would
 		// still return 200 and still revoke, losing only the audit trail —
 		// which is exactly why it needs asserting rather than eyeballing.
-		expect(body).toEqual({ reason: 'laptop stolen' })
+		expect(body).toEqual({
+			reason: 'laptop stolen',
+			acceptEmergencyLoss: false,
+		})
+	})
+
+	it('carries the emergency-loss override in the body when confirmed', async () => {
+		const post = vi.spyOn(axios, 'post').mockResolvedValue({
+			data: { id: 'suite-1', status: 'revoked' },
+		})
+		const store = useEncryptionSuiteStore()
+		store.currentSuite = { id: 'suite-1', status: 'active' }
+
+		await store.revokeSuite('lost password', true)
+
+		expect(post.mock.calls[0][1]).toEqual({
+			reason: 'lost password',
+			acceptEmergencyLoss: true,
+		})
+	})
+
+	it('propagates the 409 emergency-access refusal for the caller to surface', async () => {
+		vi.spyOn(axios, 'post').mockRejectedValue({
+			response: {
+				status: 409,
+				data: { error: 'emergency_access_present', usableEmergencyContacts: 3 },
+			},
+		})
+		const store = useEncryptionSuiteStore()
+		store.currentSuite = { id: 'suite-1', status: 'active' }
+
+		// The refusal must reach the UI so it can show the count and re-confirm —
+		// never be swallowed into a silent success.
+		await expect(store.revokeSuite('lost password')).rejects.toMatchObject({
+			response: { data: { usableEmergencyContacts: 3 } },
+		})
+		// The refused revocation must not evict the still-valid offline cache.
+		expect(evict).not.toHaveBeenCalled()
 	})
 
 	it('adopts the revoked suite returned by the server as the current suite', async () => {
