@@ -112,13 +112,23 @@
 				</li>
 			</ul>
 
+			<!-- Finishing carries a proof over the old key. When the run was
+			     resumed (the old password is not retained) re-ask for it. -->
+			<NcPasswordField
+				v-if="needsReauth"
+				v-model="oldPassword"
+				:label="
+					t('keepiq', 'Re-enter your previous master password to finish')
+				"
+				:disabled="loading" />
+
 			<div class="compromise-recovery-form__actions">
 				<NcButton :disabled="loading" @click="handleRetry">
 					{{ t('keepiq', 'Try these again') }}
 				</NcButton>
 				<NcButton
 					variant="error"
-					:disabled="loading"
+					:disabled="loading || (needsReauth && oldPassword === '')"
 					@click="handleAcceptLosses">
 					{{
 						n(
@@ -233,6 +243,8 @@ export default {
 			result: null,
 			/** @type {string|null} Retained so a retry can resume without re-asking. */
 			activeOldPassword: null,
+			/** @type {boolean} Show the re-auth field when completion needs a fresh proof. */
+			needsReauth: false,
 		}
 	},
 
@@ -484,13 +496,29 @@ export default {
 				// server counts distinct records currently failed and compares
 				// with a strict `===`. Sending the list length made every click
 				// refused and left the vault write-locked with no way out.
-				await store.acceptMigrationLosses(store.migrationStatus?.id)
+				//
+				// Completion carries a vault-key proof over the OLD key. The old
+				// password is retained from the run when it started here; on a
+				// resumed run it is not, so the field below is re-shown.
+				await store.acceptMigrationLosses(
+					store.migrationStatus?.id,
+					this.activeOldPassword || this.oldPassword,
+				)
+				this.needsReauth = false
 				this.result = {
 					...(this.result ?? { migrated: 0, droppedVersions: 0 }),
 					failures: this.unrecoverable,
 				}
 				this.phase = 'terminal'
 			} catch (e) {
+				// A guard refusal (or a missing password) means: re-enter and
+				// retry, not a dead end. Surface the password field.
+				if (
+					e?.code === 'key_proof_required'
+					|| e?.response?.data?.error === 'key_proof_required'
+				) {
+					this.needsReauth = true
+				}
 				this.error = this.describe(e)
 			} finally {
 				this.loading = false

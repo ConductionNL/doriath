@@ -195,11 +195,14 @@ describe('CompromiseRecoveryForm', () => {
 		const accept = vi.spyOn(store, 'acceptMigrationLosses').mockResolvedValue({})
 
 		const wrapper = mountForm()
+		// The retained old password is passed so completion can build its
+		// vault-key proof over the old key; the count still comes from the store.
+		wrapper.vm.activeOldPassword = 'old-pw'
 		await wrapper.vm.handleAcceptLosses()
 
-		// Called with the id alone: the action reads the authoritative number
-		// from the store rather than being handed a count derived here.
-		expect(accept).toHaveBeenCalledWith('migration-1')
+		// Called with the id and the retained password: the action reads the
+		// authoritative count from the store rather than being handed one here.
+		expect(accept).toHaveBeenCalledWith('migration-1', 'old-pw')
 		expect(wrapper.vm.phase).toBe('terminal')
 	})
 

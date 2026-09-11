@@ -23,13 +23,16 @@ namespace OCA\Keepiq\Controller;
 
 use Exception;
 use OCA\Keepiq\AppInfo\Application;
+use OCA\Keepiq\Attribute\VaultKeyProofRequired;
 use OCA\Keepiq\Db\SuiteMigration;
 use OCA\Keepiq\Exception\ForbiddenException;
+use OCA\Keepiq\Exception\MigrationAbortRefusedException;
 use OCA\Keepiq\Exception\MigrationIncompleteException;
 use OCA\Keepiq\Exception\NotFoundException;
 use OCA\Keepiq\Service\EncryptionSuiteService;
 use OCA\Keepiq\Service\MigrationService;
 use OCA\Keepiq\Service\MigrationWorkService;
+use OCA\Keepiq\Service\VaultKeyProofService;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -114,6 +117,11 @@ class MigrationController extends OCSController {
 	 * @spec openspec/changes/retrofit-2026-05-25-doriath-coverage/tasks.md#task-4
 	 */
 	#[NoAdminRequired]
+	#[VaultKeyProofRequired(
+		binds: ['id'],
+		subject: 'migrationOldSuite',
+		purpose: VaultKeyProofService::PURPOSE_COMPLETE_MIGRATION
+	)]
 	public function complete(string $id, bool $hasErrors = false, ?int $acceptUnrecoverable = null): JSONResponse {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
@@ -171,6 +179,55 @@ class MigrationController extends OCSController {
 			);
 		}//end try
 	}//end complete()
+
+	/**
+	 * Abort a migration, returning the vault to the old suite.
+	 *
+	 * The endpoint the `compromiseRecovery` refusal already tells users to use.
+	 * Non-destructive: it discards the unused successor and leaves the old suite
+	 * active. Permitted only while no record has been committed to the new suite;
+	 * once records have moved the server refuses and points at resuming.
+	 *
+	 * @param string $id The migration ID
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @return JSONResponse
+	 *
+	 * @spec openspec/changes/harden-vault-key-material-guards/specs/encryption-suites/spec.md#requirement-a-migration-can-be-aborted-before-any-record-moves
+	 */
+	#[NoAdminRequired]
+	public function abort(string $id): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(data: ['message' => 'Unauthorized'], statusCode: Http::STATUS_UNAUTHORIZED);
+		}
+
+		try {
+			$this->requireOwnMigration(migrationId: $id, userId: $user->getUID());
+
+			$result = $this->migrationService->abortMigration(migrationId: $id);
+			return new JSONResponse(data: $result);
+		} catch (ForbiddenException $e) {
+			return new JSONResponse(data: ['message' => $e->getMessage()], statusCode: Http::STATUS_FORBIDDEN);
+		} catch (MigrationAbortRefusedException $e) {
+			// The migration is intact and resumable — a record has already
+			// moved, so abort would lose data. Distinct from a generic fault so
+			// the client offers "resume", not "try abort again".
+			return new JSONResponse(
+				data: [
+					'error' => 'migration_abort_refused',
+					'message' => $e->getMessage(),
+					'committed' => $e->getCommitted(),
+				],
+				statusCode: Http::STATUS_CONFLICT
+			);
+		} catch (NotFoundException $e) {
+			return new JSONResponse(data: ['message' => $e->getMessage()], statusCode: Http::STATUS_NOT_FOUND);
+		} catch (Exception $e) {
+			return new JSONResponse(data: ['message' => $e->getMessage()], statusCode: Http::STATUS_BAD_REQUEST);
+		}//end try
+	}//end abort()
 
 	/**
 	 * List the records still bound to the migration's old suite.

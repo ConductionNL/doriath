@@ -24,12 +24,14 @@ declare(strict_types=1);
 namespace OCA\Keepiq\AppInfo;
 
 use OCA\Keepiq\Event\EncryptionSuiteRevokedEvent;
+use OCA\Keepiq\Event\SuiteMigrationAbortedEvent;
 use OCA\Keepiq\Event\SuiteMigrationCompletedEvent;
 use OCA\Keepiq\Event\SuiteMigrationStartedEvent;
 use OCA\Keepiq\Listener\EmergencyAccessSuiteRevocationListener;
 use OCA\Keepiq\Listener\EmergencyAccessSuiteRotationListener;
 use OCA\Keepiq\Listener\EncryptionSuiteRevokedListener;
 use OCA\Keepiq\Listener\SuiteCompromiseListener;
+use OCA\Keepiq\Listener\SuiteMigrationAbortedListener;
 use OCA\Keepiq\Listener\SuiteMigrationCompletedListener;
 use OCA\Keepiq\Listener\SuiteMigrationStartedListener;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
@@ -68,6 +70,15 @@ final class SuiteLifecycleEventRegistrar {
 		$context->registerEventListener(
 			event: SuiteMigrationCompletedEvent::class,
 			listener: SuiteMigrationCompletedListener::class
+		);
+
+		// Abort: release the SecretRequests locked at start, keeping them on the
+		// old suite. Deliberately bound ONLY to this listener — none of the
+		// terminal-cascade listeners above may react to an abort, since nothing
+		// migrated and the old suite stays active.
+		$context->registerEventListener(
+			event: SuiteMigrationAbortedEvent::class,
+			listener: SuiteMigrationAbortedListener::class
 		);
 
 		// Implement-user-sharing §8 — sharing-graph reactions to suite
