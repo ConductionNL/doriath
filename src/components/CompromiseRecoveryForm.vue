@@ -112,13 +112,23 @@
 				</li>
 			</ul>
 
+			<!-- Finishing carries a proof over the old key. When the run was
+			     resumed (the old password is not retained) re-ask for it. -->
+			<NcPasswordField
+				v-if="needsReauth"
+				v-model="oldPassword"
+				:label="
+					t('keepiq', 'Re-enter your previous master password to finish')
+				"
+				:disabled="loading" />
+
 			<div class="compromise-recovery-form__actions">
 				<NcButton :disabled="loading" @click="handleRetry">
 					{{ t('keepiq', 'Try these again') }}
 				</NcButton>
 				<NcButton
 					variant="error"
-					:disabled="loading"
+					:disabled="loading || (needsReauth && oldPassword === '')"
 					@click="handleAcceptLosses">
 					{{
 						n(
@@ -188,6 +198,35 @@
 					</li>
 				</ul>
 			</template>
+
+			<!-- Emergency contacts that could not be re-enveloped (the grantee
+			     had no reachable certificate) were invalidated by the completion
+			     sweep. Name them so the owner re-establishes exactly those; a
+			     rotation where every contact migrated shows nothing here. -->
+			<template v-if="residualContacts.length > 0">
+				<NcNoteCard
+					type="warning"
+					data-testid="compromise-recovery-residual">
+					{{
+						n(
+							'keepiq',
+							'Emergency access for %n contact could not be carried across and was removed. Re-establish it so they can still recover your vault.',
+							'Emergency access for %n contacts could not be carried across and was removed. Re-establish them so they can still recover your vault.',
+							residualContacts.length,
+						)
+					}}
+				</NcNoteCard>
+				<ul class="compromise-recovery-form__list">
+					<li
+						v-for="grantee in residualContacts"
+						:key="grantee"
+						data-testid="compromise-recovery-residual-item">
+						<span class="compromise-recovery-form__list-name">{{
+							grantee
+						}}</span>
+					</li>
+				</ul>
+			</template>
 		</template>
 
 		<NcButton
@@ -233,10 +272,25 @@ export default {
 			result: null,
 			/** @type {string|null} Retained so a retry can resume without re-asking. */
 			activeOldPassword: null,
+			/** @type {boolean} Show the re-auth field when completion needs a fresh proof. */
+			needsReauth: false,
 		}
 	},
 
 	computed: {
+		/**
+		 * Emergency contacts that could not be carried across the rotation and
+		 * were invalidated — the owner is prompted to re-establish exactly these.
+		 * Empty (so the block is hidden) when every contact migrated, on a resumed
+		 * run that cannot re-envelope, or before a run has terminated.
+		 *
+		 * @return {string[]} The residual grantee ids.
+		 * @spec openspec/changes/migrate-emergency-access-on-rotation/specs/emergency-access/spec.md#requirement-envelope-invalidation-on-key-change
+		 */
+		residualContacts() {
+			return this.result?.residualContacts ?? []
+		},
+
 		/**
 		 * Gate the compromise-recovery submit on matching, strength-valid input.
 		 *
@@ -484,13 +538,29 @@ export default {
 				// server counts distinct records currently failed and compares
 				// with a strict `===`. Sending the list length made every click
 				// refused and left the vault write-locked with no way out.
-				await store.acceptMigrationLosses(store.migrationStatus?.id)
+				//
+				// Completion carries a vault-key proof over the OLD key. The old
+				// password is retained from the run when it started here; on a
+				// resumed run it is not, so the field below is re-shown.
+				await store.acceptMigrationLosses(
+					store.migrationStatus?.id,
+					this.activeOldPassword || this.oldPassword,
+				)
+				this.needsReauth = false
 				this.result = {
 					...(this.result ?? { migrated: 0, droppedVersions: 0 }),
 					failures: this.unrecoverable,
 				}
 				this.phase = 'terminal'
 			} catch (e) {
+				// A guard refusal (or a missing password) means: re-enter and
+				// retry, not a dead end. Surface the password field.
+				if (
+					e?.code === 'key_proof_required'
+					|| e?.response?.data?.error === 'key_proof_required'
+				) {
+					this.needsReauth = true
+				}
 				this.error = this.describe(e)
 			} finally {
 				this.loading = false

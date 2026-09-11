@@ -74,7 +74,47 @@ describe('useEncryptionSuiteStore — revocation', () => {
 		// revoked_at, revoked_reason and revoked_by. Dropping it here would
 		// still return 200 and still revoke, losing only the audit trail —
 		// which is exactly why it needs asserting rather than eyeballing.
-		expect(body).toEqual({ reason: 'laptop stolen' })
+		expect(body).toEqual({
+			reason: 'laptop stolen',
+			acceptEmergencyLoss: false,
+		})
+	})
+
+	it('carries the emergency-loss override in the body when confirmed', async () => {
+		const post = vi.spyOn(axios, 'post').mockResolvedValue({
+			data: { id: 'suite-1', status: 'revoked' },
+		})
+		const store = useEncryptionSuiteStore()
+		store.currentSuite = { id: 'suite-1', status: 'active' }
+
+		await store.revokeSuite('lost password', true)
+
+		expect(post.mock.calls[0][1]).toEqual({
+			reason: 'lost password',
+			acceptEmergencyLoss: true,
+		})
+	})
+
+	it('propagates the 409 emergency-access refusal for the caller to surface', async () => {
+		vi.spyOn(axios, 'post').mockRejectedValue({
+			response: {
+				status: 409,
+				data: {
+					error: 'emergency_access_present',
+					usableEmergencyContacts: 3,
+				},
+			},
+		})
+		const store = useEncryptionSuiteStore()
+		store.currentSuite = { id: 'suite-1', status: 'active' }
+
+		// The refusal must reach the UI so it can show the count and re-confirm —
+		// never be swallowed into a silent success.
+		await expect(store.revokeSuite('lost password')).rejects.toMatchObject({
+			response: { data: { usableEmergencyContacts: 3 } },
+		})
+		// The refused revocation must not evict the still-valid offline cache.
+		expect(evict).not.toHaveBeenCalled()
 	})
 
 	it('adopts the revoked suite returned by the server as the current suite', async () => {
@@ -139,3 +179,71 @@ describe('useEncryptionSuiteStore — revocation', () => {
 // the server deliberately has no endpoint listing who holds a suite, so
 // candidates are named by Nextcloud's sharee search and PROBED
 // (tests/store/share.recipients.spec.js).
+
+describe('useEncryptionSuiteStore — abort migration', () => {
+	beforeEach(() => {
+		setActivePinia(createPinia())
+		vi.restoreAllMocks()
+	})
+
+	it('POSTs the abort to the in-progress migration and clears state on success', async () => {
+		// status GET first resolves in-progress, then 'none' after the abort.
+		const statuses = [
+			{ data: { status: 'in_progress', id: 'migr-1', oldSuiteId: 'old' } },
+			{ data: { status: 'none' } },
+		]
+		vi.spyOn(axios, 'get').mockImplementation(async (url) => {
+			if (url.endsWith('/migrations/status')) {
+				return statuses.shift() ?? { data: { status: 'none' } }
+			}
+			// fetchMigrationRemaining hits /work
+			return { data: { totalRemaining: 0 } }
+		})
+		const post = vi.spyOn(axios, 'post').mockResolvedValue({
+			data: { id: 'migr-1', status: 'aborted', aborted: true },
+		})
+
+		const store = useEncryptionSuiteStore()
+		const result = await store.abortMigration()
+
+		expect(post).toHaveBeenCalledWith(
+			expect.stringContaining('/migrations/migr-1/abort'),
+		)
+		expect(result.aborted).toBe(true)
+		// State re-read afterwards and the banner cleared.
+		expect(store.migrationStatus).toBeNull()
+	})
+
+	it('surfaces a server refusal (records already moved) as a throw and keeps the banner', async () => {
+		vi.spyOn(axios, 'get').mockImplementation(async (url) => {
+			if (url.endsWith('/migrations/status')) {
+				return {
+					data: { status: 'in_progress', id: 'migr-1', oldSuiteId: 'old' },
+				}
+			}
+			return { data: { totalRemaining: 4 } }
+		})
+		vi.spyOn(axios, 'post').mockRejectedValue({
+			response: {
+				status: 409,
+				data: { error: 'migration_abort_refused', committed: 2 },
+			},
+		})
+
+		const store = useEncryptionSuiteStore()
+		await expect(store.abortMigration()).rejects.toMatchObject({
+			response: { data: { committed: 2 } },
+		})
+		// The migration is still there — abort did not clear it.
+		expect(store.migrationStatus).not.toBeNull()
+	})
+
+	it('refuses to abort when there is no migration', async () => {
+		vi.spyOn(axios, 'get').mockResolvedValue({ data: { status: 'none' } })
+		const post = vi.spyOn(axios, 'post')
+
+		const store = useEncryptionSuiteStore()
+		await expect(store.abortMigration()).rejects.toThrow(/no migration to abort/)
+		expect(post).not.toHaveBeenCalled()
+	})
+})

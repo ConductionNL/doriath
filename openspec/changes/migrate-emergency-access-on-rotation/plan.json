@@ -1,0 +1,272 @@
+{
+  "change": "migrate-emergency-access-on-rotation",
+  "project": "keepiq",
+  "repo": "ConductionNL/keepiq",
+  "base_branch": "development",
+  "feature_branch": "feature/674/migrate-emergency-access-on-rotation",
+  "created": "2026-09-10",
+  "tracking_issue": 674,
+  "tasks": [
+    {
+      "id": 1,
+      "num": "1.1",
+      "title": "Add a read the client can use to enumerate the rotating owner's emergency contacts still bound to the old suite: reuse `EmergencyContactMapper::findByGrantorSuite($oldSuiteId)` filtered to the migration owner, returning `id`, `granteeUserId`, and `state` (exclude already-`invalidated`). Prefer the existing emergency-access index over widening `getWork`, so the completion gate and its progress denominator are untouched",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 2,
+      "num": "1.2",
+      "title": "Add a migration re-point endpoint (e.g. `POST /api/v1/migrations/{id}/emergency-contacts/{contactId}`) accepting a fresh `recoveryEnvelope`; it MUST set `recovery_envelope`, set `grantor_suite_id` to the migration's new suite, keep `state = granted`, and clear any `invalidated_reason`",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 3,
+      "num": "1.3",
+      "title": "Enforce scoping identically to the other migration writes: refuse unless the contact's current `grantor_suite_id` is the migration's `old_suite_id` and the contact's grantor is the migration owner (resolve the acting user via `OCP\\IUserSession`)",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 4,
+      "num": "1.4",
+      "title": "Validate the submitted envelope's shape server-side as far as is possible without the grantee's key: it MUST parse, carry the expected `v`/`alg`, and its declared `granteeSuiteId` MUST match the grantee's current active suite (a shape check, not a round-trip \u2014 only the grantee can open it)",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 5,
+      "num": "1.5",
+      "title": "Register the route in `appinfo/routes.php` before the SPA catch-all wildcard",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 6,
+      "num": "1.6",
+      "title": "Add a comment at the `invalidateForGrantorRotation()` call site noting it is now a **residual sweep**: after the loop it finds only contacts the migration could not carry (grantee unreachable). Do not \"optimise away\" the apparent no-op",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 7,
+      "num": "2.1",
+      "title": "In `initiateCompromiseRecovery` (`src/store/modules/encryptionSuite.js`), after the new key pair is generated and before/within the migration loop, fetch the owner's emergency contacts on the old suite (1.1)",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 8,
+      "num": "2.2",
+      "title": "For each contact: fetch the grantee's current certificate via `getGranteeCertificate(granteeUserId)`; on success call `buildRecoveryEnvelope(newPrivateKeyPem, granteeCert)` and POST it to the re-point endpoint (1.2). `newPrivateKeyPem` is already materialised in this function \u2014 reuse it, do not re-derive",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 9,
+      "num": "2.3",
+      "title": "On a grantee with no active certificate (fetch throws / returns none), do NOT commit: leave the contact bound to the old suite so the completion sweep invalidates it, and collect it into a `residualContacts` list",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 10,
+      "num": "2.4",
+      "title": "Treat a transient re-point failure as residual for this run (the contact is re-designatable); do not halt the migration on it \u2014 emergency contacts are outside the completion gate",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 11,
+      "num": "2.5",
+      "title": "The raw new private key PEM MUST stay in the existing rotation scope and MUST NOT be persisted or logged; only envelope ciphertext crosses the wire (ADR-003)",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 12,
+      "num": "3.1",
+      "title": "Include `residualContacts` (grantee display names) in the migration outcome returned by `initiateCompromiseRecovery`",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 13,
+      "num": "3.2",
+      "title": "In `CompromiseRecoveryForm.vue`, on completion, prompt the owner to re-establish exactly the residual contacts; show nothing about emergency access when every contact migrated",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 14,
+      "num": "3.3",
+      "title": "Use `@conduction/nextcloud-vue` components and the NL Design System double-fallback CSS pattern, consistent with the rest of the form",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 15,
+      "num": "4.1",
+      "title": "Unit test the re-point endpoint: re-points `grantor_suite_id` to the new suite, keeps `state = granted`, clears `invalidated_reason`; refuses when the contact is on a different suite or owned by another user; rejects a malformed envelope and a `granteeSuiteId` that does not match the grantee's current suite",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 16,
+      "num": "4.2",
+      "title": "Unit test the residual sweep: after the loop, `invalidateForGrantorRotation(oldSuiteId)` invalidates only contacts still on the old suite; a migrated contact (now on the new suite) is untouched",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 17,
+      "num": "4.3",
+      "title": "Frontend unit test: a reachable grantee yields a `buildRecoveryEnvelope(newPrivateKeyPem, cert)` call and a commit; an unreachable grantee yields no commit and a residual entry",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 18,
+      "num": "4.4",
+      "title": "Cross-implementation sanity: an envelope built in JS parses under the server's shape check (config rule: test cross-implementation round-trips as far as the trust model allows)",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 19,
+      "num": "4.5",
+      "title": "Regression: a rotation with all grantees reachable prompts no re-designation and leaves no contact invalidated (the behaviour this change fixes)",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 20,
+      "num": "4.6",
+      "title": "Two-rotations-in-succession: a contact migrated A\u2192B is then migrated B\u2192C, found each time via `grantor_suite_id`",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 21,
+      "num": "4b.1",
+      "title": "On the user-suite revoke path, before clearing, count the owner's usable (non-invalidated) emergency contacts via `EmergencyContactMapper::findByGrantorSuite` / grantor lookup; refuse the revocation when the count is > 0 and no override is supplied, returning that count (never identities)",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 22,
+      "num": "4b.2",
+      "title": "Add an explicit `override`/`acceptEmergencyAccessLoss` parameter to the revoke endpoint; with it, revocation proceeds and `clearForGrantorRevocation` runs as today",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 23,
+      "num": "4b.3",
+      "title": "Surface the destruction warning in the revoke UI: secrets permanently unreadable + vault rebuilt from scratch; emergency access deleted; if an accessor exists they MUST retrieve secrets first while the suite is still `active`. Use `@conduction/nextcloud-vue` + NL Design System double-fallback CSS",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 24,
+      "num": "4b.4",
+      "title": "Tests: revoke refused with the usable-contact count when a contact exists and no override; revoke proceeds and clears with the override; count is returned without identities; no-contact case revokes unchanged",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 25,
+      "num": "5.1",
+      "title": "Run the hydra gates locally: route-auth (the re-point route, plus the revoke override param), no-admin-idor (the re-point endpoint is owner-scoped by construction), gate-16 spec-coverage, gate-113 exclusion-evidence (every `@e2e exclude` carries a reason)",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 26,
+      "num": "5.2",
+      "title": "Confirm gate-110 does not apply (no migration). If a schema change is introduced after all, bump `appinfo/info.xml` `<version>` from `0.3.1`",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 27,
+      "num": "5.3",
+      "title": "Update `docs/ARCHITECTURE.md` where it describes suite migration: emergency contacts are a migrated store, and `invalidateForGrantorRotation` is a residual sweep",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 28,
+      "num": "5.4",
+      "title": "Every commit carries `Assisted-by: ClaudeCode:claude-opus-5`; no `Signed-off-by` (only the human certifies the DCO)",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 29,
+      "num": "5.5",
+      "title": "PR description discloses AI tool use in the contributor's own words and links the `harden-vault-key-material-guards` change whose open question this resolves",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    }
+  ]
+}

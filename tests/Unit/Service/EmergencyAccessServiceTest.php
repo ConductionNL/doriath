@@ -112,6 +112,7 @@ class EmergencyAccessServiceTest extends TestCase {
 
 		$this->invalidationService = new EmergencyEnvelopeInvalidationService(
 			mapper: $this->mapper,
+			suiteMapper: $this->suiteMapper,
 			auditTrail: $auditTrail,
 		);
 	}//end setUp()

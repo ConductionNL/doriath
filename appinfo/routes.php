@@ -39,6 +39,7 @@ return \OCA\OpenRegister\AppHost\Routes::standard([
     ['name' => 'encryptionSuite#revoke',            'url' => '/api/v1/suites/{id}/revoke',              'verb' => 'POST'],
     ['name' => 'encryptionSuite#reinstate',         'url' => '/api/v1/suites/{id}/reinstate',           'verb' => 'POST'],
     ['name' => 'encryptionSuite#compromiseRecovery','url' => '/api/v1/suites/compromise-recovery',      'verb' => 'POST'],
+    ['name' => 'encryptionSuite#proofChallenge',    'url' => '/api/v1/suites/{id}/proof-challenge',     'verb' => 'GET'],
 
     // CA management (admin-only).
     ['name' => 'cACertificate#getStatus',          'url' => '/api/v1/ca/status',                      'verb' => 'GET'],
@@ -49,6 +50,7 @@ return \OCA\OpenRegister\AppHost\Routes::standard([
     // Migration tracking.
     ['name' => 'migration#getStatus',                'url' => '/api/v1/migrations/status',               'verb' => 'GET'],
     ['name' => 'migration#complete',                 'url' => '/api/v1/migrations/{id}/complete',        'verb' => 'POST'],
+    ['name' => 'migration#abort',                    'url' => '/api/v1/migrations/{id}/abort',           'verb' => 'POST'],
 
     // Compromise-recovery migration work loop. One record per request: the
     // browser decrypts with the old private key, re-encrypts under the new one,
@@ -59,6 +61,10 @@ return \OCA\OpenRegister\AppHost\Routes::standard([
     ['name' => 'migration#reEncryptSecret',          'url' => '/api/v1/migrations/{id}/secrets/{secretId}', 'verb' => 'POST'],
     ['name' => 'migration#reEncryptVersion',         'url' => '/api/v1/migrations/{id}/versions/{versionId}', 'verb' => 'POST'],
     ['name' => 'migration#reEncryptAttachmentGrant', 'url' => '/api/v1/migrations/{id}/attachment-grants/{grantId}', 'verb' => 'POST'],
+    // Emergency contacts migrate too, but off the gate: the browser mints a fresh
+    // envelope escrowing the new key and re-points the contact here. A contact it
+    // cannot carry is left for the completion sweep to invalidate.
+    ['name' => 'migration#reEnvelopeEmergencyContact', 'url' => '/api/v1/migrations/{id}/emergency-contacts/{contactId}', 'verb' => 'POST'],
 
     // Key generator endpoint (stateless, authenticated).
     ['name' => 'keyGenerator#generate', 'url' => '/api/v1/generate-key', 'verb' => 'POST'],

@@ -71,7 +71,15 @@ class EmergencyAccessSuiteRotationListener implements IEventListener {
 		}
 
 		try {
-			// The envelope escrows the OLD suite's private key.
+			// Residual SWEEP, not a blanket invalidation. The migration loop has
+			// already re-enveloped every reachable contact onto the new suite
+			// (MigrationController::reEnvelopeEmergencyContact), so those rows no
+			// longer sit on the old suite and this pass skips them. What remains on
+			// the old suite is exactly the residual the browser could not carry —
+			// a grantee with no active certificate to seal to — which genuinely
+			// must be invalidated. Do NOT "optimise away" this apparent no-op: on a
+			// rotation with an unreachable grantee it is the only thing that clears
+			// the stale envelope. The envelope escrows the OLD suite's private key.
 			$this->service->invalidateForGrantorRotation(
 				grantorSuiteId: $event->getOldSuiteId(),
 				reason: 'grantor_rotation',

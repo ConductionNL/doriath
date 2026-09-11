@@ -22,14 +22,19 @@ declare(strict_types=1);
 namespace OCA\Keepiq\Controller;
 
 use Exception;
+use InvalidArgumentException;
 use OCA\Keepiq\AppInfo\Application;
+use OCA\Keepiq\Attribute\VaultKeyProofRequired;
 use OCA\Keepiq\Db\SuiteMigration;
 use OCA\Keepiq\Exception\ForbiddenException;
+use OCA\Keepiq\Exception\MigrationAbortRefusedException;
 use OCA\Keepiq\Exception\MigrationIncompleteException;
 use OCA\Keepiq\Exception\NotFoundException;
+use OCA\Keepiq\Service\EmergencyEnvelopeInvalidationService;
 use OCA\Keepiq\Service\EncryptionSuiteService;
 use OCA\Keepiq\Service\MigrationService;
 use OCA\Keepiq\Service\MigrationWorkService;
+use OCA\Keepiq\Service\VaultKeyProofService;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -41,11 +46,19 @@ use OCP\IUserSession;
 /**
  * Controller for suite migration tracking.
  *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The four migration-work
- *   endpoints share one guard shell and one exception-to-status mapping, so the
- *   controller references the migration entity, both guard exceptions and the
- *   two services. Splitting the stores across controllers would duplicate the
- *   ownership guard four times over.
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The migration-work endpoints
+ *   share one guard shell and one exception-to-status mapping, so the controller
+ *   references the migration entity, the guard exceptions and the work services.
+ *   Splitting the stores across controllers would duplicate the ownership guard
+ *   once per store.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Same cause: one controller
+ *   deliberately holds every per-record migration-work endpoint (secrets,
+ *   versions, attachment grants, emergency contacts) plus status/complete/abort,
+ *   because they all authorise through the same private requireOwnMigration
+ *   guard. The aggregate complexity is the sum of small, uniform endpoints, not a
+ *   single tangled method; dispersing them to satisfy the threshold would copy
+ *   the guard into each new controller — the very IDOR risk the shared shell
+ *   exists to prevent.
  */
 class MigrationController extends OCSController {
 	/**
@@ -55,6 +68,7 @@ class MigrationController extends OCSController {
 	 * @param MigrationService $migrationService The migration service
 	 * @param MigrationWorkService $workService The per-record migration work service
 	 * @param EncryptionSuiteService $suiteService The suite service (ownership check)
+	 * @param EmergencyEnvelopeInvalidationService $envelopeService The emergency-envelope re-point service
 	 * @param IUserSession $userSession The user session
 	 *
 	 * @return void
@@ -64,6 +78,7 @@ class MigrationController extends OCSController {
 		private MigrationService $migrationService,
 		private MigrationWorkService $workService,
 		private EncryptionSuiteService $suiteService,
+		private EmergencyEnvelopeInvalidationService $envelopeService,
 		private IUserSession $userSession,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
@@ -114,6 +129,11 @@ class MigrationController extends OCSController {
 	 * @spec openspec/changes/retrofit-2026-05-25-doriath-coverage/tasks.md#task-4
 	 */
 	#[NoAdminRequired]
+	#[VaultKeyProofRequired(
+		binds: ['id'],
+		subject: 'migrationOldSuite',
+		purpose: VaultKeyProofService::PURPOSE_COMPLETE_MIGRATION
+	)]
 	public function complete(string $id, bool $hasErrors = false, ?int $acceptUnrecoverable = null): JSONResponse {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
@@ -171,6 +191,55 @@ class MigrationController extends OCSController {
 			);
 		}//end try
 	}//end complete()
+
+	/**
+	 * Abort a migration, returning the vault to the old suite.
+	 *
+	 * The endpoint the `compromiseRecovery` refusal already tells users to use.
+	 * Non-destructive: it discards the unused successor and leaves the old suite
+	 * active. Permitted only while no record has been committed to the new suite;
+	 * once records have moved the server refuses and points at resuming.
+	 *
+	 * @param string $id The migration ID
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @return JSONResponse
+	 *
+	 * @spec openspec/changes/harden-vault-key-material-guards/specs/encryption-suites/spec.md#requirement-a-migration-can-be-aborted-before-any-record-moves
+	 */
+	#[NoAdminRequired]
+	public function abort(string $id): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(data: ['message' => 'Unauthorized'], statusCode: Http::STATUS_UNAUTHORIZED);
+		}
+
+		try {
+			$this->requireOwnMigration(migrationId: $id, userId: $user->getUID());
+
+			$result = $this->migrationService->abortMigration(migrationId: $id);
+			return new JSONResponse(data: $result);
+		} catch (ForbiddenException $e) {
+			return new JSONResponse(data: ['message' => $e->getMessage()], statusCode: Http::STATUS_FORBIDDEN);
+		} catch (MigrationAbortRefusedException $e) {
+			// The migration is intact and resumable — a record has already
+			// moved, so abort would lose data. Distinct from a generic fault so
+			// the client offers "resume", not "try abort again".
+			return new JSONResponse(
+				data: [
+					'error' => 'migration_abort_refused',
+					'message' => $e->getMessage(),
+					'committed' => $e->getCommitted(),
+				],
+				statusCode: Http::STATUS_CONFLICT
+			);
+		} catch (NotFoundException $e) {
+			return new JSONResponse(data: ['message' => $e->getMessage()], statusCode: Http::STATUS_NOT_FOUND);
+		} catch (Exception $e) {
+			return new JSONResponse(data: ['message' => $e->getMessage()], statusCode: Http::STATUS_BAD_REQUEST);
+		}//end try
+	}//end abort()
 
 	/**
 	 * List the records still bound to the migration's old suite.
@@ -417,6 +486,85 @@ class MigrationController extends OCSController {
 			}
 		);
 	}//end reEncryptAttachmentGrant()
+
+	/**
+	 * Re-point one emergency-access recovery envelope onto the new suite.
+	 *
+	 * Emergency contacts are the one migrated store not produced by
+	 * decrypt-then-re-encrypt: the browser builds a fresh envelope escrowing the
+	 * NEW private key, sealed to the grantee's current certificate, and posts it
+	 * here. Deliberately NOT routed through commitRecord: emergency contacts are
+	 * outside the completion gate (design D2), so there is no per-record failure
+	 * to account and a contact the browser could not carry is simply left on the
+	 * old suite for the completion sweep to invalidate — never recorded as a
+	 * migration failure that would block the gate.
+	 *
+	 * @param string $id The migration ID
+	 * @param string $contactId The emergency-contact ID
+	 * @param string|null $recoveryEnvelope The fresh envelope escrowing the new private key
+	 * @param string|null $granteeSuiteId The grantee suite the envelope was sealed to
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @return JSONResponse
+	 *
+	 * @spec openspec/changes/migrate-emergency-access-on-rotation/specs/encryption-suites/spec.md#requirement-migration-covers-every-suite-bound-store
+	 */
+	#[NoAdminRequired]
+	public function reEnvelopeEmergencyContact(
+		string $id,
+		string $contactId,
+		?string $recoveryEnvelope = null,
+		?string $granteeSuiteId = null,
+	): JSONResponse {
+		$userId = $this->uid();
+		if ($userId === null) {
+			return new JSONResponse(data: ['message' => 'Unauthorized'], statusCode: Http::STATUS_UNAUTHORIZED);
+		}
+
+		if ($recoveryEnvelope === null || $granteeSuiteId === null) {
+			return new JSONResponse(
+				data: ['message' => 'A recovery envelope and grantee suite are required'],
+				statusCode: Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		try {
+			$migration = $this->requireOwnMigration(migrationId: $id, userId: $userId);
+
+			// Re-pointing to the new suite only makes sense while the migration
+			// owns the write lock; once terminated the sweep has already run.
+			if ($migration->getStatus() !== 'in_progress') {
+				return new JSONResponse(
+					data: ['message' => 'Migration is no longer in progress'],
+					statusCode: Http::STATUS_CONFLICT
+				);
+			}
+
+			$contact = $this->envelopeService->reEnvelopeForRotation(
+				ownerId: $userId,
+				oldSuiteId: $migration->getOldSuiteId(),
+				newSuiteId: $migration->getNewSuiteId(),
+				contactId: $contactId,
+				recoveryEnvelope: $recoveryEnvelope,
+				sealedSuiteId: $granteeSuiteId
+			);
+
+			return new JSONResponse(
+				data: [
+					'id' => $contact->getId(),
+					'grantorSuiteId' => $contact->getGrantorSuiteId(),
+					'state' => $contact->getState(),
+				]
+			);
+		} catch (NotFoundException $e) {
+			return new JSONResponse(data: ['message' => $e->getMessage()], statusCode: Http::STATUS_NOT_FOUND);
+		} catch (ForbiddenException $e) {
+			return new JSONResponse(data: ['message' => $e->getMessage()], statusCode: Http::STATUS_FORBIDDEN);
+		} catch (InvalidArgumentException $e) {
+			return new JSONResponse(data: ['message' => $e->getMessage()], statusCode: Http::STATUS_BAD_REQUEST);
+		}//end try
+	}//end reEnvelopeEmergencyContact()
 
 	/**
 	 * The acting user's id, or null when unauthenticated.
