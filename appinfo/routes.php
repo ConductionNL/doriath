@@ -61,6 +61,10 @@ return \OCA\OpenRegister\AppHost\Routes::standard([
     ['name' => 'migration#reEncryptSecret',          'url' => '/api/v1/migrations/{id}/secrets/{secretId}', 'verb' => 'POST'],
     ['name' => 'migration#reEncryptVersion',         'url' => '/api/v1/migrations/{id}/versions/{versionId}', 'verb' => 'POST'],
     ['name' => 'migration#reEncryptAttachmentGrant', 'url' => '/api/v1/migrations/{id}/attachment-grants/{grantId}', 'verb' => 'POST'],
+    // Emergency contacts migrate too, but off the gate: the browser mints a fresh
+    // envelope escrowing the new key and re-points the contact here. A contact it
+    // cannot carry is left for the completion sweep to invalidate.
+    ['name' => 'migration#reEnvelopeEmergencyContact', 'url' => '/api/v1/migrations/{id}/emergency-contacts/{contactId}', 'verb' => 'POST'],
 
     // Key generator endpoint (stateless, authenticated).
     ['name' => 'keyGenerator#generate', 'url' => '/api/v1/generate-key', 'verb' => 'POST'],

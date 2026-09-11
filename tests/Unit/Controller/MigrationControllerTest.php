@@ -28,6 +28,9 @@ use OCA\Keepiq\Exception\ForbiddenException;
 use OCA\Keepiq\Exception\MigrationAbortRefusedException;
 use OCA\Keepiq\Exception\MigrationIncompleteException;
 use OCA\Keepiq\Exception\NotFoundException;
+use InvalidArgumentException;
+use OCA\Keepiq\Db\EmergencyContact;
+use OCA\Keepiq\Service\EmergencyEnvelopeInvalidationService;
 use OCA\Keepiq\Service\EncryptionSuiteService;
 use OCA\Keepiq\Service\MigrationService;
 use OCA\Keepiq\Service\MigrationWorkService;
@@ -52,6 +55,8 @@ class MigrationControllerTest extends TestCase {
 
 	private EncryptionSuiteService&MockObject $suiteService;
 
+	private EmergencyEnvelopeInvalidationService&MockObject $envelopeService;
+
 	private IUserSession&MockObject $userSession;
 
 	/**
@@ -66,6 +71,7 @@ class MigrationControllerTest extends TestCase {
 		$this->migrationService = $this->createMock(MigrationService::class);
 		$this->workService = $this->createMock(MigrationWorkService::class);
 		$this->suiteService = $this->createMock(EncryptionSuiteService::class);
+		$this->envelopeService = $this->createMock(EmergencyEnvelopeInvalidationService::class);
 		$this->userSession = $this->createMock(IUserSession::class);
 
 		$user = $this->createMock(IUser::class);
@@ -80,6 +86,7 @@ class MigrationControllerTest extends TestCase {
 			migrationService: $this->migrationService,
 			workService: $this->workService,
 			suiteService: $this->suiteService,
+			envelopeService: $this->envelopeService,
 			userSession: $this->userSession,
 		);
 	}//end setUp()
@@ -548,4 +555,130 @@ class MigrationControllerTest extends TestCase {
 
 		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
 	}//end testReEncryptGrantReportsMissingRecord()
+
+	/**
+	 * A re-point delegates to the envelope service with the migration's owner and
+	 * suite ids resolved from the guarded migration, and echoes the result.
+	 *
+	 * @return void
+	 */
+	public function testReEnvelopeEmergencyContactSucceeds(): void {
+		$this->arrangeOwnMigration();
+
+		$repointed = new EmergencyContact();
+		$repointed->setId('rel-1');
+		$repointed->setGrantorSuiteId('suite-2');
+		$repointed->setState(EmergencyContact::STATE_GRANTED);
+
+		$this->envelopeService->expects($this->once())
+			->method('reEnvelopeForRotation')
+			->with('testuser', 'suite-1', 'suite-2', 'rel-1', 'ENV', 'grantee-suite')
+			->willReturn($repointed);
+
+		$response = $this->controller->reEnvelopeEmergencyContact(
+			'migr-1',
+			'rel-1',
+			recoveryEnvelope: 'ENV',
+			granteeSuiteId: 'grantee-suite'
+		);
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame('rel-1', $response->getData()['id']);
+		$this->assertSame('suite-2', $response->getData()['grantorSuiteId']);
+		$this->assertSame(EmergencyContact::STATE_GRANTED, $response->getData()['state']);
+	}//end testReEnvelopeEmergencyContactSucceeds()
+
+	/**
+	 * A re-point missing the envelope or grantee suite is a 400 and never reaches
+	 * the service.
+	 *
+	 * @return void
+	 */
+	public function testReEnvelopeEmergencyContactRequiresEnvelopeAndSuite(): void {
+		$this->envelopeService->expects($this->never())->method('reEnvelopeForRotation');
+
+		$response = $this->controller->reEnvelopeEmergencyContact('migr-1', 'rel-1', recoveryEnvelope: 'ENV');
+
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
+	}//end testReEnvelopeEmergencyContactRequiresEnvelopeAndSuite()
+
+	/**
+	 * A re-point against a terminated migration is a 409 and never reaches the
+	 * service — the completion sweep has already run.
+	 *
+	 * @return void
+	 */
+	public function testReEnvelopeEmergencyContactRefusesTerminatedMigration(): void {
+		$this->arrangeOwnMigration(status: 'completed');
+		$this->envelopeService->expects($this->never())->method('reEnvelopeForRotation');
+
+		$response = $this->controller->reEnvelopeEmergencyContact(
+			'migr-1',
+			'rel-1',
+			recoveryEnvelope: 'ENV',
+			granteeSuiteId: 'grantee-suite'
+		);
+
+		$this->assertSame(Http::STATUS_CONFLICT, $response->getStatus());
+	}//end testReEnvelopeEmergencyContactRefusesTerminatedMigration()
+
+	/**
+	 * A foreign contact surfaces as 403.
+	 *
+	 * @return void
+	 */
+	public function testReEnvelopeEmergencyContactMapsForbiddenTo403(): void {
+		$this->arrangeOwnMigration();
+		$this->envelopeService->method('reEnvelopeForRotation')
+			->willThrowException(new ForbiddenException('Emergency contact does not belong to you'));
+
+		$response = $this->controller->reEnvelopeEmergencyContact(
+			'migr-1',
+			'rel-1',
+			recoveryEnvelope: 'ENV',
+			granteeSuiteId: 'grantee-suite'
+		);
+
+		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
+	}//end testReEnvelopeEmergencyContactMapsForbiddenTo403()
+
+	/**
+	 * A missing contact surfaces as 404.
+	 *
+	 * @return void
+	 */
+	public function testReEnvelopeEmergencyContactMapsNotFoundTo404(): void {
+		$this->arrangeOwnMigration();
+		$this->envelopeService->method('reEnvelopeForRotation')
+			->willThrowException(new NotFoundException('Emergency contact not found'));
+
+		$response = $this->controller->reEnvelopeEmergencyContact(
+			'migr-1',
+			'rel-1',
+			recoveryEnvelope: 'ENV',
+			granteeSuiteId: 'grantee-suite'
+		);
+
+		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+	}//end testReEnvelopeEmergencyContactMapsNotFoundTo404()
+
+	/**
+	 * A malformed or misaddressed envelope surfaces as 400.
+	 *
+	 * @return void
+	 */
+	public function testReEnvelopeEmergencyContactMapsInvalidArgumentTo400(): void {
+		$this->arrangeOwnMigration();
+		$this->envelopeService->method('reEnvelopeForRotation')
+			->willThrowException(new InvalidArgumentException('Recovery envelope is not valid JSON'));
+
+		$response = $this->controller->reEnvelopeEmergencyContact(
+			'migr-1',
+			'rel-1',
+			recoveryEnvelope: 'ENV',
+			granteeSuiteId: 'grantee-suite'
+		);
+
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
+	}//end testReEnvelopeEmergencyContactMapsInvalidArgumentTo400()
 }//end class
