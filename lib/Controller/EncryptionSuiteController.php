@@ -41,6 +41,14 @@ use RuntimeException;
 
 /**
  * API controller for EncryptionSuite CRUD operations.
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The suite lifecycle this
+ *   controller owns — create, show, revoke, reinstate, routine re-key,
+ *   compromise recovery and now vault-key-proof challenge issuance — legitimately
+ *   coordinates several services and the guard attribute. Adding
+ *   VaultKeyProofService for the challenge endpoint pushed it to 13; splitting
+ *   the challenge onto its own controller would add a route surface for one
+ *   trivial method without reducing the domain coupling that the rest carries.
  */
 class EncryptionSuiteController extends OCSController {
 	/**
@@ -50,6 +58,7 @@ class EncryptionSuiteController extends OCSController {
 	 * @param EncryptionSuiteService $suiteService The suite service
 	 * @param MigrationService $migrationService The migration service
 	 * @param IUserSession $userSession The user session
+	 * @param VaultKeyProofService $proofService The vault-key-proof service (issues challenges)
 	 * @param \OCA\Keepiq\Service\PasskeyService|null $passkeyService The passkey service (passkey vault login; null when unwired)
 	 *
 	 * @return void

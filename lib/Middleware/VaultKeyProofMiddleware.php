@@ -133,6 +133,10 @@ class VaultKeyProofMiddleware extends Middleware {
 	 * @return JSONResponse
 	 *
 	 * @throws Throwable When the exception is not the guard's own (re-thrown)
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $controller and $methodName
+	 *   are mandated by OCP\AppFramework\Middleware::afterException(), which this
+	 *   overrides; only the exception is acted on.
 	 */
 	public function afterException($controller, $methodName, Throwable $exception): JSONResponse {
 		if (($exception instanceof KeyProofRequiredException) === false) {

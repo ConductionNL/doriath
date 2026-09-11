@@ -98,14 +98,14 @@ class VaultKeyProofService {
 	public function issueChallenge(string $userId, string $purpose): array {
 		$expiresAt = ($this->timeFactory->getTime() + self::TTL);
 
-		$payload = $this->b64url((string)json_encode([
+		$payload = $this->b64url(raw: (string)json_encode([
 			'r' => base64_encode($this->secureRandom->generate(18)),
 			'u' => $userId,
 			'p' => $purpose,
 			'e' => $expiresAt,
 		]));
 
-		$nonce = $payload . '.' . $this->mac($payload);
+		$nonce = $payload . '.' . $this->mac(payload: $payload);
 
 		return ['nonce' => $nonce, 'expiresAt' => $expiresAt];
 	}//end issueChallenge()
@@ -207,7 +207,7 @@ class VaultKeyProofService {
 		}
 
 		[$payload, $mac] = $parts;
-		if (hash_equals($this->mac($payload), $mac) === false) {
+		if (hash_equals($this->mac(payload: $payload), $mac) === false) {
 			throw new KeyProofRequiredException(message: 'Challenge failed authentication');
 		}
 
@@ -233,7 +233,7 @@ class VaultKeyProofService {
 	 */
 	private function mac(string $payload): string {
 		$secret = $this->config->getSystemValueString('secret', '');
-		return $this->b64url(hash_hmac('sha256', $payload, $secret, true));
+		return $this->b64url(raw: hash_hmac('sha256', $payload, $secret, true));
 	}//end mac()
 
 	/**
