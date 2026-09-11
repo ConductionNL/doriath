@@ -250,7 +250,7 @@ class MigrationService {
 	 *
 	 * @throws MigrationAbortRefusedException When a record has already been committed
 	 *
-	 * @spec openspec/specs/encryption-suites/spec.md#requirement-a-migration-can-be-aborted-before-any-record-moves
+	 * @spec openspec/changes/harden-vault-key-material-guards/specs/encryption-suites/spec.md#requirement-a-migration-can-be-aborted-before-any-record-moves
 	 */
 	public function abortMigration(string $migrationId): array {
 		$migration = $this->mapper->findById($migrationId);

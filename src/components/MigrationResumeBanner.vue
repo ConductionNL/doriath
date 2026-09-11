@@ -256,7 +256,7 @@ export default {
 		 * the banner stays, pointing the user at resuming instead.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/specs/encryption-suites/spec.md#requirement-a-migration-can-be-aborted-before-any-record-moves
+		 * @spec openspec/changes/harden-vault-key-material-guards/specs/encryption-suites/spec.md#requirement-a-migration-can-be-aborted-before-any-record-moves
 		 */
 		async onAbort() {
 			this.busy = true

@@ -147,56 +147,28 @@
 		</section>
 
 		<!-- Revoking deletes the recovery envelope, so it is guarded: confirm
-		     with the master password, which signs the proof and is never sent. -->
-		<NcDialog
-			:name="t('keepiq', 'Revoke emergency access')"
+		     with the master password, which signs the proof and is never sent.
+		     The dialog lives in src/dialogs/ per ADR-004; the guard state it acts
+		     on stays here. -->
+		<EmergencyRevokeDialog
 			:open="revokeTarget !== null"
-			size="normal"
-			data-testid="emergency-revoke-dialog"
-			@update:open="cancelRevoke">
-			<div class="emergency-revoke-confirm">
-				<NcNoteCard type="warning">
-					{{
-						t(
-							'keepiq',
-							'This deletes the recovery envelope for this contact. They will no longer be able to break glass unless you re-establish them.',
-						)
-					}}
-				</NcNoteCard>
-				<NcPasswordField
-					v-model="revokePassword"
-					:label="t('keepiq', 'Your master password')"
-					:disabled="revoking" />
-				<NcNoteCard v-if="revokeError" type="error">
-					{{ revokeError }}
-				</NcNoteCard>
-			</div>
-			<template #actions>
-				<NcButton :disabled="revoking" @click="cancelRevoke">
-					{{ t('keepiq', 'Cancel') }}
-				</NcButton>
-				<NcButton
-					variant="error"
-					:disabled="revoking || revokePassword === ''"
-					data-testid="emergency-revoke-confirm"
-					@click="confirmRevoke">
-					{{ revoking ? t('keepiq', 'Revoking…') : t('keepiq', 'Revoke') }}
-				</NcButton>
-			</template>
-		</NcDialog>
+			v-model:password="revokePassword"
+			:revoking="revoking"
+			:error="revokeError"
+			@close="cancelRevoke"
+			@confirm="confirmRevoke" />
 	</div>
 </template>
 
 <script>
 import {
 	NcButton,
-	NcDialog,
 	NcEmptyContent,
-	NcNoteCard,
 	NcPasswordField,
 	NcSelect,
 	NcTextField,
 } from '@nextcloud/vue'
+import EmergencyRevokeDialog from '../dialogs/EmergencyRevokeDialog.vue'
 import { useEmergencyAccessStore } from '../store/modules/emergencyAccess.js'
 
 /**
@@ -213,12 +185,11 @@ export default {
 
 	components: {
 		NcButton,
-		NcDialog,
-		NcNoteCard,
 		NcTextField,
 		NcPasswordField,
 		NcSelect,
 		NcEmptyContent,
+		EmergencyRevokeDialog,
 	},
 
 	data() {
@@ -334,6 +305,7 @@ export default {
 		 * Dismiss the revoke confirmation without acting.
 		 *
 		 * @return {void}
+		 * @spec openspec/changes/harden-vault-key-material-guards/specs/emergency-access/spec.md#requirement-revoke-emergency-contact
 		 */
 		cancelRevoke() {
 			this.revokeTarget = null

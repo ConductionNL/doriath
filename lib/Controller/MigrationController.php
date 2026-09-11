@@ -194,7 +194,7 @@ class MigrationController extends OCSController {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/specs/encryption-suites/spec.md#requirement-a-migration-can-be-aborted-before-any-record-moves
+	 * @spec openspec/changes/harden-vault-key-material-guards/specs/encryption-suites/spec.md#requirement-a-migration-can-be-aborted-before-any-record-moves
 	 */
 	#[NoAdminRequired]
 	public function abort(string $id): JSONResponse {

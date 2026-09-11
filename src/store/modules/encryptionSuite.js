@@ -1068,7 +1068,7 @@ export const useEncryptionSuiteStore = defineStore('encryptionSuite', {
 		 * banner rather than pretending it succeeded.
 		 *
 		 * @return {Promise<object>} The server's terminal result.
-		 * @spec openspec/specs/encryption-suites/spec.md#requirement-a-migration-can-be-aborted-before-any-record-moves
+		 * @spec openspec/changes/harden-vault-key-material-guards/specs/encryption-suites/spec.md#requirement-a-migration-can-be-aborted-before-any-record-moves
 		 */
 		async abortMigration() {
 			await this.fetchMigrationStatus()

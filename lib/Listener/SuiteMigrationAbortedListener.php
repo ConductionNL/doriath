@@ -63,7 +63,7 @@ class SuiteMigrationAbortedListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/specs/encryption-suites/spec.md#requirement-a-migration-can-be-aborted-before-any-record-moves
+	 * @spec openspec/changes/harden-vault-key-material-guards/specs/encryption-suites/spec.md#requirement-a-migration-can-be-aborted-before-any-record-moves
 	 */
 	public function handle(Event $event): void {
 		if (($event instanceof SuiteMigrationAbortedEvent) === false) {
