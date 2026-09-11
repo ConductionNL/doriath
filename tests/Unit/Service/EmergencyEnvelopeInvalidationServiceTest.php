@@ -351,4 +351,31 @@ class EmergencyEnvelopeInvalidationServiceTest extends TestCase {
 		$this->assertNull($residual->getRecoveryEnvelope());
 		$this->assertSame('grantor_rotation', $residual->getInvalidatedReason());
 	}//end testResidualSweepInvalidatesOnlyOldSuiteContacts()
+
+	/**
+	 * The revoke-safeguard count includes every non-invalidated contact on the
+	 * suite and excludes the invalidated ones.
+	 *
+	 * @return void
+	 */
+	public function testCountUsableExcludesInvalidatedContacts(): void {
+		$this->mapper->method('findByGrantorSuite')->willReturn([
+			$this->contact(state: EmergencyContact::STATE_GRANTED),
+			$this->contact(state: EmergencyContact::STATE_REQUESTED),
+			$this->contact(state: EmergencyContact::STATE_INVALIDATED),
+		]);
+
+		$this->assertSame(2, $this->service->countUsableForGrantorSuite('old-suite'));
+	}//end testCountUsableExcludesInvalidatedContacts()
+
+	/**
+	 * The count is zero when nothing is bound to the suite.
+	 *
+	 * @return void
+	 */
+	public function testCountUsableIsZeroWhenNoContacts(): void {
+		$this->mapper->method('findByGrantorSuite')->willReturn([]);
+
+		$this->assertSame(0, $this->service->countUsableForGrantorSuite('old-suite'));
+	}//end testCountUsableIsZeroWhenNoContacts()
 }//end class

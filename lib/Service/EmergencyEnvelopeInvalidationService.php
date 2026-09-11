@@ -102,6 +102,31 @@ class EmergencyEnvelopeInvalidationService {
 	}//end invalidateForGrantorRotation()
 
 	/**
+	 * Count the grantor's usable (non-invalidated) emergency contacts on a suite.
+	 *
+	 * A revocation about to DELETE these envelopes uses this to refuse silently
+	 * destroying a still-working break-glass path: the count (never the
+	 * identities, which stay grantor-private) is surfaced so the administrator
+	 * can decide with the loss in view.
+	 *
+	 * @param string $grantorSuiteId The grantor suite about to be revoked
+	 *
+	 * @return int The number of usable emergency contacts bound to that suite
+	 *
+	 * @spec openspec/changes/migrate-emergency-access-on-rotation/specs/emergency-access/spec.md#requirement-envelope-invalidation-on-key-change
+	 */
+	public function countUsableForGrantorSuite(string $grantorSuiteId): int {
+		$count = 0;
+		foreach ($this->mapper->findByGrantorSuite(grantorSuiteId: $grantorSuiteId) as $contact) {
+			if ($contact->getState() !== EmergencyContact::STATE_INVALIDATED) {
+				$count++;
+			}
+		}
+
+		return $count;
+	}//end countUsableForGrantorSuite()
+
+	/**
 	 * Clear a grantor's recovery envelopes after their suite is REVOKED — the
 	 * envelopes hold a now-void key and are deleted outright.
 	 *

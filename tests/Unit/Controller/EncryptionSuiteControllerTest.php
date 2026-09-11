@@ -26,6 +26,7 @@ use OCA\Keepiq\Db\SuiteMigration;
 use OCA\Keepiq\Exception\ConflictException;
 use OCA\Keepiq\Service\EncryptionSuiteService;
 use OCA\Keepiq\Service\MigrationService;
+use OCA\Keepiq\Service\EmergencyEnvelopeInvalidationService;
 use OCA\Keepiq\Service\VaultKeyProofService;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
@@ -70,6 +71,11 @@ class EncryptionSuiteControllerTest extends TestCase {
 	private VaultKeyProofService&MockObject $proofService;
 
 	/**
+	 * @var EmergencyEnvelopeInvalidationService&MockObject
+	 */
+	private EmergencyEnvelopeInvalidationService&MockObject $emergencyService;
+
+	/**
 	 * The mocked user session.
 	 *
 	 * @var IUserSession&MockObject
@@ -89,6 +95,7 @@ class EncryptionSuiteControllerTest extends TestCase {
 		$this->migrationService = $this->createMock(originalClassName: MigrationService::class);
 		$this->userSession = $this->createMock(originalClassName: IUserSession::class);
 		$this->proofService = $this->createMock(originalClassName: VaultKeyProofService::class);
+		$this->emergencyService = $this->createMock(originalClassName: EmergencyEnvelopeInvalidationService::class);
 
 		$user = $this->createMock(originalClassName: IUser::class);
 		$user->method('getUID')->willReturn('testuser');
@@ -100,6 +107,7 @@ class EncryptionSuiteControllerTest extends TestCase {
 			migrationService: $this->migrationService,
 			userSession: $this->userSession,
 			proofService: $this->proofService,
+			emergencyService: $this->emergencyService,
 		);
 	}//end setUp()
 
@@ -427,6 +435,87 @@ class EncryptionSuiteControllerTest extends TestCase {
 			haystack: $response->getData()['message']
 		);
 	}//end testRevokeRefusesAnotherUsersSuiteAndNeverCallsTheService()
+
+	/**
+	 * Build an owned, active suite for the revoke-safeguard tests.
+	 *
+	 * @return EncryptionSuite
+	 */
+	private function ownedActiveSuite(): EncryptionSuite {
+		$owned = new EncryptionSuite();
+		$owned->setId('suite-1');
+		$owned->setOwnerType('user');
+		$owned->setOwnerId('testuser');
+		$owned->setStatus('active');
+		return $owned;
+	}//end ownedActiveSuite()
+
+	/**
+	 * While a usable emergency contact exists, revocation without the override is
+	 * refused with the COUNT — never the identities — and never reaches the
+	 * destructive clear.
+	 *
+	 * @return void
+	 */
+	public function testRevokeRefusedWhileUsableEmergencyContactExists(): void {
+		$this->suiteService->method('getSuite')->willReturn($this->ownedActiveSuite());
+		$this->emergencyService->method('countUsableForGrantorSuite')->with('suite-1')->willReturn(2);
+		$this->suiteService->expects($this->never())->method('revokeSuite');
+
+		$response = $this->controller->revoke('suite-1', 'lost password');
+
+		$this->assertSame(expected: Http::STATUS_CONFLICT, actual: $response->getStatus());
+		$data = $response->getData();
+		$this->assertSame('emergency_access_present', $data['error']);
+		$this->assertSame(2, $data['usableEmergencyContacts']);
+		// The count is surfaced; the contacts' identities are not.
+		$this->assertArrayNotHasKey('granteeUserId', $data);
+		$this->assertArrayNotHasKey('contacts', $data);
+	}//end testRevokeRefusedWhileUsableEmergencyContactExists()
+
+	/**
+	 * With the explicit override, revocation proceeds and reaches the service
+	 * even though a usable emergency contact exists.
+	 *
+	 * @return void
+	 */
+	public function testRevokeProceedsWithOverrideDespiteEmergencyContact(): void {
+		$revoked = new EncryptionSuite();
+		$revoked->setId('suite-1');
+		$revoked->setStatus('revoked');
+
+		$this->suiteService->method('getSuite')->willReturn($this->ownedActiveSuite());
+		$this->emergencyService->method('countUsableForGrantorSuite')->willReturn(2);
+		$this->suiteService->expects($this->once())
+			->method('revokeSuite')
+			->with('suite-1', 'lost password', 'testuser')
+			->willReturn($revoked);
+
+		$response = $this->controller->revoke('suite-1', 'lost password', acceptEmergencyLoss: true);
+
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$this->assertSame(expected: 'revoked', actual: $response->getData()['status']);
+	}//end testRevokeProceedsWithOverrideDespiteEmergencyContact()
+
+	/**
+	 * With no usable emergency contact the safeguard is inert and revocation
+	 * proceeds unchanged, without an override.
+	 *
+	 * @return void
+	 */
+	public function testRevokeProceedsWhenNoUsableEmergencyContact(): void {
+		$revoked = new EncryptionSuite();
+		$revoked->setId('suite-1');
+		$revoked->setStatus('revoked');
+
+		$this->suiteService->method('getSuite')->willReturn($this->ownedActiveSuite());
+		$this->emergencyService->method('countUsableForGrantorSuite')->willReturn(0);
+		$this->suiteService->expects($this->once())->method('revokeSuite')->willReturn($revoked);
+
+		$response = $this->controller->revoke('suite-1', 'housekeeping');
+
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+	}//end testRevokeProceedsWhenNoUsableEmergencyContact()
 
 	/**
 	 * Test reinstate returns reinstated suite.
