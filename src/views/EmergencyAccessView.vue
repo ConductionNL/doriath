@@ -151,8 +151,8 @@
 		     The dialog lives in src/dialogs/ per ADR-004; the guard state it acts
 		     on stays here. -->
 		<EmergencyRevokeDialog
-			:open="revokeTarget !== null"
 			v-model:password="revokePassword"
+			:open="revokeTarget !== null"
 			:revoking="revoking"
 			:error="revokeError"
 			@close="cancelRevoke"
