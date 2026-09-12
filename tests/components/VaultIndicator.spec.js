@@ -10,7 +10,7 @@
  *    visually hidden text for screen readers (an unlabeled colored circle
  *    would be color-alone information, WCAG 1.4.1)
  *  - `tag` shows the vault name visibly (the detail sidebar's vault tag)
- *  - the vault's Stage 9 icon renders; unset/unknown icons fall back to the
+ *  - the vault's picked icon renders; unset/unknown icons fall back to the
  *    safe glyph rather than rendering nothing
  *  - no vault, no render — callers pass their resolution result straight in
  *
@@ -63,7 +63,7 @@ describe('VaultIndicator', () => {
 	// The library is stubbed in vitest (tests/vitest/stubs): a known key
 	// resolves to the stub icon component, which is exactly the contract —
 	// the picked icon renders instead of the safe fallback.
-	it('renders the vault’s picked Stage 9 icon when set', () => {
+	it('renders the vault’s picked icon when set', () => {
 		const wrapper = mount(VaultIndicator, {
 			propsData: { vault: { ...VAULT, customIcon: 'briefcase' } },
 		})

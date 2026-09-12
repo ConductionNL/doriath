@@ -7,7 +7,7 @@
  *
  * Keepiq wraps the user's RSA private key with AES-256-GCM whose key is
  * derived from the master password via PBKDF2-SHA256 (600k iterations).
- * The wrapped blob lives in `oc_doriath_settings` and the user only ever
+ * The wrapped blob lives in `oc_keepiq_settings` and the user only ever
  * unwraps it client-side during unlock. The envelope format is:
  *
  *   [4B version][16B salt][12B IV][N B ciphertext][16B GCM tag]   (base64)

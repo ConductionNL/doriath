@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction / Keepiq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
- * Component tests for `src/dialogs/FolderEditDialog.vue` (restyle Stage 9):
+ * Component tests for `src/dialogs/FolderEditDialog.vue`:
  * the vault edit dialog — rename plus the icon/color picker whose Default
  * cells send EXPLICIT nulls so a stored customization genuinely clears.
  *

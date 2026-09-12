@@ -262,7 +262,7 @@ class SecretServiceTest extends TestCase {
 	 * the PRE-update row; for a placeholder that row has an empty `key`, and
 	 * SecretVersion::$key defaults to '' — so the Entity setter never marked it
 	 * dirty, QBMapper omitted the column, and the NOT NULL constraint on
-	 * doriath_secret_versions.key rejected the insert. The recipient saw
+	 * keepiq_secret_versions.key rejected the insert. The recipient saw
 	 * "Unable to fulfil request".
 	 *
 	 * Skipping is also right on its own terms: a first fill has no earlier value to

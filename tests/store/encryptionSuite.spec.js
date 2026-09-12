@@ -133,3 +133,9 @@ describe('useEncryptionSuiteStore — revocation', () => {
 		expect(post).not.toHaveBeenCalled()
 	})
 })
+
+// The share-candidate lookup used to live here, reading user ids off
+// `GET /suites`. It has moved to `useShareStore` and changed shape with it:
+// the server deliberately has no endpoint listing who holds a suite, so
+// candidates are named by Nextcloud's sharee search and PROBED
+// (tests/store/share.recipients.spec.js).

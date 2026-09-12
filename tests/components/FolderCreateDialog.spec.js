@@ -2,9 +2,8 @@
  * SPDX-FileCopyrightText: 2026 Conduction / Keepiq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
- * Component tests for `src/dialogs/FolderCreateDialog.vue` — the Stage-9
- * additions: the icon/color picker renders at VAULT level only and its
- * picks ride the create payload.
+ * Component tests for `src/dialogs/FolderCreateDialog.vue`: the icon/color
+ * picker renders at VAULT level only and its picks ride the create payload.
  *
  * @spec openspec/specs/secrets/spec.md#requirement-folder-management
  */

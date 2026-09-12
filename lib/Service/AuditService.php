@@ -3,7 +3,7 @@
 /**
  * Keepiq Audit Service
  *
- * The single write path into the append-only doriath_audit_log table and the
+ * The single write path into the append-only keepiq_audit_log table and the
  * query API over it (add-secret-audit-trail §2.3). record() is the ONLY code
  * path that inserts a row; it validates metadata against the per-event-type
  * whitelist (unknown keys dropped) and rejects any forbidden secret-material

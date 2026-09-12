@@ -47,7 +47,7 @@ class FolderMapper extends QBMapper {
 	 * @return void
 	 */
 	public function __construct(IDBConnection $db) {
-		parent::__construct(db: $db, tableName: 'doriath_folders', entityClass: Folder::class);
+		parent::__construct(db: $db, tableName: 'keepiq_folders', entityClass: Folder::class);
 	}//end __construct()
 
 	/**

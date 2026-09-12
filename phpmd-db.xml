@@ -20,16 +20,15 @@
              field count is not a modelling choice - it is the width of the
              table. Keepiq's two widest tables are:
 
-               Db\Secret   19 fields -> `doriath_secrets`
-               Db\SiemSink 18 fields -> `doriath_siem_sinks`
+               Db\Secret   19 fields -> `keepiq_secrets`
+               Db\SiemSink 18 fields -> `keepiq_siem_sinks`
 
-             Verified against the migrations that own those tables:
-             Version000008Date20260604000002::changeSchema() creates
-             `doriath_secrets` with 15 addColumn() calls, and
-             Version000016Date20260614000001 / Version000017Date20260614000002 /
-             Version000022Date20260718110000 each getTable('doriath_secrets')
-             and add more. Every property on the entity is one of those real
-             columns. The only refactor that takes the class under the
+             Verified against the migration that owns those tables:
+             Version001000Date20260908000000 declares `keepiq_secrets` with 19
+             columns and `keepiq_siem_sinks` with 18, which is where these two
+             counts come from. That single migration replaced the 35 incremental
+             ones that used to build the tables a column at a time. Every
+             property on the entity is one of those real columns. The only refactor that takes the class under the
              threshold of 15 is splitting the app's core secrets table in a
              destructive migration - i.e. the rule is unreachable by
              refactoring the PHP.

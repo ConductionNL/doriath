@@ -33,6 +33,13 @@ class DiscoveryControllerTest extends TestCase {
 	private DiscoveryController $controller;
 
 	/**
+	 * Mocked logger, for the deprecated-path warning.
+	 *
+	 * @var \Psr\Log\LoggerInterface&\PHPUnit\Framework\MockObject\MockObject
+	 */
+	private $logger;
+
+	/**
 	 * Wire the controller with a URL generator that echoes route names.
 	 *
 	 * @return void
@@ -53,7 +60,13 @@ class DiscoveryControllerTest extends TestCase {
 			static fn (string $p) => 'https://nc.test' . $p
 		);
 
-		$this->controller = new DiscoveryController(request: $request, urlGenerator: $url);
+		$this->logger = $this->createMock(\Psr\Log\LoggerInterface::class);
+		$this->controller = new DiscoveryController(
+			request: $request,
+			urlGenerator: $url,
+			appConfig: null,
+			logger: $this->logger,
+		);
 	}//end setUp()
 
 	/**
@@ -88,4 +101,117 @@ class DiscoveryControllerTest extends TestCase {
 			$this->assertStringNotContainsString($needle, $flat);
 		}
 	}//end testNoInstancePrivateData()
+	/**
+	 * Both discovery paths return the identical document.
+	 *
+	 * The deprecated path is the one URL consumers hold by hand, so it must
+	 * keep working byte-for-byte until it is removed before the first stable release.
+	 *
+	 * @return void
+	 */
+	public function testDeprecatedPathServesTheIdenticalDocument(): void {
+		$canonical = $this->controller->document()->getData();
+		$legacy = $this->controller->legacyDocument()->getData();
+
+		$this->assertSame($canonical, $legacy);
+	}//end testDeprecatedPathServesTheIdenticalDocument()
+
+	/**
+	 * The document names the canonical path and the deprecated one.
+	 *
+	 * @return void
+	 */
+	public function testDocumentAdvertisesDiscoveryPaths(): void {
+		$data = $this->controller->document()->getData();
+
+		$this->assertSame('/api/v1/app/.well-known/keepiq', $data['discoveryPath']);
+		$this->assertSame(
+			[['value' => '/api/v1/app/.well-known/doriath', 'removedInAppVersion' => '1.0.0']],
+			$data['deprecatedDiscoveryPaths']
+		);
+	}//end testDocumentAdvertisesDiscoveryPaths()
+
+	/**
+	 * The document publishes the audience contract the spec requires.
+	 *
+	 * Token ACCEPTANCE is tested thoroughly in JwtAuthServiceTest, but what a
+	 * consumer is TOLD to send is a separate surface: a swapped constant or a
+	 * dropped field would break self-configuring clients while every
+	 * acceptance test stayed green.
+	 *
+	 * @return void
+	 */
+	public function testDocumentPublishesTheAudienceContract(): void {
+		$assertion = $this->controller->document()->getData()['assertion'];
+
+		$this->assertSame('keepiq', $assertion['audience'], 'the value a consumer should send');
+		$this->assertSame(
+			['keepiq', 'doriath'],
+			$assertion['acceptedAudiences'],
+			'both values are honoured until the deprecated one is removed'
+		);
+		$this->assertSame(
+			[['value' => 'doriath', 'removedInAppVersion' => '1.0.0']],
+			$assertion['deprecatedAudiences'],
+			'the deprecated value must be published with the version that retires it'
+		);
+	}//end testDocumentPublishesTheAudienceContract()
+
+	/**
+	 * The canonical audience is not also listed as deprecated.
+	 *
+	 * A copy-paste swapping the two would tell every consumer to migrate away
+	 * from the value they should be adopting, and read as plausible.
+	 *
+	 * @return void
+	 */
+	public function testTheCanonicalAudienceIsNotAlsoDeprecated(): void {
+		$assertion = $this->controller->document()->getData()['assertion'];
+		$deprecated = array_column($assertion['deprecatedAudiences'], 'value');
+
+		$this->assertContains($assertion['audience'], $assertion['acceptedAudiences']);
+		$this->assertNotContains($assertion['audience'], $deprecated);
+	}//end testTheCanonicalAudienceIsNotAlsoDeprecated()
+
+	/**
+	 * Fetching the deprecated path reports it, naming the retiring version.
+	 *
+	 * @return void
+	 */
+	public function testDeprecatedPathIsReported(): void {
+		$context = [];
+		$this->logger->method('warning')->willReturnCallback(
+			static function (string $message, array $ctx = []) use (&$context): void {
+				$context = $ctx;
+			}
+		);
+
+		$this->controller->legacyDocument();
+
+		$this->assertSame('/api/v1/app/.well-known/doriath', $context['deprecated'] ?? null);
+		$this->assertSame('/api/v1/app/.well-known/keepiq', $context['canonical'] ?? null);
+		$this->assertSame('1.0.0', $context['version'] ?? null);
+	}//end testDeprecatedPathIsReported()
+
+	/**
+	 * The successor envelope format is announced but not yet emitted.
+	 *
+	 * `envelopeFormats` declares what actually goes on the wire; listing a
+	 * format nothing writes would be a claim a consumer could act on.
+	 *
+	 * @return void
+	 */
+	public function testUpcomingEnvelopeFormatIsAnnouncedNotEmitted(): void {
+		$data = $this->controller->document()->getData();
+
+		$this->assertSame(['doriath-machine-secret-v1'], $data['envelopeFormats']);
+		$this->assertSame(
+			[[
+				'value' => 'keepiq-machine-secret-v1',
+				'replaces' => 'doriath-machine-secret-v1',
+				'emittedFromAppVersion' => '1.0.0',
+			]],
+			$data['upcomingEnvelopeFormats']
+		);
+	}//end testUpcomingEnvelopeFormatIsAnnouncedNotEmitted()
 }//end class

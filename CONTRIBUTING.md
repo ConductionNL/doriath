@@ -268,3 +268,5 @@ Add labels to categorize your PR in the automated changelog:
 ## License
 
 By contributing, you agree that your contributions will be licensed under the same license as the project (EUPL-1.2 unless stated otherwise).
+
+Licensing is declared repo-wide in `REUSE.toml`, so a new file needs no SPDX header to be compliant; if you add one, it wins over the blanket. Vendoring a file that carries someone else's licence header additionally requires that licence's text in `LICENSES/<SPDX-id>.txt` — otherwise `quality / REUSE compliance` fails the build.

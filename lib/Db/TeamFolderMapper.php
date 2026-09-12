@@ -26,7 +26,7 @@ use OCP\AppFramework\Db\QBMapper;
 use OCP\IDBConnection;
 
 /**
- * Mapper for the doriath_team_folders table.
+ * Mapper for the keepiq_team_folders table.
  *
  * @template-extends QBMapper<TeamFolder>
  */
@@ -39,7 +39,7 @@ class TeamFolderMapper extends QBMapper {
 	 * @return void
 	 */
 	public function __construct(IDBConnection $db) {
-		parent::__construct(db: $db, tableName: 'doriath_team_folders', entityClass: TeamFolder::class);
+		parent::__construct(db: $db, tableName: 'keepiq_team_folders', entityClass: TeamFolder::class);
 	}//end __construct()
 
 	/**

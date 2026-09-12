@@ -168,9 +168,9 @@ test.describe('Workflow: folders + sharing — folders/spec.md', () => {
 		await unlockVault(page)
 		await openVault(page)
 
-		// The create affordance lives in the actions bar's "Actions" overflow
-		// (restyle Stage 8); at the vault root its label is "New vault". The
-		// helper clicks the NcActionButton's INNER button — the testid sits on
+		// The create affordance lives in the actions bar's "Actions" overflow;
+		// at the vault root its label is "New vault". The helper clicks the
+		// NcActionButton's INNER button — the testid sits on
 		// the presentational <li>, whose click fires nothing.
 		await clickOverflowAction(page, 'open-create-folder')
 		await expect(page.locator('.folder-form')).toBeVisible({ timeout: 10_000 })
@@ -186,7 +186,7 @@ test.describe('Workflow: folders + sharing — folders/spec.md', () => {
 			timeout: 15_000,
 		})
 
-		// The new vault appears in the app nav's folder tree (restyle Stage 7)
+		// The new vault appears in the app nav's folder tree
 		// — the create dialog's onSaved refetches the shared folder store.
 		await expect(
 			page.locator('[data-testid="nav-folder-tree"]').getByText(FOLDER),
@@ -274,7 +274,7 @@ test.describe('Workflow: folders + sharing — folders/spec.md', () => {
 		const secretName = await openFirstSecret(page)
 		expect(secretName).toBeTruthy()
 
-		// Restyle Stage-8 polish: Move lives in the sidebar's "Secret
+		// Move lives in the sidebar's "Secret
 		// actions" ("…") menu. Native clicks — the themed buttons swallow
 		// Playwright's synthetic click, same as elsewhere in this file.
 		await page
@@ -286,7 +286,7 @@ test.describe('Workflow: folders + sharing — folders/spec.md', () => {
 		// inner <button> and dispatch `el.click()`, on the assumption that
 		// the testid lands on NcActionButton's <li> root while the handler
 		// sits on the button. That assumption is what broke: after the
-		// Stage-8 restyle the synthetic dispatch stopped reaching the
+		// restyle the synthetic dispatch stopped reaching the
 		// handler, and the failure was invisible — the trace shows the
 		// testid RESOLVING in 0.1s and then `.move-form` timing out for 10s,
 		// with the menu still `[expanded]` and `menuitem "Move"` present in
@@ -590,7 +590,7 @@ test.describe('Workflow: folders + sharing — folders/spec.md', () => {
 	})
 
 	/*
-	 * Deep folder navigation purely through the LIST (restyle Stage 6): the
+	 * Deep folder navigation purely through the LIST: the
 	 * vault root shows top-level vaults as rows, clicking one descends, the
 	 * breadcrumb trail appears inside a folder, and clicking a crumb walks
 	 * back up — no sidebar involvement.

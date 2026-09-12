@@ -26,7 +26,7 @@ use OCP\AppFramework\Db\QBMapper;
 use OCP\IDBConnection;
 
 /**
- * Mapper for the doriath_honey_flags table.
+ * Mapper for the keepiq_honey_flags table.
  *
  * @template-extends QBMapper<HoneyFlag>
  */
@@ -39,7 +39,7 @@ class HoneyFlagMapper extends QBMapper {
 	 * @return void
 	 */
 	public function __construct(IDBConnection $db) {
-		parent::__construct(db: $db, tableName: 'doriath_honey_flags', entityClass: HoneyFlag::class);
+		parent::__construct(db: $db, tableName: 'keepiq_honey_flags', entityClass: HoneyFlag::class);
 	}//end __construct()
 
 	/**

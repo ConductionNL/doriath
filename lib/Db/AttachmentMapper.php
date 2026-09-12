@@ -26,7 +26,7 @@ use OCP\AppFramework\Db\QBMapper;
 use OCP\IDBConnection;
 
 /**
- * Mapper for the doriath_attachments table.
+ * Mapper for the keepiq_attachments table.
  *
  * @template-extends QBMapper<Attachment>
  */
@@ -39,7 +39,7 @@ class AttachmentMapper extends QBMapper {
 	 * @return void
 	 */
 	public function __construct(IDBConnection $db) {
-		parent::__construct(db: $db, tableName: 'doriath_attachments', entityClass: Attachment::class);
+		parent::__construct(db: $db, tableName: 'keepiq_attachments', entityClass: Attachment::class);
 	}//end __construct()
 
 	/**
@@ -88,7 +88,7 @@ class AttachmentMapper extends QBMapper {
 		$qb = $this->db->getQueryBuilder();
 		$qb->select($qb->func()->sum('a.size_bytes'))
 			->from($this->getTableName(), 'a')
-			->innerJoin('a', 'doriath_secrets', 's', $qb->expr()->eq('a.source_secret_id', 's.id'))
+			->innerJoin('a', 'keepiq_secrets', 's', $qb->expr()->eq('a.source_secret_id', 's.id'))
 			->where($qb->expr()->eq('s.owner_type', $qb->createNamedParameter('user')))
 			->andWhere($qb->expr()->eq('s.owner_id', $qb->createNamedParameter($ownerId)));
 

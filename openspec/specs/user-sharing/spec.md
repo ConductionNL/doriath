@@ -73,6 +73,70 @@ The system MUST allow a user to share a secret they own with another Nextcloud u
 - WHEN user A attempts to share a secret with user B
 - THEN the system MUST return an error indicating the recipient has no encryption suite
 
+### Requirement: Recipient Shareability Lookup
+Sharing requires the recipient's public certificate, so a client MUST be able to
+learn, before it attempts a share, which of a set of candidate users can receive
+one. The system MUST expose a lookup taking a caller-supplied list of user ids
+and returning, for each, whether that user has an active EncryptionSuite and if
+so their certificate.
+
+The lookup MUST be a probe, never an enumeration: it MUST answer only about ids
+the caller names, and the system MUST NOT expose any endpoint listing the users
+who hold a suite. Certificates are public keys and safe to distribute, but the
+set of users holding one is a membership disclosure gated by no sharing
+permission.
+
+A user who does not exist and a user with no active EncryptionSuite MUST be
+reported identically, so the lookup cannot be used as a user-existence oracle.
+
+Where a user has more than one active suite — which is normal for the duration
+of a compromise-recovery migration — the lookup MUST return the NEWEST, matching
+single-recipient resolution. Returning the older one would hand back the
+certificate the owner is migrating away from, producing a copy the recipient
+cannot open.
+
+The number of DISTINCT recipients one lookup may cover MUST be bounded, and a
+request exceeding the bound MUST be refused rather than truncated. The bound
+counts recipients, not submitted entries: a list naming the same person twice
+asks about one person. Deduplication MUST NOT be quadratic in the number of
+entries, so that reaching the bound check costs work proportional to what was
+actually asked.
+
+Results MUST carry the user id they describe, and callers MUST correlate by
+that id rather than by position: duplicate and malformed entries are dropped,
+so the result may be shorter than the request. Returning the surviving ids in
+first-seen order is a convenience, not a positional guarantee.
+
+#### Scenario: Mixed candidates answered in one request
+@e2e exclude Machine-to-machine lookup with no UI surface of its own; covered by ShareControllerTest.
+- GIVEN user B has an active EncryptionSuite and user C does not
+- WHEN a client looks up both B and C
+- THEN the response MUST report B as shareable with their certificate
+- AND report C as not shareable, without a certificate
+
+#### Scenario: Unknown user is indistinguishable from one without a suite
+@e2e exclude Machine-to-machine lookup with no UI surface of its own; covered by ShareControllerTest.
+- GIVEN no user "nobody" exists and user C exists without an EncryptionSuite
+- WHEN a client looks up both
+- THEN both MUST be reported not shareable with the same reason
+
+#### Scenario: Newest suite wins during a migration
+@e2e exclude Machine-to-machine lookup with no UI surface of its own; covered by EncryptionSuiteMapperTest.
+- GIVEN user B has two active EncryptionSuites from an in-flight compromise recovery
+- WHEN a client looks up B
+- THEN the certificate returned MUST be that of the most recently created suite
+
+#### Scenario: Results are correlated by id, not position
+@e2e exclude Machine-to-machine lookup with no UI surface of its own; covered by ShareControllerTest.
+- WHEN a client submits a list containing duplicate and empty entries
+- THEN each result MUST name the user it describes
+- AND the result list MAY be shorter than the submitted list
+
+#### Scenario: Oversized request refused
+@e2e exclude Machine-to-machine lookup with no UI surface of its own; covered by ShareControllerTest.
+- WHEN a client submits more ids than the bound allows
+- THEN the request MUST be refused, and no lookup performed
+
 ### Requirement: Sync on Update
 When either party updates a shared secret, the change MUST be propagated to all copies.
 

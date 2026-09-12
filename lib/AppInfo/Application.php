@@ -50,6 +50,27 @@ class Application extends App implements IBootstrap {
 	public const APP_ID = 'keepiq';
 
 	/**
+	 * The app version by which every pre-rename compatibility shim is gone.
+	 *
+	 * The doriath -> keepiq rename left a handful of published identifiers
+	 * carrying the old codename: the assertion audience, the discovery path
+	 * and the envelope format name. Each is accepted or announced in parallel
+	 * with its replacement so no consumer needs a flag day — but only while
+	 * the app is pre-stable. This app has never shipped a stable release, so
+	 * there is no released contract to preserve and no reason to carry a dead
+	 * codename past 1.0.0; the shims are removed before the first stable
+	 * release, not deferred to a future apiVersion.
+	 *
+	 * `apiVersion` therefore stays at 1 throughout. The "breaking changes
+	 * MUST ship as a new apiVersion" rule in the secret-store-api spec binds
+	 * from the first stable release onward, which is exactly the point these
+	 * shims stop existing.
+	 *
+	 * @var string
+	 */
+	public const PRE_STABLE_COMPAT_REMOVED_IN = '1.0.0';
+
+	/**
 	 * Constructor for the Application class.
 	 *
 	 * @return void

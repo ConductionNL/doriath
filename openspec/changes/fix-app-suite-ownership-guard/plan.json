@@ -1,0 +1,101 @@
+{
+  "change": "fix-app-suite-ownership-guard",
+  "project": "keepiq",
+  "repo": "ConductionNL/keepiq",
+  "base_branch": "development",
+  "feature_branch": "feature/675/fix-app-suite-ownership-guard",
+  "created": "2026-09-10",
+  "tracking_issue": 675,
+  "tasks": [
+    {
+      "id": 1,
+      "num": "1.1",
+      "title": "`EncryptionSuiteController::validateOwnership()` refuses unless `ownerType === 'user' && ownerId === $userId`; message \"Access denied: suite belongs to another owner\". Comment records why the previous `=== 'user' && ownerId !==` form failed open for application suites, and points at `CertificateLifecycleService::reissueSuite` as the already-correct sibling",
+      "status": "done",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 2,
+      "num": "1.2",
+      "title": "Confirmed no other caller relied on the old behaviour: the only callers are `show` (L111), `updatePrivateKey` (L236), `revoke` (L288) \u2014 all user self-service; the frontend calls `revoke` only on the caller's own current suite",
+      "status": "done",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 3,
+      "num": "2.1",
+      "title": "`testRevokeRefusesAnApplicationSuiteAndNeverCallsTheService` \u2014 a non-admin revoking an application suite gets `403 Access denied` and `revokeSuite` is never called",
+      "status": "done",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 4,
+      "num": "2.2",
+      "title": "`testUpdatePrivateKeyRefusesAnApplicationSuite` \u2014 the same guard blocks the envelope overwrite; `updateSuite` is never called",
+      "status": "done",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 5,
+      "num": "2.3",
+      "title": "Both proven to FAIL against the old guard and PASS against the fix; existing `testRevokeRefusesAnotherUsersSuite\u2026` and the happy-path cases still pass (full class: 22 tests green)",
+      "status": "done",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 6,
+      "num": "3.2",
+      "title": "phpmd clean on the touched files; `validateOwnership` introduces no finding. phpcs/phpstan carry the file's pre-existing, contradictory named-argument debt (phpcs *requires* named params for internal calls; phpstan's `@no-named-arguments` *forbids* them on PHPUnit asserts) \u2014 present identically on `development`; the new lines follow the file's established style and add no meaningful new violation. Not fixing the baseline here (unrelated scope)",
+      "status": "done",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 7,
+      "num": "3.4",
+      "title": "PR #676 discloses AI tool use; the public-disclosure path was chosen deliberately by the contributor (consistent with the public #395 filing), so a public PR rather than HackerOne is the contributor's call on record",
+      "status": "done",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 8,
+      "num": "3.1",
+      "title": "hydra gates \u2014 run in CI on PR #676, not locally (Hydra infra, not a repo composer script). no-admin-idor is the gate this fix *reduces* surface for; route-auth, gate-16 spec-coverage (new requirement backs the change), gate-113 exclusion-evidence apply",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 9,
+      "num": "3.3",
+      "title": "DCO \u2014 the contributor adds `Signed-off-by` at merge; the commits already carry `Assisted-by: ClaudeCode:claude-opus-5` and no sign-off, since only the human certifies the DCO",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 10,
+      "num": "3.5",
+      "title": "Independent human verification of the vulnerability and the fix \u2014 the contributor's review/merge is that verification; the empirical reproduction in this session is the agent's reading, not a substitute",
+      "status": "pending",
+      "spec_ref": null,
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    }
+  ]
+}

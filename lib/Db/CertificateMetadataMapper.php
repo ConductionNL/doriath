@@ -27,7 +27,7 @@ use OCP\AppFramework\Db\QBMapper;
 use OCP\IDBConnection;
 
 /**
- * Mapper for the doriath_certificate_metadata table.
+ * Mapper for the keepiq_certificate_metadata table.
  *
  * @template-extends QBMapper<CertificateMetadata>
  */
@@ -40,7 +40,7 @@ class CertificateMetadataMapper extends QBMapper {
 	 * @return void
 	 */
 	public function __construct(IDBConnection $db) {
-		parent::__construct(db: $db, tableName: 'doriath_certificate_metadata', entityClass: CertificateMetadata::class);
+		parent::__construct(db: $db, tableName: 'keepiq_certificate_metadata', entityClass: CertificateMetadata::class);
 	}//end __construct()
 
 	/**

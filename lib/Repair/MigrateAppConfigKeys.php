@@ -24,8 +24,8 @@
  * have it quietly lowered again.
  *
  * WHAT THIS STEP DOES NOT TOUCH. No secret, key or certificate is moved here:
- * the vault lives in this app's own tables (`doriath_secrets`,
- * `doriath_enc_suites`, `doriath_ca_certs`, …), whose names deliberately keep
+ * the vault lives in this app's own tables (`keepiq_secrets`,
+ * `keepiq_enc_suites`, `keepiq_ca_certs`, …), whose names deliberately keep
  * the old prefix precisely so that no rename can orphan them. See the comment
  * in `appinfo/info.xml`.
  *

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  *
  * Component tests for the §12.6 sharing integration on the secret-detail
- * sidebar (the restyle Stage-8 successor of the SecretDetail view). The
+ * sidebar (the successor of the SecretDetail view). The
  * component is mounted with the RecipientList / DelegationManager /
  * ShareRequestForm components stubbed, so the test asserts the role-driven
  * visibility branches rather than re-asserting each child's behaviour

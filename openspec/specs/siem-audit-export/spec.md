@@ -62,7 +62,7 @@ The system MUST enforce a per-sink queue cap with drop-oldest eviction and a dro
 
 ## Notes
 
-- Own tables per ADR-001 (`doriath_siem_sinks`, `doriath_siem_queue`); no OpenRegister.
+- Own tables per ADR-001 (`keepiq_siem_sinks`, `keepiq_siem_queue`); no OpenRegister.
 - Relays `secret-audit-trail`'s sanitized events and inherits its no-secret-material whitelist (`lib/Event/Audit/AuditEventTypes.php`); adds no new data path into the secrets.
 - Background delivery mirrors the existing `TimedJob` pattern (`lib/BackgroundJob/PurgeAuditLogJob.php`); dead-letter alert uses the unconditional admin notification subject pattern (`app_pending`).
 - Related specs: secret-audit-trail (event source + sanitization), admin-settings (panel conventions).

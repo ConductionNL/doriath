@@ -212,7 +212,7 @@
 							"op": "gt",
 							"value": 0
 						},
-						"_note": "The admin approval queue itself, replacing the earlier keepiq-pending-apps banner (which could only say THAT applications were waiting, not WHICH — the library gained the two pieces this needs: a def-level visibleWhen collapses any widget's grid cell while unmet, and endpointSource tables forward a client-side `limit` so the View-all footer condition can hold). visibleWhen gates on the summary's pending_apps_count: non-admins get null and admins with an empty queue get 0, so the whole card — row included — exists only for an admin with pending work. Rows come from GET /api/v1/applications/pending (a bare array: name, registeredBy — null means an anonymous registration, createdAt ISO-8601 rendered relative via format:date-time). limit 3 + viewAllRoute: the footer appears only when a fourth application is waiting. No rowRoute: applications have no detail page; approval happens on the applications page.",
+						"_note": "The admin approval queue itself, replacing the earlier keepiq-pending-apps banner (which could only say THAT applications were waiting, not WHICH — the library gained the two pieces this needs: a def-level visibleWhen collapses any widget's grid cell while unmet, and endpointSource tables forward a client-side `limit` so the View-all footer condition can hold). visibleWhen gates on the summary's pending_apps_count: non-admins get null and admins with an empty queue get 0, so the whole card — row included — exists only for an admin with pending work. Rows come from GET /api/v1/applications/pending (a bare array: id, name, registeredBy — null means an anonymous registration, createdAt ISO-8601 rendered relative via format:date-time). VIEW-ALL FOOTER, currently dead: `limit` never reaches the widget on @conduction/nextcloud-vue 2.36.3 — the object-table host adapter (objectTableContentToProps in CnWidgetObjectTable/dashboardRegistration.js) destructures `limit` out to fold it into `source`, and an endpointSource table HAS no `source`, so every row renders and the footer's total-greater-than-shown condition can never hold. Fixed upstream; the footer starts appearing at a fourth pending application once keepiq bumps past 2.36.3. rowRoute carries the navigation meanwhile and regardless: any row opens the applications page, router-pushed (a route NAME, never a full page load — the vault master key is memory-only, so a reload would re-lock it and land on /lock). Deliberately NOT ApplicationDetail (/applications/:id, which does exist): the queue's job is to get an admin to the page that handles the whole queue, not to one application. The cost of that choice is one dev-only console line per click — the widget's rowRoute always pushes `params: {id}` and vue-router discards the param this path has no segment for.",
 						"content": {
 							"endpointSource": {
 								"url": "/apps/keepiq/api/v1/applications/pending"
@@ -229,6 +229,7 @@
 							"limit": 3,
 							"viewAllRoute": { "name": "ApplicationRegister" },
 							"viewAllLabel": "View all",
+							"rowRoute": "ApplicationRegister",
 							"borderless": true,
 							"emptyText": "No applications awaiting approval"
 						}
@@ -237,7 +238,7 @@
 						"id": "kpi-total-secrets",
 						"type": "stat",
 						"showTitle": false,
-						"_note": "ADR-049 dissolution of the keepiq-kpi-card custom widget — endpoint-bound KPI tiles against GET /api/dashboard/summary. Bound to the payload keys DashboardService::fetchSummary actually emits (total_secrets / shared_with_me_count / folders_count); the legacy view read shared_secrets / folder_count / compromised_count, which the backend never sends. The 'Possibly compromised' card is dropped: compromised_count does not exist in the summary payload, so it was a permanently-zero dead binding. COLOR IDENTITY (restyle Stage 2): each KPI keeps one constant color via valueColor — total-secrets primary, folders success, rotation-due error, shared-with-me deliberately unset (theme default). TOKEN CHOICE: the *-text variants (--color-success-text / --color-error-text), NOT the bare --color-success / --color-error — on current Nextcloud server builds the bare tokens are pale BACKGROUND tints (verified live: #D8F3DA / #FFE7E7), while the *-text variants are the readable strong colors on both old and new server generations. CnStatWidget's icon circle falls back to valueColor when iconColor is unset, so valueColor alone colors both the number and the icon. A variantWhen threshold rule on rotation-due was considered and skipped: first-match variantWhen overrides the static color, which would break the constant identity this stage restores.",
+						"_note": "ADR-049 dissolution of the keepiq-kpi-card custom widget — endpoint-bound KPI tiles against GET /api/dashboard/summary. Bound to the payload keys DashboardService::fetchSummary actually emits (total_secrets / shared_with_me_count / folders_count); the legacy view read shared_secrets / folder_count / compromised_count, which the backend never sends. The 'Possibly compromised' card is dropped: compromised_count does not exist in the summary payload, so it was a permanently-zero dead binding. COLOR IDENTITY: each KPI keeps one constant color via valueColor — total-secrets primary, folders success, rotation-due error, shared-with-me deliberately unset (theme default). TOKEN CHOICE: the *-text variants (--color-success-text / --color-error-text), NOT the bare --color-success / --color-error — on current Nextcloud server builds the bare tokens are pale BACKGROUND tints (verified live: #D8F3DA / #FFE7E7), while the *-text variants are the readable strong colors on both old and new server generations. CnStatWidget's icon circle falls back to valueColor when iconColor is unset, so valueColor alone colors both the number and the icon. A variantWhen threshold rule on rotation-due was considered and skipped: first-match variantWhen overrides the static color, which would break the constant identity this change restores.",
 						"content": {
 							"label": "Total secrets",
 							"icon": "ClipboardList",
@@ -293,7 +294,7 @@
 						"id": "recent-activity-feed",
 						"type": "object-table",
 						"title": "Recent activity",
-						"_note": "Restyle Stage 2, ported from the pre-rename WIP: replaces the recent-activity-text ADR-049 placeholder with a live feed off GET /api/v1/audit/me — a plain app endpoint, so the object-table widget's endpointSource, not the OpenRegister-bound object-list. Verified against the backend: AuditController::mine returns {entries:[...]} newest-first (AuditEntryMapper orders occurred_at DESC) and AuditEntry::jsonSerialize emits occurredAt as ISO-8601 ('c'), eventType and objectName. The occurredAt column carries format:'date-time' so CnCellRenderer renders it through NcDateTime (relative time), not raw ISO. No rowRoute: audit entries have no detail page. viewAllRoute NOW WORKS — the original Stage-2 attempt had to omit it as dead config (endpointSource mode forwarded no client limit, restyle follow-up 4b, fixed in the same library release as the cell collapse): the endpoint is asked for 6 entries while the client shows 5, so the View-all footer appears exactly when a sixth entry exists, linking to the My activity page. Def-level title and no showTitle:false, so CnWidgetWrapper renders the 'Recent activity' header.",
+						"_note": "Ported from the pre-rename WIP: replaces the recent-activity-text ADR-049 placeholder with a live feed off GET /api/v1/audit/me — a plain app endpoint, so the object-table widget's endpointSource, not the OpenRegister-bound object-list. Verified against the backend: AuditController::mine returns {entries:[...]} newest-first (AuditEntryMapper orders occurred_at DESC) and AuditEntry::jsonSerialize emits occurredAt as ISO-8601 ('c'), eventType and objectName. The occurredAt column carries format:'date-time' so CnCellRenderer renders it through NcDateTime (relative time), not raw ISO. No rowRoute: audit entries have no detail page. viewAllRoute NOW WORKS — the original attempt had to omit it as dead config (endpointSource mode forwarded no client limit, restyle follow-up 4b, fixed in the same library release as the cell collapse): the endpoint is asked for 6 entries while the client shows 5, so the View-all footer appears exactly when a sixth entry exists, linking to the My activity page. Def-level title and no showTitle:false, so CnWidgetWrapper renders the 'Recent activity' header.",
 						"content": {
 							"endpointSource": {
 								"url": "/apps/keepiq/api/v1/audit/me",
@@ -515,7 +516,7 @@
 			"type": "custom",
 			"title": "Vault",
 			"component": "SecretList",
-			"_note": "Main vault: searchable/sortable/paginated secret list on the app nav's folder tree. type:\"custom\" because it owns bespoke list rows and on-demand client-side decryption that no built-in page type models yet. The optional :id? segment opens the secret-detail sidebar OVER the list (restyle Stage 8) — /secrets/<id> deep links keep working, and keeping the page id stable means CnPageRenderer never remounts the list when a row opens (its render key is the page id)."
+			"_note": "Main vault: searchable/sortable/paginated secret list on the app nav's folder tree. type:\"custom\" because it owns bespoke list rows and on-demand client-side decryption that no built-in page type models yet. The optional :id? segment opens the secret-detail sidebar OVER the list — /secrets/<id> deep links keep working, and keeping the page id stable means CnPageRenderer never remounts the list when a row opens (its render key is the page id)."
 		},
 		{
 			"id": "SecretListFolder",
@@ -599,7 +600,7 @@
 				"help": "Total number of active encryption suites",
 				"source": {
 					"kind": "tableCount",
-					"table": "doriath_enc_suites",
+					"table": "keepiq_enc_suites",
 					"filter": { "status": { "eq": "active" } }
 				}
 			}

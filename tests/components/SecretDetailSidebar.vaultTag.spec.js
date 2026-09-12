@@ -5,7 +5,7 @@
  * The detail sidebar's vault tag (2026-09-03, per Remko — Proton's pattern):
  * the rows in All secrets carry only a compact dot, and the one place you
  * look at a single secret names its vault under the title, with the vault's
- * own Stage 9 icon and color. This pins the resolution: a secret in a
+ * own icon and color. This pins the resolution: a secret in a
  * nested folder resolves to its TOP-LEVEL vault, and the tag stays away
  * while nothing is loaded or the folder tree has no match.
  *

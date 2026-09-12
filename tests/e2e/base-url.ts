@@ -27,6 +27,8 @@
  *     disagree about which instance they mean.
  */
 
+import { assertInstancePermitted } from './shared-instance.ts'
+
 /** Environment variable names accepted as the target, in priority order. */
 const CANDIDATES = [
 	'PLAYWRIGHT_BASE_URL',
@@ -38,14 +40,16 @@ const CANDIDATES = [
 /**
  * Resolve the base URL of the Nextcloud under test.
  *
- * @throws When none of the accepted environment variables is set.
+ * @throws When none of the accepted environment variables is set, or when the
+ *         target is the shared development instance and no opt-in flag names
+ *         it. See tests/e2e/shared-instance.ts.
  * @return The base URL, without a trailing slash.
  */
 export function resolveBaseUrl(): string {
 	for (const name of CANDIDATES) {
 		const value = process.env[name]
 		if (value && value.trim() !== '') {
-			return value.trim().replace(/\/+$/, '')
+			return assertInstancePermitted(value.trim().replace(/\/+$/, ''))
 		}
 	}
 

@@ -2,7 +2,7 @@
   SPDX-License-Identifier: EUPL-1.2
   SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 
-  KeepiqAppNav — keepiq's own left rail (restyle Stage 7).
+  KeepiqAppNav — keepiq's own left rail.
 
   The ONE justified custom shell component: CnAppNav verifiably cannot
   render trees, and the vault rail needs the folder tree. Every STATIC
@@ -65,8 +65,12 @@
 			     names the group and a second link to the vault root would
 			     double-highlight next to "All secrets". Revisit if the lib's
 			     filter learns to spare captions. -->
+			<!-- UNGATED, unlike the tree: with no vaults yet there was nothing
+			     under this caption AND no way to make the first one — creating
+			     a vault was only reachable from the secret list. The caption
+			     always has the "New vault" row under it now, so it never
+			     stands alone. -->
 			<NcAppNavigationCaption
-				v-if="folderTree.length > 0"
 				:name="t('keepiq', 'Vaults')"
 				data-testid="cn-nav-caption-FoldersCaption" />
 			<NavFolderTree
@@ -77,8 +81,31 @@
 				@edit="editFolder = $event"
 				@share="shareFolder = $event"
 				@move="moveFolder = $event"
-				@delete="onDeleteRequested" />
-			<!-- Vault dialogs (restyle Stage 9), opened from the tree
+				@delete="onDeleteRequested"
+				@newFolder="onNewFolder" />
+			<!-- Vault creation lives at the END of the group, the usual place
+			     for an "add" affordance, and is a plain row rather than a
+			     caption action: a menu the user has to open first is what made
+			     this look missing in the first place. No `to`, so
+			     NcAppNavigationItem renders it as a button. -->
+			<NcAppNavigationItem
+				:name="t('keepiq', 'New vault')"
+				data-testid="nav-vault-new"
+				@click="onNewVault">
+				<template #icon>
+					<Plus :size="20" />
+				</template>
+			</NcAppNavigationItem>
+			<!-- One dialog for both: FolderCreateDialog switches between the
+			     vault and folder flow on `parentId` alone (no parent = a vault
+			     at the root, which is the only place a vault can be made), so
+			     the two entry points differ by exactly that value. -->
+			<FolderCreateDialog
+				v-if="createOpen"
+				:parentId="createParentId"
+				@saved="createOpen = false"
+				@close="createOpen = false" />
+			<!-- Vault dialogs, opened from the tree
 			     entries' "⋮" menu. The store updates the folder list in
 			     place, so the tree re-renders without a refetch. -->
 			<FolderEditDialog
@@ -193,7 +220,9 @@ import {
 	NcAppNavigationSettings,
 } from '@nextcloud/vue'
 import OpenInNew from 'vue-material-design-icons/OpenInNew.vue'
+import Plus from 'vue-material-design-icons/Plus.vue'
 import ShieldAccountOutline from 'vue-material-design-icons/ShieldAccountOutline.vue'
+import FolderCreateDialog from '../../dialogs/FolderCreateDialog.vue'
 import FolderDeleteConfirmDialog from '../../dialogs/FolderDeleteConfirmDialog.vue'
 import FolderEditDialog from '../../dialogs/FolderEditDialog.vue'
 import MoveDialog from '../../dialogs/MoveDialog.vue'
@@ -211,6 +240,7 @@ export default {
 
 	components: {
 		CnIcon,
+		FolderCreateDialog,
 		FolderDeleteConfirmDialog,
 		FolderEditDialog,
 		MoveDialog,
@@ -220,6 +250,7 @@ export default {
 		NcAppNavigationItem,
 		NcAppNavigationSettings,
 		OpenInNew,
+		Plus,
 		ShieldAccountOutline,
 		SubfolderResolutionDialog,
 		TeamFolderDialog,
@@ -245,13 +276,23 @@ export default {
 		return {
 			/**
 			 * The vault whose edit dialog is open (from the tree entries'
-			 * "⋮" menu), or null. Restyle Stage 9.
+			 * "⋮" menu), or null.
 			 */
 			editFolder: null,
 			/** The vault whose team-share dialog is open, or null. */
 			shareFolder: null,
 			/** The vault whose move dialog is open, or null. */
 			moveFolder: null,
+			/** Whether the create dialog is open (vault OR folder). */
+			createOpen: false,
+			/**
+			 * The parent for the open create dialog: a vault id when creating a
+			 * folder inside it, null when creating a vault. It is the ONLY
+			 * thing that distinguishes the two flows, and FolderCreateDialog
+			 * fixes the level from it at open time, so the dialog cannot morph
+			 * from one into the other while it is up.
+			 */
+			createParentId: null,
 			/** The vault a delete was requested for, or null. */
 			deleteFolder: null,
 			/**
@@ -547,6 +588,33 @@ export default {
 		 */
 		fetchFoldersSafe() {
 			this.folderStore.fetchFolders().catch(() => {})
+		},
+
+		/**
+		 * Create a VAULT: the root level, so no parent.
+		 *
+		 * @return {void}
+		 * @spec openspec/specs/secrets/spec.md#requirement-folder-management
+		 */
+		onNewVault() {
+			this.createParentId = null
+			this.createOpen = true
+		},
+
+		/**
+		 * Create a FOLDER inside the vault whose "⋮" menu was used.
+		 *
+		 * The store inserts the new folder into its own list, so the rail's
+		 * tree picks it up without a refetch — same as the edit and move
+		 * dialogs hosted here.
+		 *
+		 * @param {object} node The vault node to create inside.
+		 * @return {void}
+		 * @spec openspec/specs/secrets/spec.md#requirement-folder-management
+		 */
+		onNewFolder(node) {
+			this.createParentId = node.id
+			this.createOpen = true
 		},
 
 		/**

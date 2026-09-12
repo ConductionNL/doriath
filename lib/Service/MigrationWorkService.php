@@ -78,7 +78,7 @@ class MigrationWorkService {
 
 	/**
 	 * Store keys. These are the values persisted in
-	 * `doriath_migration_failures.store` and the keys the client sends, so
+	 * `keepiq_migration_failures.store` and the keys the client sends, so
 	 * they are declared once rather than spelled inline.
 	 *
 	 * @var string
@@ -694,7 +694,7 @@ class MigrationWorkService {
 	/**
 	 * Record a per-record migration failure on the owning secret.
 	 *
-	 * `migration_error` exists only on `doriath_secrets`, so a version or
+	 * `migration_error` exists only on `keepiq_secrets`, so a version or
 	 * grant failure is recorded against the secret that owns it, prefixed with
 	 * the store it came from. That keeps the user's failure list one flat list
 	 * pointing at things they recognise, and needs no schema change.

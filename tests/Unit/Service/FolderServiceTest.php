@@ -404,7 +404,7 @@ class FolderServiceTest extends TestCase {
 	}//end testMoveDuplicateNameRejected()
 
 	/**
-	 * Creating with customization keys persists both (restyle Stage 9).
+	 * Creating with customization keys persists both.
 	 *
 	 * @return void
 	 */

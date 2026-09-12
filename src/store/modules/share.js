@@ -18,9 +18,20 @@
  */
 
 import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
+import { generateOcsUrl, generateUrl } from '@nextcloud/router'
 import { defineStore } from 'pinia'
 import { importPublicKey, rsaEncrypt } from '../../crypto/index.js'
+
+/**
+ * How many candidates one shareability probe may name.
+ *
+ * The server's own bound (ShareController::MAX_RECIPIENT_PROBE) — matched here
+ * so an over-long sharee page is trimmed before it becomes a 400 that reads
+ * like "nobody is shareable".
+ *
+ * @type {number}
+ */
+const MAX_RECIPIENT_PROBE = 100
 
 export const useShareStore = defineStore('share', {
 	state: () => ({
@@ -30,6 +41,37 @@ export const useShareStore = defineStore('share', {
 		loading: false,
 		/** @type {string|null} The last error message. */
 		error: null,
+		/**
+		 * Users from the last candidate search who can actually receive a
+		 * secret, in the order Nextcloud's sharee search returned them.
+		 *
+		 * `label` is the display name the sharee search reports, which is what
+		 * a picker has to show: on an LDAP or SSO instance the `id` is a GUID.
+		 *
+		 * @type {Array<{id: string, label: string}>}
+		 */
+		shareableRecipients: [],
+		/** @type {boolean} Whether a candidate search is in flight. */
+		candidatesLoading: false,
+		/**
+		 * Why the last candidate search produced nothing, when the reason was
+		 * not "nobody matches". Kept apart from `error`, which belongs to the
+		 * share list itself: a directory that cannot be reached must not read
+		 * as a failure of the shares on screen.
+		 *
+		 * @type {string|null}
+		 */
+		candidatesError: null,
+		/**
+		 * Sequence number of the most recently STARTED candidate search.
+		 *
+		 * Two searches that both fire race, and the picker must show the answer
+		 * to the last term typed rather than the last one to arrive: a slow
+		 * "car" landing after a fast "carol" would otherwise win.
+		 *
+		 * @type {number}
+		 */
+		candidatesSeq: 0,
 	}),
 
 	getters: {
@@ -43,6 +85,152 @@ export const useShareStore = defineStore('share', {
 	},
 
 	actions: {
+		/**
+		 * The users a secret can actually be shared with.
+		 *
+		 * TWO STEPS, because the server deliberately offers no third option.
+		 * Nextcloud's sharee search says WHO the caller may share with at all
+		 * (it is permission-filtered, and honours the instance's
+		 * share-with-group-members-only and autocomplete limits); keepiq's
+		 * batch probe then says which of those hold an active suite, i.e. a
+		 * public key to encrypt a copy to.
+		 *
+		 * There is no endpoint that lists suite holders, and that is a
+		 * decision rather than a gap: a certificate is a public key and safe
+		 * to hand out, but "who has a keepiq vault" is a membership fact
+		 * gated by no sharing permission, so it is only ever answered about
+		 * users the caller already named
+		 * (ShareController::recipientCertificates).
+		 *
+		 * Only the shareable ones come back. The endpoint's per-recipient
+		 * `reason` is not carried up: it says `no_active_suite` for a user
+		 * without a suite AND for one that does not exist — on purpose, so
+		 * that it cannot be used as a user-existence oracle — so it can tell a
+		 * caller nothing beyond "not this one".
+		 *
+		 * @param {string} [search] Sharee search term; '' asks for the first page.
+		 *
+		 * @return {Promise<Array<{id: string, label: string}>>} Options for
+		 *   this call's own answer — whether or not a newer search has since
+		 *   superseded it in the store.
+		 *
+		 * @spec openspec/specs/user-sharing/spec.md#requirement-recipient-shareability-lookup
+		 */
+		async searchShareableRecipients(search = '') {
+			const seq = ++this.candidatesSeq
+			this.candidatesError = null
+			this.candidatesLoading = true
+			try {
+				const sharees = await this.searchSharees(search)
+				if (sharees.length === 0) {
+					if (seq === this.candidatesSeq) {
+						this.shareableRecipients = []
+					}
+					return []
+				}
+
+				const response = await axios.post(
+					generateUrl('/apps/keepiq/api/v1/shares/recipient-certificates'),
+					{ userIds: sharees.map((sharee) => sharee.id) },
+				)
+
+				// The probe answers ids only, so the display names come back
+				// off the search rows they were asked about.
+				const labels = new Map(
+					sharees.map((sharee) => [sharee.id, sharee.label]),
+				)
+				const recipients = response.data?.recipients
+				const options = (Array.isArray(recipients) ? recipients : [])
+					.filter((recipient) => recipient?.shareable === true)
+					.map((recipient) => {
+						const id = String(recipient.userId ?? '')
+						return { id, label: labels.get(id) || id }
+					})
+
+				if (seq === this.candidatesSeq) {
+					this.shareableRecipients = options
+				}
+				return options
+			} catch (e) {
+				if (seq === this.candidatesSeq) {
+					this.candidatesError =
+						e?.response?.data?.message
+						|| e?.message
+						|| 'Failed to search recipients'
+				}
+				throw e
+			} finally {
+				// A superseded search must not clear a flag the newer one set,
+				// or the spinner disappears while that one is still running.
+				if (seq === this.candidatesSeq) {
+					this.candidatesLoading = false
+				}
+			}
+		},
+
+		/**
+		 * The users Nextcloud's own sharee search returns for a term.
+		 *
+		 * `itemType=file` with `shareType=0` is the users-only form of the
+		 * autocomplete every NC share dialog uses, so the candidate set is
+		 * exactly the one the instance already permits this user to share
+		 * with — keepiq neither widens it nor keeps a user directory of its
+		 * own. Exact matches come first, which is the order the search itself
+		 * distinguishes them in.
+		 *
+		 * Every row carries the display name the server put in `label`, which
+		 * is the only place it is available: the shareability probe answers
+		 * about ids and knows nothing of names.
+		 *
+		 * @param {string} search The search term.
+		 *
+		 * @return {Promise<Array<{id: string, label: string}>>} Distinct
+		 *   users, capped at the probe's own bound.
+		 *
+		 * @spec openspec/specs/user-sharing/spec.md#requirement-recipient-shareability-lookup
+		 */
+		async searchSharees(search) {
+			const response = await axios.get(
+				generateOcsUrl('apps/files_sharing/api/v1/sharees'),
+				{
+					// OCS refuses the call without the header and answers XML
+					// without the format; neither is added for us.
+					headers: { 'OCS-APIRequest': 'true' },
+					params: {
+						format: 'json',
+						search,
+						itemType: 'file',
+						// Users only. Groups come from the provisioning API,
+						// which needs no shareability probe.
+						shareType: 0,
+						perPage: MAX_RECIPIENT_PROBE,
+						// No global address book: a remote lookup answers with
+						// users this server cannot hold a suite for.
+						lookup: false,
+					},
+				},
+			)
+
+			const data = response.data?.ocs?.data ?? {}
+			const rows = [
+				...(Array.isArray(data.exact?.users) ? data.exact.users : []),
+				...(Array.isArray(data.users) ? data.users : []),
+			]
+
+			const users = []
+			const seen = new Set()
+			for (const row of rows) {
+				const id = String(row?.value?.shareWith ?? '')
+				if (id === '' || seen.has(id)) {
+					continue
+				}
+				seen.add(id)
+				users.push({ id, label: String(row?.label || id) })
+			}
+
+			return users.slice(0, MAX_RECIPIENT_PROBE)
+		},
+
 		/**
 		 * Hydrate the share list for a source secret.
 		 *

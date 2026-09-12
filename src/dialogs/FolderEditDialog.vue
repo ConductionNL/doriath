@@ -2,7 +2,7 @@
   SPDX-License-Identifier: EUPL-1.2
   SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 
-  Edit-folder dialog (restyle Stage 9): rename plus — at VAULT level — the
+  Edit-folder dialog: rename plus — at VAULT level — the
   Proton-style icon & color picker. This dialog REINTRODUCES rename: the
   store's updateFolder had no UI caller since the old FolderTree left, so
   this is the rename surface, not just the customize surface.
@@ -33,7 +33,7 @@
 				:required="true" />
 
 			<!-- Personalization applies to VAULTS (top-level folders) only —
-			     nested folders keep the plain glyph (Stage 9 scope). -->
+			     nested folders keep the plain glyph. -->
 			<CnIconColorPicker
 				v-if="isVaultLevel"
 				v-model:icon="customIcon"
@@ -120,7 +120,7 @@ export default {
 	computed: {
 		/**
 		 * Whether the edited folder is a top-level Vault — customization
-		 * (and the dialog's wording) follows the Stage-5 terminology split.
+		 * (and the dialog's wording) follows the vault/folder terminology split.
 		 *
 		 * @return {boolean}
 		 * @spec openspec/specs/secrets/spec.md#requirement-folder-management

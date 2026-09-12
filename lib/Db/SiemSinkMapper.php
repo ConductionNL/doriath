@@ -26,7 +26,7 @@ use OCP\AppFramework\Db\QBMapper;
 use OCP\IDBConnection;
 
 /**
- * Mapper for the doriath_siem_sinks table.
+ * Mapper for the keepiq_siem_sinks table.
  *
  * @template-extends QBMapper<SiemSink>
  */
@@ -39,7 +39,7 @@ class SiemSinkMapper extends QBMapper {
 	 * @return void
 	 */
 	public function __construct(IDBConnection $db) {
-		parent::__construct(db: $db, tableName: 'doriath_siem_sinks', entityClass: SiemSink::class);
+		parent::__construct(db: $db, tableName: 'keepiq_siem_sinks', entityClass: SiemSink::class);
 	}//end __construct()
 
 	/**

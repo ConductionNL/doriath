@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Keepiq\Service;
 
+use OCA\Keepiq\AppInfo\Application as KeepiqApp;
 use OCA\Keepiq\Db\Application;
 use OCA\Keepiq\Db\ApplicationMapper;
 use OCA\Keepiq\Event\Audit\AuditEvent;
@@ -33,6 +34,7 @@ use OCA\Keepiq\Event\Audit\AuditEventTypes;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\ICacheFactory;
+use Psr\Log\NullLogger;
 use RuntimeException;
 
 /**
@@ -50,7 +52,7 @@ class JwtAuthService {
 	/**
 	 * Distributed cache namespace for jti replay protection.
 	 *
-	 * KEPT ON THE OLD `doriath_` PREFIX ACROSS THE RENAME, deliberately.
+	 * KEPT ON THE OLD `keepiq_` PREFIX ACROSS THE RENAME, deliberately.
 	 * The jti cache IS the replay-protection window: renaming the namespace
 	 * empties it, and every assertion already spent during the preceding
 	 * CLOCK_SKEW+exp window becomes replayable exactly once more. Keeping
@@ -59,7 +61,7 @@ class JwtAuthService {
 	 *
 	 * @var string
 	 */
-	public const JTI_CACHE_NS = 'doriath_jwt_jti';
+	public const JTI_CACHE_NS = 'keepiq_jwt_jti';
 
 	/**
 	 * Distributed cache namespace for opaque access tokens.
@@ -70,7 +72,7 @@ class JwtAuthService {
 	 *
 	 * @var string
 	 */
-	public const TOKEN_CACHE_NS = 'doriath_jwt_token';
+	public const TOKEN_CACHE_NS = 'keepiq_jwt_token';
 
 	/**
 	 * Lifetime of issued access tokens in seconds (5 minutes per spec
@@ -87,28 +89,6 @@ class JwtAuthService {
 	 */
 	public const CLOCK_SKEW_SECONDS = 60;
 
-	/**
-	 * The expected audience claim ("aud") for assertions targeted at
-	 * this Keepiq instance.
-	 *
-	 * DELIBERATELY STILL `doriath` AFTER THE RENAME. This value is not an
-	 * app id, it is a published authentication parameter: every registered
-	 * application signs `aud=doriath` into its RS256 assertion with a
-	 * private key this server does not hold and cannot re-sign. Changing
-	 * the expected audience would reject every existing application's
-	 * assertion with an opaque 400 — a fleet-wide credential outage that
-	 * no repair step can heal, because the fix lives in each consumer's
-	 * configuration.
-	 *
-	 * The value is advertised in the `.well-known` discovery document, so a
-	 * self-configuring consumer reads it rather than hardcoding it; rolling
-	 * it to `keepiq` is a coordinated cross-app change (a new `apiVersion`
-	 * per openspec/specs/secret-store-api/spec.md), not part of an app-id
-	 * rename.
-	 *
-	 * @var string
-	 */
-	public const EXPECTED_AUDIENCE = 'doriath';
 
 	/**
 	 * Constructor for JwtAuthService.
@@ -117,6 +97,7 @@ class JwtAuthService {
 	 * @param ICacheFactory $cacheFactory The cache factory
 	 * @param JwtAssertionVerifier $verifier The JOSE assertion verifier
 	 * @param ApplicationJwkResolver $keyResolver The issuer key resolver
+	 * @param AudiencePolicy $audiencePolicy Which `aud` values name this instance
 	 * @param IEventDispatcher|null $eventDispatcher The event dispatcher
 	 * @param AuditEventFactory $auditEvents The audit-event factory
 	 *
@@ -127,6 +108,7 @@ class JwtAuthService {
 		private ICacheFactory $cacheFactory,
 		private JwtAssertionVerifier $verifier,
 		private ApplicationJwkResolver $keyResolver,
+		private AudiencePolicy $audiencePolicy = new AudiencePolicy(new NullLogger()),
 		private ?IEventDispatcher $eventDispatcher = null,
 		private AuditEventFactory $auditEvents = new AuditEventFactory(),
 	) {
@@ -209,6 +191,11 @@ class JwtAuthService {
 
 		$claims = $this->verifier->readAcceptableClaims(assertion: $assertion);
 
+		// Audience is asserted here rather than inside the verifier: which
+		// values this deployment answers to, and for how much longer, is a
+		// published contract decision, not a property of a well-formed JWS.
+		$usesDeprecated = $this->audiencePolicy->assertNamesThisInstance(claims: $claims);
+
 		$jtiCache = $this->cacheFactory->createDistributed(self::JTI_CACHE_NS);
 		$jti = (string)$claims['jti'];
 		if ($jtiCache->hasKey($jti) === true) {
@@ -224,6 +211,14 @@ class JwtAuthService {
 
 		// Store jti to prevent replay during max assertion lifetime.
 		$jtiCache->set($jti, true, self::ACCESS_TOKEN_TTL);
+
+		// Reported only now: everything above can reject, and an issuer named
+		// by a rejected assertion is unverified. Warning earlier would let a
+		// forged or replayed assertion manufacture migration traffic for any
+		// issuer it cared to name.
+		if ($usesDeprecated === true) {
+			$this->audiencePolicy->reportDeprecatedUse(claims: $claims);
+		}
 
 		return $application;
 	}//end verifyAssertion()

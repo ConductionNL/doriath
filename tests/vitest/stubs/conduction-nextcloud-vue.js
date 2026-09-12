@@ -106,8 +106,8 @@ const CnIndexPage = {
 	},
 }
 
-// CnFolderSidebar stub removed with the in-page folder pane (restyle
-// Stage 7) — folder navigation lives in KeepiqAppNav's tree now.
+// CnFolderSidebar stub removed with the in-page folder pane — folder
+// navigation lives in KeepiqAppNav's tree now.
 
 /** CnStatusBadge stub — a pill span carrying the label. */
 const CnStatusBadge = {
@@ -185,7 +185,7 @@ const CnIconColorPicker = {
 }
 
 /**
- * Catalog-resolver stubs (folder customization, restyle Stage 9). A
+ * Catalog-resolver stubs (folder customization). A
  * two-entry palette is enough for rendering specs; unknown keys resolve to
  * null exactly like the real resolvers, so fallback paths stay covered.
  */

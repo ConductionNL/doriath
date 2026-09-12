@@ -57,7 +57,7 @@ use OCP\AppFramework\Db\Entity;
  *
  * @SuppressWarnings(PHPMD.ShortVariable) The `$ip` property name IS the persistence
  *   contract: QBMapper derives the column name from the property, and the column
- *   shipped as `ip` in Migration\Version000030Date20260718220000. Renaming it would
+ *   shipped as `ip` in Migration\Version001000Date20260908000000. Renaming it would
  *   silently retarget every read and write at a non-existent `ip_address` column, so
  *   the short name is load-bearing. It is the only sub-3-character name in this class.
  */

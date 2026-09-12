@@ -107,7 +107,7 @@ keepiq/
 │   └── DESIGN-REFERENCES.md    # Design patterns, ASCII wireframes
 ├── docusaurus/                 # Documentation site
 ├── tests/                      # Unit and integration tests
-├── l10n/                       # Translations (en, nl)
+├── l10n/                       # Translations — 36 locales, <locale>.json + generated <locale>.js
 ├── .github/workflows/          # CI/CD pipelines
 └── img/                        # App icons and screenshots
 ```
@@ -176,6 +176,52 @@ npm run lint            # ESLint
 npm run stylelint       # CSS linting
 ```
 
+### Translations
+
+Every locale ships as a **pair** of files in `l10n/` with identical content:
+
+| File | Read by | How it gets there |
+|------|---------|-------------------|
+| `l10n/<locale>.json` | PHP, through `$l->t()` | hand-edited — this is the source |
+| `l10n/<locale>.js` | the browser, through `OC.L10N.register()` | **generated** from the `.json` by `npm run l10n:build` |
+
+Nextcloud needs both because it never serves raw JSON from an app directory:
+the browser can only load a `.js` catalogue, while PHP only reads the `.json`.
+That is the standard Nextcloud/Transifex layout, and the two halves are meant
+to carry the same strings — splitting them by "frontend vs backend strings"
+is not a supported optimisation. Edit only the `.json`; `check:l10n-js` fails
+the build when a `.js` is stale or hand-edited.
+
+`l10n/en.json` is the source catalogue: every `t('keepiq', '…')` literal in
+`src/` must exist there as a key (English source text === key). The other
+35 locales are the official languages of Europe plus Russian and Turkish.
+
+Adding or changing a user-facing string:
+
+```bash
+npm run test:l10n:write   # extract new t() literals into l10n/en.json
+# translate the new key(s) in every l10n/<locale>.json — all 36 are mandatory
+npm run l10n:build        # regenerate every l10n/<locale>.js
+npm run test:l10n         # extraction check + parity gate
+```
+
+The parity gate (`tests/l10n/check-l10n-parity.js`) holds **all 36 locales** at
+full parity: a missing or empty key in any of them fails the build. Adding an
+English source string without translating it everywhere therefore turns CI red
+in the same commit. Override the enforced set with `L10N_PARITY_ENFORCED` only
+to narrow it deliberately — it defaults to the whole required list.
+
+While the initial 20,433-string backlog was being paid down the gate ran
+two-tier: `L10N_PARITY_ENFORCED` named the locales that had finished, and
+everything else sat on a no-regression ratchet whose bounds
+`node tests/l10n/check-l10n-parity.js --write` recorded after each pass. Every
+locale is complete now, so that data file is gone and the ratchet is
+unreachable under the default: a locale added to the required set is enforced
+along with it and hard-fails rather than falling through to a bound of its own.
+Only an explicit `L10N_PARITY_ENFORCED` naming a **subset** of the required
+list brings the ratchet — and `--write` — back, which is how a future bulk
+translation push would stage itself again.
+
 ### Enable locally
 
 The docker compose stack enables both apps automatically on every start. To
@@ -191,8 +237,8 @@ docker exec nextcloud php occ app:enable keepiq
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | Vue 2.7, Pinia, @nextcloud/vue |
-| Build | Webpack 5, @nextcloud/webpack-vue-config |
+| Frontend | Vue 3, Pinia, @nextcloud/vue |
+| Build | Webpack 5 (standalone config) |
 | Backend | PHP 8.1+, Nextcloud App Framework, OpenSSL |
 | Data | PostgreSQL (own encrypted tables) |
 | UX | @conduction/nextcloud-vue |

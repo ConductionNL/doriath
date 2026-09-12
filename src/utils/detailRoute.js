@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * Route ↔ detail-sidebar mapping (restyle Stage 8).
+ * Route ↔ detail-sidebar mapping.
  *
  * The secret detail renders as a right-hand NcAppSidebar OVER the vault
  * list instead of on a page of its own. The open/closed state lives in

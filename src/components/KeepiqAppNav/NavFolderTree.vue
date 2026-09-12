@@ -2,7 +2,7 @@
   SPDX-License-Identifier: EUPL-1.2
   SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 
-  NavFolderTree — recursive folder tree for the left rail (restyle Stage 7).
+  NavFolderTree — recursive folder tree for the left rail.
 
   Renders folderStore.folderTree nodes as NcAppNavigationItem rows, each
   navigating to its folder's list page. DISPLAY CAP (Option C): folders
@@ -10,7 +10,7 @@
   "…" standing in the chain. Clicking "…" navigates INTO the folder it
   represents when the deepest rendered folder has exactly one hidden
   child; with more than one hidden child it opens the deepest rendered
-  folder's own page instead — its subfolder rows (Stage 6) list all
+  folder's own page instead — its subfolder rows list all
   children, and rows + breadcrumbs take over from there.
 -->
 <template>
@@ -27,14 +27,23 @@
 			:open="openState[node.id] ?? true"
 			:data-testid="`nav-folder-${node.id}`"
 			@update:open="openState[node.id] = $event">
-			<!-- Root-level entries ARE the vaults (Stage 5 terminology), so
-			     they carry the safe glyph — or the user's OWN icon + color
-			     on a Proton-style tinted circle derived from the SAME color
-			     (restyle Stage 9); only nested entries are plain folders. -->
+			<!-- Root-level entries ARE the vaults, so they carry the safe
+			     glyph — or the user's OWN icon + color on a Proton-style
+			     tinted circle derived from the SAME color; only nested
+			     entries are plain folders. EVERY vault gets the circle, the
+			     default (colorless) one included: with a disc on some rows
+			     and a bare glyph on others the two sat on different optical
+			     baselines, so the rail read as misaligned. The colorless
+			     disc is neutral and comes from CSS (see --plain below)
+			     because its active-row variant cannot be derived from a
+			     vault color. -->
 			<template #icon>
 				<span
 					v-if="depth === 0"
 					class="keepiq-nav-tree__vault-glyph"
+					:class="{
+						'keepiq-nav-tree__vault-glyph--plain': isColorless(node),
+					}"
 					:style="vaultGlyphStyle(node)">
 					<component
 						:is="vaultIcon(node)"
@@ -43,7 +52,7 @@
 				</span>
 				<FolderOutline v-else :size="18" />
 			</template>
-			<!-- Vault-level actions (Stage 9): edit/share/move/delete in the
+			<!-- Vault-level actions: edit/share/move/delete in the
 			     NcAppNavigationItem-native actions menu, hosted by
 			     KeepiqAppNav. Proton's dialog approach, touch-friendly.
 			     The trigger is the VERTICAL dots (per review) — NcActions
@@ -52,6 +61,20 @@
 				<DotsVertical :size="20" />
 			</template>
 			<template v-if="depth === 0" #actions>
+				<!-- First, because it is the only one that ADDS something:
+				     the rest edit or remove the vault you opened the menu on.
+				     A folder is only ever created inside a vault, which is
+				     exactly what this menu has to hand. -->
+				<NcActionButton
+					:data-testid="`nav-folder-new-${node.id}`"
+					:closeAfterClick="true"
+					@click="$emit('newFolder', node)">
+					<template #icon>
+						<FolderPlusOutline :size="20" />
+					</template>
+					{{ t('keepiq', 'New folder') }}
+				</NcActionButton>
+				<NcActionSeparator />
 				<NcActionButton
 					:data-testid="`nav-folder-edit-${node.id}`"
 					:closeAfterClick="true"
@@ -126,6 +149,7 @@ import {
 import DotsVertical from 'vue-material-design-icons/DotsVertical.vue'
 import FolderMove from 'vue-material-design-icons/FolderMove.vue'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
+import FolderPlusOutline from 'vue-material-design-icons/FolderPlusOutline.vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
 import Safe from 'vue-material-design-icons/Safe.vue'
 import ShareVariantOutline from 'vue-material-design-icons/ShareVariantOutline.vue'
@@ -134,7 +158,7 @@ import TrashCanOutline from 'vue-material-design-icons/TrashCanOutline.vue'
 /**
  * Maximum folder depth the rail renders. Deeper levels are reachable
  * through the "…" stand-in node plus the list page's subfolder rows and
- * breadcrumbs (Stage 6) — the rail stays legible, nothing becomes
+ * breadcrumbs — the rail stays legible, nothing becomes
  * unreachable.
  *
  * @type {number}
@@ -154,6 +178,7 @@ export default {
 		DotsVertical,
 		FolderMove,
 		FolderOutline,
+		FolderPlusOutline,
 		Pencil,
 		ShareVariantOutline,
 		TrashCanOutline,
@@ -194,7 +219,7 @@ export default {
 		},
 	},
 
-	emits: ['edit', 'share', 'move', 'delete'],
+	emits: ['edit', 'share', 'move', 'delete', 'newFolder'],
 
 	data() {
 		return {
@@ -211,9 +236,9 @@ export default {
 		t,
 
 		/**
-		 * The glyph a depth-0 vault entry renders: the user's picked icon
-		 * (restyle Stage 9), with the Safe default for unset — and for
-		 * UNKNOWN keys, which keeps older bundles forward-compatible with
+		 * The glyph a depth-0 vault entry renders: the user's picked icon,
+		 * with the Safe default for unset — and for UNKNOWN keys, which
+		 * keeps older bundles forward-compatible with
 		 * values written by newer catalogs.
 		 *
 		 * @param {object} node The vault node.
@@ -222,6 +247,20 @@ export default {
 		 */
 		vaultIcon(node) {
 			return resolveFolderIcon(node.customIcon) ?? Safe
+		},
+
+		/**
+		 * Whether the vault has no color of its own — the DEFAULT vault
+		 * look. Drives the neutral disc class rather than an inline tint:
+		 * "no color" has no hex to derive an active-row variant from, so
+		 * that state is expressed in CSS against the row's own `.active`.
+		 *
+		 * @param {object} node The vault node.
+		 * @return {boolean}
+		 * @spec openspec/specs/secrets/spec.md#requirement-folder-management
+		 */
+		isColorless(node) {
+			return resolveFolderColor(node.customColor, currentTheme()) === null
 		},
 
 		/**
@@ -261,11 +300,12 @@ export default {
 		},
 
 		/**
-		 * The circle behind the vault glyph: the Proton-style translucent
-		 * tint of the SAME resolved color (the 53a36006 approach — one
-		 * color source, glyph and circle can never disagree across
-		 * themes). No circle on the HIGHLIGHTED row (the glyph is plain
-		 * there, see vaultColor) and none for uncolored vaults.
+		 * The INLINE tint behind the vault glyph: the Proton-style
+		 * translucent tint of the SAME resolved color (the 53a36006
+		 * approach — one color source, glyph and circle can never disagree
+		 * across themes). Uncolored vaults get no inline style at all —
+		 * they still show a circle, painted by the
+		 * `keepiq-nav-tree__vault-glyph--plain` rule.
 		 *
 		 * @param {object} node The vault node.
 		 * @return {object|undefined} A style object or undefined.
@@ -275,9 +315,10 @@ export default {
 			const theme = currentTheme()
 			const hasColor = resolveFolderColor(node.customColor, theme) !== null
 			if (!hasColor) {
-				// Colorless vaults: no circle anywhere; the glyph follows the
-				// row's text color (white on the highlight, via the CSS
-				// icon-column rule below).
+				// Colorless vaults have no hex to tint with — the neutral
+				// disc and its active-row variant are CSS-only, and the glyph
+				// follows the row's text color (white on the highlight, via
+				// the CSS icon-column rule below).
 				return undefined
 			}
 			if (this.isHighlighted(node)) {
@@ -355,31 +396,123 @@ export default {
 	display: contents;
 }
 
-/* The Proton-style tinted circle behind a colored vault's glyph. Sized to
-   sit inside NcAppNavigationItem's icon column without growing the row. */
+/* Give the tree's icon column room for a circle. NcAppNavigationItem
+   sizes it to --default-clickable-area (34px on NC 30), which a 30px disc
+   fills almost edge to edge: the label ended up 2px from the disc where a
+   bare glyph sat 8px clear of it, and that gap difference is what made the
+   circled rows look wrong next to the uncircled default. Widening the
+   column by 8px and taking the disc down to 28px restores ~7px on both
+   sides — the bare glyph's own breathing room — without moving the glyph's
+   center, so the rows still line up vertically. Applied to the WHOLE tree
+   (nested folder rows too) so every label in it shares one text column.
+
+   The selector mirrors NcAppNavigationItem's OWN
+   `.app-navigation-entry .app-navigation-entry-link .app-navigation-entry-icon`
+   on purpose: that rule sets `flex: 0 0 var(--default-clickable-area)` at
+   three classes plus its scope attribute, so the short
+   `:deep(.app-navigation-entry-icon)` form loses the cascade and the
+   column silently stays 34px. Both link and button variants are listed
+   because which one NcAppNavigationItem renders depends on `to`/`href`. */
+.keepiq-nav-tree
+	:deep(
+		.app-navigation-entry .app-navigation-entry-link .app-navigation-entry-icon
+	),
+.keepiq-nav-tree
+	:deep(
+		.app-navigation-entry .app-navigation-entry-button .app-navigation-entry-icon
+	) {
+	flex-basis: calc(var(--default-clickable-area) + 8px);
+	width: calc(var(--default-clickable-area) + 8px);
+}
+
+/* The Proton-style tinted circle behind a vault's glyph. Sized to sit
+   inside the widened icon column above without growing the row. */
 .keepiq-nav-tree__vault-glyph {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 30px;
-	height: 30px;
+	width: 28px;
+	height: 28px;
 	border-radius: 50%;
+}
+
+/* The DEFAULT vault — no color picked — gets the same circle, in the
+   theme's neutral surface. Without it the default row was the only one
+   with a bare glyph, which is the asymmetry this rule exists to remove. */
+.keepiq-nav-tree__vault-glyph--plain {
+	background-color: var(--color-background-dark);
+}
+
+/* ...except on the ACTIVE row, where the disc has to survive whichever
+   highlight the running server gets. NcAppNavigationItem ships TWO
+   treatments and picks between them on `isLegacy34` (server major < 34),
+   both with !important, so they beat the server's own solid-primary rule
+   in core/css/apps.scss. They need opposite discs:
+
+   - LEGACY (NC 32-33): the row is solid --color-primary-element and the
+     label is whitened, so a neutral grey disc reads as a stray pill —
+     the same finding that sent the COLORED discs to their opaque
+     main-background variant. A low-alpha scrim in the row's own text
+     color sits ABOVE the primary instead.
+   - MODERN (NC 34+, and 34 is our max-version): the row is only a 16%
+     primary tint over --color-main-background and the label stays
+     --color-main-text. A 20% white scrim on that is ~1.05:1 — an
+     invisible disc, i.e. exactly the asymmetry this whole rule exists to
+     remove. So it goes OPAQUE main-background, which is the variant the
+     colored discs already take on that row (see vaultGlyphStyle) and
+     reads as one treatment rather than two.
+
+   Scoped under .keepiq-nav-tree like every other rule here: the --plain
+   class is unique to this component, so the ancestor is not needed to
+   disambiguate, but a rule that skips it reads as an oversight. */
+.keepiq-nav-tree
+	:deep(
+		.app-navigation-entry--legacy.active .keepiq-nav-tree__vault-glyph--plain
+	) {
+	background-color: color-mix(
+		in srgb,
+		var(--color-primary-element-text) 20%,
+		transparent
+	);
+}
+
+.keepiq-nav-tree
+	:deep(
+		.app-navigation-entry:not(.app-navigation-entry--legacy).active
+			.keepiq-nav-tree__vault-glyph--plain
+	) {
+	background-color: var(--color-main-background);
 }
 
 /* Icon-column color on the ACTIVE row, keyed to the row's own `.active`
    class (which has MORE sources than the highlightId prop —
    NcAppNavigationItem also activates through vue-router's own link
-   matching). NcAppNavigationItem's modern active rule pins the LINK to
-   --color-main-text (black) with !important while the instance themes
-   paint the row SOLID PRIMARY and whiten only the label — so inherited
-   currentColor resolves black on a blue row. The primary-contrast token
-   makes colorless vault glyphs and the nested FolderOutline white there.
-   COLORED vault glyphs are untouched: their hex rides the svg fill
-   attribute, which inherited color never overrides — on the selected row
-   they render on the opaque main-background disc instead (see
+   matching), and split on the same legacy/modern highlight as the plain
+   disc above, because the row's own label color flips between them:
+
+   - LEGACY: the instance themes paint the row SOLID PRIMARY and whiten
+     only the label, so inherited currentColor resolves black on a blue
+     row. The primary-contrast token makes colorless vault glyphs and the
+     nested FolderOutline white there.
+   - MODERN: the row is a light primary TINT and NcAppNavigationItem pins
+     the link to --color-main-text, so the same white would leave the
+     glyph white-on-near-white (~1.28:1). It follows the label instead.
+
+   COLORED vault glyphs are untouched either way: their hex rides the svg
+   fill attribute, which inherited color never overrides — on the selected
+   row they render on the opaque main-background disc instead (see
    vaultGlyphStyle), keeping the color identity visible. */
-.keepiq-nav-tree :deep(.app-navigation-entry.active .app-navigation-entry-icon) {
+.keepiq-nav-tree
+	:deep(.app-navigation-entry--legacy.active .app-navigation-entry-icon) {
 	color: var(--color-primary-element-text) !important;
+}
+
+.keepiq-nav-tree
+	:deep(
+		.app-navigation-entry:not(.app-navigation-entry--legacy).active
+			.app-navigation-entry-icon
+	) {
+	color: var(--color-main-text) !important;
 }
 
 /* The actions trigger on the ACTIVE row: the default button chrome reads

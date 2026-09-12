@@ -328,8 +328,8 @@ test.describe('Routed page surfaces — authenticated', () => {
 			placement.Applications,
 			`"Applications" should be in the settings foldout (saw: ${JSON.stringify(placement)})`,
 		).toBe('foldout')
-		// Restyle Stage 1: Certificates and Emergency access moved from the
-		// footer to the settings foldout (RESTYLE-PLAN.md).
+		// Certificates and Emergency access moved from the footer to the
+		// settings foldout.
 		expect(placement.Certificates).toBe('foldout')
 		expect(placement['Emergency access']).toBe('foldout')
 	})
@@ -433,7 +433,7 @@ test.describe('Routed page surfaces — public recipient routes', () => {
 		// Mint the fixture rather than relying on the seeded rows: the
 		// link-share workflow spec REVOKES them (hard delete), so depending on
 		// them makes this test a function of run order. Observed on a dev rig:
-		// oc_doriath_link_shares went 3 rows -> 0 across one suite run.
+		// oc_keepiq_link_shares went 3 rows -> 0 across one suite run.
 		const created = await api(
 			page,
 			'POST',
