@@ -443,7 +443,19 @@ class EncryptionSuiteController extends OCSController {
 	}//end compromiseRecovery()
 
 	/**
-	 * Validate that the current user owns the suite (or is admin).
+	 * Validate that the current user owns the suite.
+	 *
+	 * These are user self-service endpoints (show/updatePrivateKey/revoke): the
+	 * only suite a session may act on here is its own. The previous form guarded
+	 * `ownerType === 'user' && ownerId !== $userId`, which silently PASSED for
+	 * every non-user suite — an APPLICATION suite has `ownerType === 'application'`,
+	 * so the `=== 'user'` clause is false and the whole condition is false. Any
+	 * authenticated non-admin could therefore revoke an application's suite by id
+	 * and lock that application out of its own vault (a revoked suite blocks every
+	 * read). CertificateLifecycleService::reissueSuite already expresses the same
+	 * intent the correct way round (`ownsIt = ownerType==='user' && ownerId===uid`);
+	 * this brings the check into line. Application suites are managed through the
+	 * admin application-lifecycle endpoints, never here.
 	 *
 	 * @param mixed $suite The encryption suite entity
 	 *
@@ -451,8 +463,8 @@ class EncryptionSuiteController extends OCSController {
 	 */
 	private function validateOwnership($suite): void {
 		$userId = $this->userSession->getUser()->getUID();
-		if ($suite->getOwnerType() === 'user' && $suite->getOwnerId() !== $userId) {
-			throw new RuntimeException('Access denied: suite belongs to another user');
+		if ($suite->getOwnerType() !== 'user' || $suite->getOwnerId() !== $userId) {
+			throw new RuntimeException('Access denied: suite belongs to another owner');
 		}
 	}//end validateOwnership()
 }//end class
